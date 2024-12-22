@@ -3,11 +3,12 @@ import { cn } from "@/utils";
 
 export interface InputProps
 	extends React.InputHTMLAttributes<HTMLInputElement> {
+	// eslint-disable-next-line react/require-default-props
 	type?: "text" | "password" | "email" | "number";
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-	({ className, type, ...props }, ref) => (
+	({ className, type = "text", ...props }, ref) => (
 		<input
 			type={type}
 			className={cn(

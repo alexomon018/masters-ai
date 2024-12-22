@@ -73,6 +73,7 @@ type FormItemContextValue = {
 
 const FormItem = React.forwardRef<
 	HTMLDivElement,
+	// eslint-disable-next-line react/require-default-props
 	React.HTMLAttributes<HTMLDivElement> & { className?: string }
 >(({ className, ...props }, ref) => {
 	const id = React.useId();
