@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# run linting
+yarn lint-staged
+
+# check for valid branch name
+LC_ALL=C
+
+local_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+valid_branch_regex="^(feature|release|hotfix)\/[a-zA-Z0-9._#-]+$"
+
+message="Branch should confirm to git flow branching strategy. Please use (feature|release|hotfix)/*"
+
+
+if [[ ! $local_branch =~ $valid_branch_regex ]]
+then
+    echo "$message"
+    exit 1
+fi
+
+exit 0
+
+
+
