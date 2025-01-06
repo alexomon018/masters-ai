@@ -22,7 +22,7 @@ const ExpertCard = ({ name, title, image }: ExpertCardProps) => (
 				<p className="text-sm text-muted-foreground">{title}</p>
 			</div>
 		</div>
-		<ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+		<ArrowRight className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
 	</div>
 );
 

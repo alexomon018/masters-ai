@@ -9,6 +9,7 @@
 		"start": "next start",
 		"lint": "next lint",
 		"test": "jest",
+		"tsc": "tsc",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
 		"chromatic": "npx chromatic"

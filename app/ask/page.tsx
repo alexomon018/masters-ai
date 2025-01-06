@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Message as MessageProps, useChat } from "ai/react";
 import { Message } from "@molecules";
-import { Form } from "@organisms";
+import { CustomForm } from "@organisms";
 import { MessageLoader } from "@atoms";
 import { cn } from "@utils";
 import { INITIAL_QUESTIONS } from "@constants";
@@ -98,7 +98,7 @@ Your ultimate companion in navigating the academic landscape of Stanford.`
 				<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
 
 				<div className="w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5">
-					<Form
+					<CustomForm
 						ref={formRef}
 						onSubmit={onSubmit}
 						inputProps={{

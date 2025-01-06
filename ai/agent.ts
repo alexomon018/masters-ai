@@ -24,6 +24,7 @@ export const runAgent = async ({
 }: {
 	userMessage: string;
 	tools: AIFunction[];
+	// eslint-disable-next-line consistent-return
 }) => {
 	const agent = createAgent(tools);
 
@@ -52,6 +53,8 @@ export const runAgent = async ({
 				(msg) => msg.role !== "system" && msg.role !== "user"
 			)
 		);
+
+		return result;
 	} catch (error) {
 		console.error(error);
 	}
