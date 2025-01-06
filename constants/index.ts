@@ -1,3 +1,4 @@
 import { formSchema } from "./validationSchemas";
+import { INITIAL_QUESTIONS } from "./initialQuestions";
 
-export { formSchema };
+export { formSchema, INITIAL_QUESTIONS };

@@ -34,7 +34,8 @@
 			"@organisms": ["./components/organisms"],
 			"@store": ["./store"],
 			"@types": ["./types"],
-			"@app": ["./app"]
+			"@app": ["./app"],
+			"@ai": ["./ai"]
 		}
 	},
 	"include": [
