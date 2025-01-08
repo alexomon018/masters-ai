@@ -1,16 +1,15 @@
 export const INITIAL_QUESTIONS = [
 	{
-		content: "Are there resources for students interested in creative writing?"
+		content: "What are server components in Next.js?"
 	},
 	{
-		content: "Are there courses on environmental sustainability?"
+		content: "What are the best practices for writing clean code?"
 	},
 	{
-		content:
-			"Are there any workshops or seminars on entrepreneurship for students?"
+		content: "What are client components in Next.js?"
 	},
 	{
-		content: "What kinds of courses will I take as a philosophy major?"
+		content: "How to improve performance of React applications?"
 	}
 ];
 

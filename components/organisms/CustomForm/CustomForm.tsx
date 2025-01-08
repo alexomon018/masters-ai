@@ -21,7 +21,7 @@ const Form = (
 			required
 			{...inputProps}
 			className={cn(
-				"h-10 flex-1 rounded-xl pl-4 pr-12 transition md:h-12",
+				"h-10 flex-1 rounded-xl bg-white pl-4 pr-12 transition md:h-12",
 				"border border-gray-400 text-base",
 				"disabled:bg-gray-100",
 				inputProps.className

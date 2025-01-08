@@ -17,19 +17,16 @@ const Ask = () => {
 	const { messages, input, handleInputChange, handleSubmit, setInput } =
 		useChat({
 			api: "/api/masters",
-			initialMessages: [
-				{
-					id: "0",
-					role: "system",
-					content: `**Welcome to DegreeGuru**
-
-Your ultimate companion in navigating the academic landscape of Stanford.`
-				}
-			],
+			initialMessages: [],
 			onResponse: () => {
 				setStreaming(false);
 			}
 		});
+
+	console.log({
+		messages,
+		input
+	});
 
 	const onClickQuestion = (value: string) => {
 		setInput(value);
@@ -59,7 +56,7 @@ Your ultimate companion in navigating the academic landscape of Stanford.`
 	);
 
 	return (
-		<main className="relative mx-auto flex min-h-svh max-w-screen-md overflow-y-auto p-4 !pb-32 md:p-6 md:!pb-40">
+		<main className="relative mx-auto flex min-h-svh max-w-screen-md overflow-y-auto bg-[#F8FAFF] p-4 !pb-32 md:p-6 md:!pb-40">
 			<div className="w-full">
 				{messages.map((message: MessageProps) => (
 					<Message key={message.id} {...message} />

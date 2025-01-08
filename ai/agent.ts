@@ -44,7 +44,7 @@ export const runAgent = async ({
 				...history
 			],
 			handleUpdate(chunk) {
-				process.stdout.write(chunk);
+				return chunk;
 			}
 		});
 
