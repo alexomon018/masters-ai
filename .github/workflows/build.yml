@@ -3,6 +3,29 @@ name: Build and Test
 on:
   pull_request:
     branches: [main]
+  workflow_call:
+    inputs:
+      UPSTASH_REDIS_REST_URL:
+        type: string
+        required: true
+      UPSTASH_REDIS_REST_TOKEN:
+        type: string
+        required: true
+      UPSTASH_VECTOR_REST_URL:
+        type: string
+      UPSTASH_VECTOR_REST_TOKEN:
+        type: string
+        required: true
+      OPENAI_API_KEY:
+        type: string
+        required: true
+
+env:
+  UPSTASH_REDIS_REST_URL: ${{ inputs.UPSTASH_REDIS_REST_URL }}
+  UPSTASH_REDIS_REST_TOKEN: ${{ inputs.UPSTASH_REDIS_REST_TOKEN }}
+  UPSTASH_VECTOR_REST_URL: ${{ inputs.UPSTASH_VECTOR_REST_URL }}
+  UPSTASH_VECTOR_REST_TOKEN: ${{ inputs.UPSTASH_VECTOR_REST_TOKEN }}
+  OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
 
 jobs:
   test-and-lint:
