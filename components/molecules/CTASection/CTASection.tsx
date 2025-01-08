@@ -7,7 +7,7 @@ const CtaSection = () => (
 		<p className="mb-6 text-xl">Join Masters AI now.</p>
 		<Button className="group">
 			Join Masters AI
-			<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+			<ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
 		</Button>
 	</div>
 );

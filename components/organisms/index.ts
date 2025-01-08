@@ -13,6 +13,7 @@ import AskSection from "./AskSection/AskSection";
 import ExpertsSection from "./ExpertsSection/ExpertsSection";
 import DiveInQuestions from "./DiveInQuestions/DiveInQuestions";
 import InsightfulClips from "./InsightfulClips/InsightfulClips";
+import CustomForm from "./CustomForm/CustomForm";
 
 export {
 	Form,
@@ -27,5 +28,6 @@ export {
 	AskSection,
 	ExpertsSection,
 	DiveInQuestions,
-	InsightfulClips
+	InsightfulClips,
+	CustomForm
 };
