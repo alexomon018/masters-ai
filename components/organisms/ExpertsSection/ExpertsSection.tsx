@@ -55,7 +55,7 @@ const experts = [
 const ExpertsSection = () => (
 	<section className="mb-16">
 		<h2 className="mb-2 text-2xl font-bold">
-			Your personal AMA
+			Your personal Frontend Masters AI
 			<br />
 			with trusted experts
 		</h2>
