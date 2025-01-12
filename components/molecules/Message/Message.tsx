@@ -26,10 +26,12 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 					</AvatarFallback>
 				</Avatar>
 			) : (
-				<Avatar>
+				<Avatar className="rounded-none">
 					<AvatarImage
-						src="/https://frontendmasters.com/static-assets/core/m-transparent.webp"
+						src="https://frontendmasters.com/static-assets/core/m-transparent.webp"
 						alt="@masters"
+						width={50}
+						height={50}
 					/>
 					<AvatarFallback>
 						<AvatarIcon className="size-10" />
