@@ -37,13 +37,12 @@ export const runAgent = async ({
 			messages: [
 				{
 					role: "system",
-					content: `${
-						defaultSystemPrompt
-					}. Conversation summary so far: ${summary}`
+					content: `${defaultSystemPrompt}. Conversation summary so far: ${summary}`
 				},
 				...history
 			],
 			handleUpdate(chunk) {
+				console.log({ chunk });
 				return chunk;
 			}
 		});
