@@ -77,7 +77,9 @@ const AskChat = () => {
 						streaming={streaming}
 						messagesEndRef={messagesEndRef}
 					/>
-					<InitialQuestions onClickQuestion={onClickQuestion} />
+					{messages.length === 1 && (
+						<InitialQuestions onClickQuestion={onClickQuestion} />
+					)}
 				</div>
 
 				<ChatForm
