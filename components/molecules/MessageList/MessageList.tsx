@@ -1,6 +1,6 @@
 import { Message as MessageProps } from "ai/react";
 import { MessageLoader } from "@atoms";
-import { VList } from "virtua";
+import { Virtualizer } from "virtua";
 import Message from "../Message/Message";
 
 interface MessageListProps {
@@ -14,13 +14,13 @@ const MessageList = ({
 	streaming,
 	messagesEndRef
 }: MessageListProps) => (
-	<VList>
+	<Virtualizer>
 		{messages.map((message: MessageProps) => (
 			<Message key={message.id} {...message} />
 		))}
 		{streaming && <MessageLoader />}
 		<div ref={messagesEndRef} />
-	</VList>
+	</Virtualizer>
 );
 
 export default MessageList;

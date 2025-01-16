@@ -42,3 +42,19 @@ export const messages = pgTable(
 	},
 	(table) => [index("chat_id_idx").on(table.chatId)]
 );
+
+export const saveMessageInBackground = async ({
+	content,
+	role,
+	chatId
+}: {
+	content: string;
+	role: string;
+	chatId: number;
+}) => {
+	await db.insert(messages).values({
+		content,
+		role,
+		chatId
+	});
+};
