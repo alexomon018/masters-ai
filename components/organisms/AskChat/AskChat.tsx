@@ -8,7 +8,7 @@ import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
 
 const AskChat = () => {
-	const formRef = useRef<HTMLFormElement>(null);
+	const formRef = useRef<HTMLFormElement>(null)
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -75,15 +75,14 @@ const AskChat = () => {
 					<MessageList
 						messages={messages}
 						streaming={streaming}
-						messagesEndRef={messagesEndRef}
+						messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
 					/>
 					{messages.length === 1 && (
 						<InitialQuestions onClickQuestion={onClickQuestion} />
 					)}
 				</div>
-
 				<ChatForm
-					formRef={formRef}
+					formRef={formRef as React.RefObject<HTMLFormElement>}
 					onSubmit={onSubmit}
 					input={input}
 					handleInputChange={handleInputChange}
