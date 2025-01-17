@@ -20,20 +20,29 @@ const useAskChat = () => {
 					method: "POST"
 				});
 				const data = await res.json();
+				console.log({ data });
 				setChatId(data.id);
 			}
 		},
 		onFinish: async (message: Message) => {
-			if (chatId) {
-				await fetch("/api/messages", {
-					method: "POST",
-					body: JSON.stringify({
-						chatId,
-						content: message.content,
-						role: message.role
-					})
-				});
+			try {
+				if (chatId) {
+					await fetch("/api/messages", {
+						method: "POST",
+						body: JSON.stringify({
+							chatId,
+							content: message.content,
+							role: message.role
+						})
+					});
+				} else {
+					console.error("No chatId available for saving message");
+					return;
+				}
+			} catch (error) {
+				console.error("Failed to save message:", error);
 			}
+			setStreaming(false);
 		}
 	});
 

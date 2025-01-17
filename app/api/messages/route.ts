@@ -9,6 +9,15 @@ export async function POST(request: Request) {
 		const body = await request.json();
 		const { chatId, content, role } = body;
 
+		if (!chatId) {
+			return NextResponse.json(
+				{ error: "chatId is required" },
+				{ status: 400 }
+			);
+		}
+
+		console.log({ chatId, content, role });
+
 		const [newMessage] = await db
 			.insert(messages)
 			.values({
