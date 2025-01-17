@@ -1,11 +1,9 @@
 import { Message, useChat } from "ai/react";
 import { useState } from "react";
-import { saveMessage } from "@/lib/data";
 
 const useAskChat = () => {
 	const [streaming, setStreaming] = useState<boolean>(false);
-
-	const chatId = 1;
+	const [chatId, setChatId] = useState<number | null>(null);
 
 	const chatConfig = useChat({
 		api: "/api/masters",
@@ -16,25 +14,53 @@ const useAskChat = () => {
 				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
 			}
 		],
-
+		onResponse: async () => {
+			if (!chatId) {
+				const res = await fetch("/api/chats", {
+					method: "POST"
+				});
+				const data = await res.json();
+				setChatId(data.id);
+			}
+		},
 		onFinish: async (message: Message) => {
-			try {
-				setStreaming(false);
-				if (!chatId) {
-					throw new Error("No chat ID available");
-				}
-				await saveMessage(message.content, chatId, message.role);
-			} catch (error) {
-				console.error("Error saving message:", error);
+			if (chatId) {
+				await fetch("/api/messages", {
+					method: "POST",
+					body: JSON.stringify({
+						chatId,
+						content: message.content,
+						role: message.role
+					})
+				});
 			}
 		}
 	});
+
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+
+		if (chatId && chatConfig.input.trim()) {
+			await fetch("/api/messages", {
+				method: "POST",
+				body: JSON.stringify({
+					chatId,
+					content: chatConfig.input,
+					role: "user"
+				})
+			});
+		}
+
+		chatConfig.handleSubmit(e);
+		setStreaming(true);
+	};
 
 	return {
 		...chatConfig,
 		streaming,
 		setStreaming,
-		chatId
+		chatId,
+		handleSubmit
 	};
 };
 
