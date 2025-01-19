@@ -1,49 +1,92 @@
 {
-	"compilerOptions": {
-		"lib": ["dom", "dom.iterable", "esnext"],
-		"allowJs": true,
-		"skipLibCheck": true,
-		"strict": true,
-		"noEmit": true,
-		"esModuleInterop": true,
-		"module": "esnext",
-		"moduleResolution": "bundler",
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"jsx": "preserve",
-		"incremental": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
-		"paths": {
-			"@/*": ["./*"],
-			"@atoms": ["./components/atoms"],
-			"@icons": ["./assets/icons"],
-			"@constants": ["./constants"],
-			"@utils": ["./utils"],
-			"@lib": ["./lib"],
-			"@reducers": ["./reducers"],
-			"@hooks": ["./hooks"],
-			"@services": ["./services"],
-			"@models": ["./models"],
-			"@images": ["./assets/images"],
-			"@providers": ["./providers"],
-			"@molecules": ["./components/molecules"],
-			"@organisms": ["./components/organisms"],
-			"@store": ["./store"],
-			"@types": ["./types"],
-			"@app": ["./app"],
-			"@ai": ["./ai"]
-		}
-	},
-	"include": [
-		"next-env.d.ts",
-		"**/*.ts",
-		"**/*.tsx",
-		".next/types/**/*.ts",
-		"**/*.cjs"
-	],
-	"exclude": ["node_modules"]
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@atoms": [
+        "./components/atoms"
+      ],
+      "@icons": [
+        "./assets/icons"
+      ],
+      "@constants": [
+        "./constants"
+      ],
+      "@utils": [
+        "./utils"
+      ],
+      "@lib": [
+        "./lib"
+      ],
+      "@reducers": [
+        "./reducers"
+      ],
+      "@hooks": [
+        "./hooks"
+      ],
+      "@services": [
+        "./services"
+      ],
+      "@models": [
+        "./models"
+      ],
+      "@images": [
+        "./assets/images"
+      ],
+      "@providers": [
+        "./providers"
+      ],
+      "@molecules": [
+        "./components/molecules"
+      ],
+      "@organisms": [
+        "./components/organisms"
+      ],
+      "@store": [
+        "./store"
+      ],
+      "@types": [
+        "./types"
+      ],
+      "@app": [
+        "./app"
+      ],
+      "@ai": [
+        "./ai"
+      ]
+    },
+    "target": "ES2017"
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "**/*.cjs"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

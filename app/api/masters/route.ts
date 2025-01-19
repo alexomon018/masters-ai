@@ -1,5 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -91,7 +89,6 @@ export const POST = async (req: NextRequest) => {
 		if (e instanceof Error) {
 			return NextResponse.json({ error: e.message }, { status: 500 });
 		}
-		// Handle non-Error objects
 		return NextResponse.json(
 			{ error: "An unknown error occurred" },
 			{ status: 500 }
