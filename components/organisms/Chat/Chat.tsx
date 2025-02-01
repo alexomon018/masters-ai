@@ -7,8 +7,8 @@ import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
 
-const AskChat = () => {
-	const formRef = useRef<HTMLFormElement>(null)
+const Chat = ({ threadId }: { threadId: string }) => {
+	const formRef = useRef<HTMLFormElement>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -20,7 +20,7 @@ const AskChat = () => {
 		setInput,
 		streaming,
 		setStreaming
-	} = useAskChat();
+	} = useAskChat(threadId);
 
 	const onClickQuestion = (value: string) => {
 		setInput(value);
@@ -94,4 +94,4 @@ const AskChat = () => {
 	);
 };
 
-export default AskChat;
+export default Chat;

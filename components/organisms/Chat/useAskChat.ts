@@ -1,9 +1,8 @@
 import { Message, useChat } from "ai/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const useAskChat = () => {
+const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
-	const [chatId, setChatId] = useState<number | null>(null);
 
 	const chatConfig = useChat({
 		api: "/api/masters",
@@ -14,31 +13,16 @@ const useAskChat = () => {
 				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
 			}
 		],
-		onResponse: async () => {
-			if (!chatId) {
-				const res = await fetch("/api/chats", {
-					method: "POST"
-				});
-				const data = await res.json();
-				console.log({ data });
-				setChatId(data.id);
-			}
-		},
 		onFinish: async (message: Message) => {
 			try {
-				if (chatId) {
-					await fetch("/api/messages", {
-						method: "POST",
-						body: JSON.stringify({
-							chatId,
-							content: message.content,
-							role: message.role
-						})
-					});
-				} else {
-					console.error("No chatId available for saving message");
-					return;
-				}
+				await fetch("/api/messages", {
+					method: "POST",
+					body: JSON.stringify({
+						chatId: threadId,
+						content: message.content,
+						role: message.role
+					})
+				});
 			} catch (error) {
 				console.error("Failed to save message:", error);
 			}
@@ -46,14 +30,33 @@ const useAskChat = () => {
 		}
 	});
 
+	// Add useEffect to fetch messages
+	useEffect(() => {
+		const fetchMessages = async () => {
+			try {
+				const response = await fetch(`/api/messages?chatId=${threadId}`);
+				const data = await response.json();
+
+				// Update chat with existing messages
+				chatConfig.setMessages([...data]);
+			} catch (error) {
+				console.error("Failed to fetch messages:", error);
+			}
+		};
+
+		if (threadId) {
+			fetchMessages();
+		}
+	}, [threadId]);
+
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		if (chatId && chatConfig.input.trim()) {
+		if (threadId && chatConfig.input.trim()) {
 			await fetch("/api/messages", {
 				method: "POST",
 				body: JSON.stringify({
-					chatId,
+					chatId: threadId,
 					content: chatConfig.input,
 					role: "user"
 				})
@@ -68,7 +71,7 @@ const useAskChat = () => {
 		...chatConfig,
 		streaming,
 		setStreaming,
-		chatId,
+		threadId,
 		handleSubmit
 	};
 };

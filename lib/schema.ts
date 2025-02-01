@@ -2,16 +2,16 @@ import {
 	pgTable,
 	serial,
 	text,
-	integer,
 	timestamp,
-	index
+	index,
+	uuid
 } from "drizzle-orm/pg-core";
 
 // Define the chats table
 export const chats = pgTable(
 	"chats",
 	{
-		id: serial("id").primaryKey(),
+		id: uuid("id").primaryKey().defaultRandom(),
 		userId: text("user_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -24,9 +24,9 @@ export const messages = pgTable(
 	"messages",
 	{
 		id: serial("id").primaryKey(),
-		chatId: integer("chat_id")
-			.references(() => chats.id)
-			.notNull(),
+		chatId: uuid("chat_id")
+			.notNull()
+			.references(() => chats.id),
 		content: text("content").notNull(),
 		role: text("role").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()
