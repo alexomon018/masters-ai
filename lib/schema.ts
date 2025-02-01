@@ -4,8 +4,7 @@ import {
 	text,
 	timestamp,
 	index,
-	uuid,
-	foreignKey
+	uuid
 } from "drizzle-orm/pg-core";
 
 // Define the chats table

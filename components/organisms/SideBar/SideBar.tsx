@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { cn } from "@utils";
-import { useRouter } from "next/navigation";
 import { AllSidesIcon } from "@radix-ui/react-icons";
+import Link from "next/link";
 
 // Add interface for Chat type
 interface Chat {
@@ -19,7 +19,6 @@ interface SideBarProps {
 const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 	const [chats, setChats] = useState<Chat[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const router = useRouter();
 
 	useEffect(() => {
 		const fetchChats = async () => {
@@ -37,11 +36,39 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 		fetchChats();
 	}, []);
 
+	const renderChatList = () => {
+		if (isLoading) {
+			return (
+				<div className="p-4 text-center text-gray-500">Loading chats...</div>
+			);
+		}
+
+		if (chats.length === 0) {
+			return <div className="p-4 text-center text-gray-500">No chats yet</div>;
+		}
+
+		return chats.map((chat) => (
+			<Link
+				key={chat.id}
+				href={`/chat/${chat.id}`}
+				className="cursor-pointer p-4 outline-none transition-colors hover:bg-gray-50"
+			>
+				<div className="mb-1 flex items-start justify-between">
+					<h3 className="font-medium">{chat.title}</h3>
+					<span className="text-xs text-gray-500">
+						{chat.createdAt.toString()}
+					</span>
+				</div>
+				<p className="truncate text-sm text-gray-600">{chat.id}</p>
+			</Link>
+		));
+	};
+
 	return (
 		<>
 			{!isSidebarOpen && (
-				// eslint-disable-next-line react/button-has-type
 				<button
+					type="button"
 					onClick={() => setIsSidebarOpen(true)}
 					className="fixed left-4 top-4 z-30 rounded-lg border border-gray-200 bg-white p-2 shadow-sm md:hidden"
 				>
@@ -73,31 +100,7 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 				</div>
 
 				{isSidebarOpen && (
-					<div className="divide-y divide-gray-200">
-						{isLoading ? (
-							<div className="p-4 text-center text-gray-500">
-								Loading chats...
-							</div>
-						) : chats.length === 0 ? (
-							<div className="p-4 text-center text-gray-500">No chats yet</div>
-						) : (
-							chats.map((chat) => (
-								<div
-									key={chat.id}
-									className="cursor-pointer p-4 transition-colors hover:bg-gray-50"
-									onClick={() => router.push(`/chat/${chat.id}`)}
-								>
-									<div className="mb-1 flex items-start justify-between">
-										<h3 className="font-medium">{chat.title}</h3>
-										<span className="text-xs text-gray-500">
-											{chat.createdAt.toString()}
-										</span>
-									</div>
-									<p className="truncate text-sm text-gray-600">{chat.id}</p>
-								</div>
-							))
-						)}
-					</div>
+					<div className="divide-y divide-gray-200">{renderChatList()}</div>
 				)}
 			</aside>
 		</>

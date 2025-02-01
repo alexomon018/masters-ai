@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-export default function ChatPage() {
+const ChatPage = () => {
 	const router = useRouter();
 
 	const startNewChat = async () => {
@@ -26,6 +26,7 @@ export default function ChatPage() {
 	return (
 		<div className="flex min-h-screen items-center justify-center">
 			<button
+				type="button"
 				onClick={startNewChat}
 				className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
 			>
@@ -33,4 +34,6 @@ export default function ChatPage() {
 			</button>
 		</div>
 	);
-}
+};
+
+export default ChatPage;

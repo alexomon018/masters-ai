@@ -4,25 +4,6 @@ import { useState, useEffect } from "react";
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
 
-	// Add useEffect to fetch messages
-	useEffect(() => {
-		const fetchMessages = async () => {
-			try {
-				const response = await fetch(`/api/messages?chatId=${threadId}`);
-				const data = await response.json();
-
-				// Update chat with existing messages
-				chatConfig.setMessages([...data]);
-			} catch (error) {
-				console.error("Failed to fetch messages:", error);
-			}
-		};
-
-		if (threadId) {
-			fetchMessages();
-		}
-	}, [threadId]);
-
 	const chatConfig = useChat({
 		api: "/api/masters",
 		initialMessages: [
@@ -48,6 +29,25 @@ const useAskChat = (threadId: string) => {
 			setStreaming(false);
 		}
 	});
+
+	// Add useEffect to fetch messages
+	useEffect(() => {
+		const fetchMessages = async () => {
+			try {
+				const response = await fetch(`/api/messages?chatId=${threadId}`);
+				const data = await response.json();
+
+				// Update chat with existing messages
+				chatConfig.setMessages([...data]);
+			} catch (error) {
+				console.error("Failed to fetch messages:", error);
+			}
+		};
+
+		if (threadId) {
+			fetchMessages();
+		}
+	}, [threadId]);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
