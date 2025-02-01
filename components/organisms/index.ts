@@ -14,7 +14,7 @@ import ExpertsSection from "./ExpertsSection/ExpertsSection";
 import DiveInQuestions from "./DiveInQuestions/DiveInQuestions";
 import InsightfulClips from "./InsightfulClips/InsightfulClips";
 import CustomForm from "./CustomForm/CustomForm";
-import AskChat from "./AskChat/AskChat";
+import Chat from "./Chat/Chat";
 
 export {
 	Form,
@@ -31,5 +31,5 @@ export {
 	DiveInQuestions,
 	InsightfulClips,
 	CustomForm,
-	AskChat
+	Chat
 };

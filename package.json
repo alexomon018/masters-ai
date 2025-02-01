@@ -59,7 +59,7 @@
 		"storybook": "^8.2.9",
 		"tailwind-merge": "^2.5.2",
 		"tailwindcss-animate": "^1.0.7",
-		"uuid": "^11.0.4",
+		"uuid": "^11.0.5",
 		"virtua": "^0.39.3",
 		"zod": "^3.23.8"
 	},

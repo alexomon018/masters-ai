@@ -20,3 +20,17 @@ export async function POST() {
 		);
 	}
 }
+
+export async function GET() {
+	try {
+		const allChats = await db.select().from(chats);
+
+		return NextResponse.json(allChats);
+	} catch (error) {
+		console.error("Failed to fetch chats:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch chats" },
+			{ status: 500 }
+		);
+	}
+}
