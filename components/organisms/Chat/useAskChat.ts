@@ -18,7 +18,7 @@ const useAskChat = (threadId: string) => {
 				await fetch("/api/messages", {
 					method: "POST",
 					body: JSON.stringify({
-						chatId: threadId,
+						threadId,
 						content: message.content,
 						role: message.role
 					})
@@ -34,10 +34,9 @@ const useAskChat = (threadId: string) => {
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
-				const response = await fetch(`/api/messages?chatId=${threadId}`);
+				const response = await fetch(`/api/messages?threadId=${threadId}`);
 				const data = await response.json();
 
-				// Update chat with existing messages
 				chatConfig.setMessages([...data]);
 			} catch (error) {
 				console.error("Failed to fetch messages:", error);
@@ -56,7 +55,7 @@ const useAskChat = (threadId: string) => {
 			await fetch("/api/messages", {
 				method: "POST",
 				body: JSON.stringify({
-					chatId: threadId,
+					threadId,
 					content: chatConfig.input,
 					role: "user"
 				})

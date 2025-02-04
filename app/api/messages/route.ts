@@ -8,21 +8,20 @@ import { messages } from "@/lib/schema";
 export async function POST(request: Request) {
 	try {
 		const body = await request.json();
-		const { chatId, content, role } = body;
+		const { threadId, content, role } = body;
 
-		if (!chatId) {
+		if (!threadId) {
 			return NextResponse.json(
-				{ error: "chatId is required" },
+				{ error: "threadId is required" },
 				{ status: 400 }
 			);
 		}
 
-		console.log({ chatId, content, role });
-
 		const [newMessage] = await db
 			.insert(messages)
+
 			.values({
-				chatId,
+				threadId,
 				content,
 				role
 			})
@@ -41,11 +40,11 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
 	try {
 		const { searchParams } = new URL(request.url);
-		const chatId = searchParams.get("chatId");
+		const threadId = searchParams.get("threadId");
 
-		if (!chatId) {
+		if (!threadId) {
 			return NextResponse.json(
-				{ error: "chatId is required" },
+				{ error: "threadId is required" },
 				{ status: 400 }
 			);
 		}
@@ -53,7 +52,7 @@ export async function GET(request: Request) {
 		const chatMessages = await db
 			.select()
 			.from(messages)
-			.where(eq(messages.chatId, chatId))
+			.where(eq(messages.threadId, threadId))
 			.orderBy(messages.createdAt);
 
 		return NextResponse.json(chatMessages);
