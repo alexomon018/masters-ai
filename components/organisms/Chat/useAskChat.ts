@@ -1,8 +1,16 @@
+"use client";
+
 import { Message, useChat } from "ai/react";
 import { useState, useEffect } from "react";
+import { useThread } from "@/providers/threadProvider";
+import { dxdb } from "@/localdb/dexie";
 
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
+	const { threads, activeThreadId, addMessageToThread, updateThread } =
+		useThread();
+
+	const activeThread = threads.find((thread) => thread.id === activeThreadId);
 
 	const chatConfig = useChat({
 		api: "/api/masters",
@@ -15,29 +23,46 @@ const useAskChat = (threadId: string) => {
 		],
 		onFinish: async (message: Message) => {
 			try {
-				await fetch("/api/messages", {
-					method: "POST",
-					body: JSON.stringify({
-						threadId,
-						content: message.content,
-						role: message.role
-					})
-				});
+				addMessageToThread(
+					message.content,
+					message.role as "user" | "assistant",
+					threadId
+				);
+
+				if (activeThread?.title === "New Chat") {
+					console.log("ovde pjucam");
+					const response = await fetch("/api/name-thread", {
+						method: "POST",
+						body: JSON.stringify({
+							messages: chatConfig.messages
+						})
+					});
+
+					const title = await response.json();
+
+					updateThread(threadId, {
+						title: title
+					});
+				}
 			} catch (error) {
 				console.error("Failed to save message:", error);
 			}
+
 			setStreaming(false);
 		}
 	});
 
-	// Add useEffect to fetch messages
+	// Update useEffect to fetch messages from Dexie
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
-				const response = await fetch(`/api/messages?threadId=${threadId}`);
-				const data = await response.json();
-
-				chatConfig.setMessages([...data]);
+				const messages = await dxdb.getThreadMessages(threadId);
+				const formattedMessages = messages.map((msg) => ({
+					id: msg.id,
+					role: msg.role,
+					content: msg.content
+				}));
+				chatConfig.setMessages([...formattedMessages]);
 			} catch (error) {
 				console.error("Failed to fetch messages:", error);
 			}
@@ -52,14 +77,7 @@ const useAskChat = (threadId: string) => {
 		e.preventDefault();
 
 		if (threadId && chatConfig.input.trim()) {
-			await fetch("/api/messages", {
-				method: "POST",
-				body: JSON.stringify({
-					threadId,
-					content: chatConfig.input,
-					role: "user"
-				})
-			});
+			addMessageToThread(chatConfig.input, "user", threadId);
 		}
 
 		chatConfig.handleSubmit(e);

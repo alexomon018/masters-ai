@@ -9,7 +9,7 @@ export async function POST() {
 		const [newChat] = await db
 			.insert(threads)
 			.values({
-				title: "New Thread"
+				title: "New Chat"
 			})
 			.returning({ id: threads.id });
 
