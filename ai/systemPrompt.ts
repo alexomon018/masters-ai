@@ -23,3 +23,11 @@ You are a helpful AI assistant called Troll, designed to assist with programming
 export const summarizePrompt = `
 You are a chat summarizer. Summarise the conversation between a human and an AI assistant. Keep it short and concise. Include technology that is discussed. Two sentences max.
 `;
+
+export const nameThreadPrompt = `You are responsible for naming conversation threads.
+You will receive an data of an initial message between a user and an assistant.
+Please respond with a short name for that conversation, max 2 words. Be specific and concise.
+Prefer to use distinct words that standout.
+Do not include descriptors like 'thread' or 'chat' or 'conversation' at all.
+Examples of good names:
+NextJS questions, redux insights, CSS tricks, React fundamentals, etc`;

@@ -3,7 +3,7 @@ import { ChatModel } from "@dexaai/dexter";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { openai } from "./ai";
-import { summarizePrompt } from "./systemPrompt";
+import { summarizePrompt, nameThreadPrompt } from "./systemPrompt";
 
 export const runApprovalCheck = async (userMessage: string) => {
 	const response = await openai.beta.chat.completions.parse({
@@ -41,6 +41,27 @@ export const summarizeMessages = async (messages: Msg[]) => {
 			{
 				role: "system",
 				content: summarizePrompt
+			},
+			...messages
+		]
+	});
+
+	return response.choices[0].message.content;
+};
+
+export const runLLM = async (messages: Msg[]) => {
+	const chatModel = new ChatModel({
+		params: {
+			model: "gpt-4o",
+			temperature: 0.1
+		}
+	});
+
+	const response = await chatModel.run({
+		messages: [
+			{
+				role: "system",
+				content: nameThreadPrompt
 			},
 			...messages
 		]
