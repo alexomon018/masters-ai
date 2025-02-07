@@ -5,13 +5,6 @@ import { cn } from "@utils";
 import { AllSidesIcon, ChatBubbleIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
 import { useThread } from "@/providers/threadProvider";
-// Add interface for Chat type
-interface Chat {
-	id: string;
-	createdAt: Date;
-	updatedAt: Date;
-	title: string;
-}
 
 interface SideBarProps {
 	isSidebarOpen: boolean;
@@ -41,6 +34,7 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 		return threads.map((chat) => (
 			<button
 				key={chat.id}
+				type="button"
 				onClick={() => {
 					router.push(`/chat/${chat.id}`);
 				}}

@@ -4,7 +4,7 @@ import { runLLM } from "@/ai/llm";
 export async function POST(request: Request) {
 	try {
 		const body = await request.json();
-		const messages = body.messages;
+		const { messages } = body;
 
 		const response = await runLLM(messages);
 

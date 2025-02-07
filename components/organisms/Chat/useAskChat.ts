@@ -41,7 +41,7 @@ const useAskChat = (threadId: string) => {
 					const title = await response.json();
 
 					updateThread(threadId, {
-						title: title
+						title
 					});
 				}
 			} catch (error) {
