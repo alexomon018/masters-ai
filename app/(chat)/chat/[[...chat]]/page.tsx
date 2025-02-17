@@ -6,7 +6,7 @@ import { ThreadProvider } from "@/providers/threadProvider";
 
 const ChatPage = () => {
 	const params = useParams();
-	const chatId = params.chat?.[0]; // Gets the first segment after /chat/
+	const chatId = params.chat?.[0];
 
 	return (
 		<ThreadProvider>

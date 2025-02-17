@@ -4,13 +4,49 @@ import { Message, useChat } from "ai/react";
 import { useState, useEffect } from "react";
 import { useThread } from "@/providers/threadProvider";
 import { dxdb } from "@/localdb/dexie";
-
+import { useRouter } from "next/navigation";
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
-	const { threads, activeThreadId, addMessageToThread, updateThread } =
-		useThread();
+	const {
+		threads,
+		activeThreadId,
+		addMessageToThread,
+		updateThread,
+		createThread
+	} = useThread();
+	const router = useRouter();
+
+	let currentThreadId = threadId;
 
 	const activeThread = threads.find((thread) => thread.id === activeThreadId);
+
+	const handleMessageFinish = async (message: Message) => {
+		try {
+			await addMessageToThread(
+				message.content,
+				message.role as "user" | "assistant",
+				currentThreadId
+			);
+
+			if (activeThread?.title === "New Chat" || !threadId) {
+				const response = await fetch("/api/name-thread", {
+					method: "POST",
+					body: JSON.stringify({
+						messages: chatConfig.messages
+					})
+				});
+
+				const title = await response.json();
+				await updateThread(currentThreadId, { title });
+			}
+
+			router.push(`/chat/${currentThreadId}`);
+		} catch (error) {
+			console.error("Failed to save message:", error);
+		}
+
+		setStreaming(false);
+	};
 
 	const chatConfig = useChat({
 		api: "/api/masters",
@@ -21,38 +57,9 @@ const useAskChat = (threadId: string) => {
 				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
 			}
 		],
-		onFinish: async (message: Message) => {
-			try {
-				addMessageToThread(
-					message.content,
-					message.role as "user" | "assistant",
-					threadId
-				);
-
-				if (activeThread?.title === "New Chat") {
-					console.log("ovde pjucam");
-					const response = await fetch("/api/name-thread", {
-						method: "POST",
-						body: JSON.stringify({
-							messages: chatConfig.messages
-						})
-					});
-
-					const title = await response.json();
-
-					updateThread(threadId, {
-						title
-					});
-				}
-			} catch (error) {
-				console.error("Failed to save message:", error);
-			}
-
-			setStreaming(false);
-		}
+		onFinish: handleMessageFinish
 	});
 
-	// Update useEffect to fetch messages from Dexie
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
@@ -76,8 +83,11 @@ const useAskChat = (threadId: string) => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		if (threadId && chatConfig.input.trim()) {
-			addMessageToThread(chatConfig.input, "user", threadId);
+		if (!threadId) {
+			currentThreadId = await createThread("New Chat");
+		}
+		if (chatConfig.input.trim()) {
+			await addMessageToThread(chatConfig.input, "user", currentThreadId);
 		}
 
 		chatConfig.handleSubmit(e);

@@ -6,7 +6,7 @@ interface ChatLayoutProps {
 
 const ChatLayout = ({ children }: ChatLayoutProps) => (
 	<div className="flex h-screen flex-col">
-		<main className="flex-1 overflow-hidden">{children}</main>
+		<main className="flex-1">{children}</main>
 	</div>
 );
 

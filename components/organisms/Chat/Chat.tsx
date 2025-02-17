@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { MessageList, InitialQuestions } from "@molecules";
 import { cn } from "@/utils";
 import SideBar from "../SideBar/SideBar";
