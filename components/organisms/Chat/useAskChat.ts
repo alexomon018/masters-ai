@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useThread } from "@/providers/threadProvider";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
+
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
 	const {
@@ -30,6 +31,7 @@ const useAskChat = (threadId: string) => {
 
 			if (activeThread?.title === "New Chat" || !threadId) {
 				const response = await fetch("/api/name-thread", {
+					/* eslint-disable @typescript-eslint/no-use-before-define */
 					method: "POST",
 					body: JSON.stringify({
 						messages: chatConfig.messages
