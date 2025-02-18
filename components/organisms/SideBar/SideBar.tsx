@@ -17,12 +17,10 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 
 	const startNewChat = async () => {
 		try {
-			const id = crypto.randomUUID();
-			createThread("New Chat", id);
-			router.push(`/chat/${id}`);
+			const threadId = await createThread("New Chat");
+			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
-			// You might want to show an error message to the user here
 		}
 	};
 

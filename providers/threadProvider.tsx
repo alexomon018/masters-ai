@@ -14,11 +14,7 @@ interface ThreadContextType {
 	threads: DEX_Thread[];
 	messages: Record<string, DEX_Message[]>;
 	activeThreadId: string | null;
-	createThread: (
-		title: string,
-		id: string,
-		projectId?: string
-	) => Promise<string>;
+	createThread: (title: string, projectId?: string) => Promise<string>;
 	setActiveThreadId: (id: string) => void;
 	addMessageToThread: (
 		content: string,
@@ -64,20 +60,22 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 		messages,
 		activeThreadId,
 
-		async createThread(title: string, id: string, projectId?: string) {
+		async createThread(title: string, projectId?: string) {
+			const threadId = crypto.randomUUID();
+
 			const newThread = {
 				title: title || "New Chat",
-				id: id,
+				id: threadId,
 				projectId: projectId
 			};
 
 			await dxdb.createThread(newThread);
-			const createdThread = await dxdb.threads.get(id);
+			const createdThread = await dxdb.threads.get(threadId);
 			if (createdThread) {
 				setThreads((prev) => [createdThread, ...prev]);
-				setActiveThreadId(id);
+				setActiveThreadId(threadId);
 			}
-			return id;
+			return threadId;
 		},
 
 		async addMessageToThread(
@@ -95,10 +93,8 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 		},
 
 		async updateThread(id: string, updates: Partial<DEX_Thread>) {
-			console.log("updates", updates);
 			await dxdb.updateThread(id, updates);
 			const updatedThread = await dxdb.threads.get(id);
-			console.log("updatedThread", updatedThread);
 
 			if (updatedThread) {
 				setThreads((prev) =>
