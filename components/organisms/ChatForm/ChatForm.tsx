@@ -1,4 +1,3 @@
-import { PoweredBy } from "@molecules";
 import { cn } from "@utils";
 import CustomForm from "../CustomForm/CustomForm";
 
