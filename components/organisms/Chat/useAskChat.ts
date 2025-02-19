@@ -13,7 +13,8 @@ const useAskChat = (threadId: string) => {
 		activeThreadId,
 		addMessageToThread,
 		updateThread,
-		createThread
+		createThread,
+		deleteThread
 	} = useThread();
 	const router = useRouter();
 
@@ -34,7 +35,7 @@ const useAskChat = (threadId: string) => {
 					/* eslint-disable @typescript-eslint/no-use-before-define */
 					method: "POST",
 					body: JSON.stringify({
-						messages: chatConfig.messages
+						messages: [message]
 					})
 				});
 
@@ -101,7 +102,8 @@ const useAskChat = (threadId: string) => {
 		streaming,
 		setStreaming,
 		threadId,
-		handleSubmit
+		handleSubmit,
+		deleteThread
 	};
 };
 

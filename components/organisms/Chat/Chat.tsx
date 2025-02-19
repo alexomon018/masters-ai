@@ -19,7 +19,8 @@ const Chat = ({ threadId }: { threadId: string }) => {
 		handleSubmit,
 		setInput,
 		streaming,
-		setStreaming
+		setStreaming,
+		deleteThread
 	} = useAskChat(threadId);
 
 	const onClickQuestion = (value: string) => {
@@ -51,6 +52,7 @@ const Chat = ({ threadId }: { threadId: string }) => {
 			<SideBar
 				isSidebarOpen={isSidebarOpen}
 				setIsSidebarOpen={setIsSidebarOpen}
+				deleteThread={deleteThread}
 			/>
 			<main
 				className={cn(

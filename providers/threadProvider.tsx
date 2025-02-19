@@ -16,6 +16,7 @@ interface ThreadContextType {
 	activeThreadId: string | null;
 	createThread: (title: string, projectId?: string) => Promise<string>;
 	setActiveThreadId: (id: string) => void;
+	getThreadMessages: (threadId: string) => Promise<DEX_Message[]>;
 	addMessageToThread: (
 		content: string,
 		role: "user" | "assistant",
@@ -43,8 +44,22 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
 			setThreads(threadsData);
 		};
+
 		loadThreads();
 	}, []);
+
+	useEffect(() => {
+		if (activeThreadId) {
+			const loadMessages = async () => {
+				const threadMessages = await dxdb.getThreadMessages(activeThreadId);
+				setMessages((prev) => ({
+					...prev,
+					[activeThreadId]: threadMessages
+				}));
+			};
+			loadMessages();
+		}
+	}, [activeThreadId]);
 
 	// Add new useEffect for URL monitoring using Next.js features
 	useEffect(() => {
@@ -114,6 +129,11 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 			if (activeThreadId === id) {
 				setActiveThreadId(null);
 			}
+		},
+
+		async getThreadMessages(threadId: string) {
+			const messages = await dxdb.getThreadMessages(threadId);
+			return messages;
 		},
 
 		setActiveThreadId: (id: string) => {

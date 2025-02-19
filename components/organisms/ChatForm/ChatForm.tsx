@@ -1,4 +1,3 @@
-import { PoweredBy } from "@molecules";
 import { cn } from "@utils";
 import CustomForm from "../CustomForm/CustomForm";
 
@@ -27,8 +26,13 @@ const ChatForm = ({
 			isSidebarOpen && "ml-80"
 		)}
 	>
-		<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
-		<div className="w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5">
+		<span className="absolute inset-x-0 bottom-full h-10 bg-gradient-to-b to-white pointer-events-none from-white/0" />
+		<div
+			className={cn(
+				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5",
+				!isSidebarOpen && "pl-[5rem]"
+			)}
+		>
 			<CustomForm
 				ref={formRef}
 				onSubmit={onSubmit}
@@ -41,7 +45,6 @@ const ChatForm = ({
 					disabled: streaming
 				}}
 			/>
-			<PoweredBy />
 		</div>
 	</div>
 );

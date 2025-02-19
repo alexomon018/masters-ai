@@ -2,16 +2,21 @@
 
 import React from "react";
 import { cn } from "@utils";
-import { AllSidesIcon, ChatBubbleIcon } from "@radix-ui/react-icons";
+import { AllSidesIcon, ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
 import { useThread } from "@/providers/threadProvider";
 
 interface SideBarProps {
 	isSidebarOpen: boolean;
 	setIsSidebarOpen: (isSidebarOpen: boolean) => void;
+	deleteThread: (threadId: string) => void;
 }
 
-const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
+const SideBar = ({
+	isSidebarOpen,
+	setIsSidebarOpen,
+	deleteThread
+}: SideBarProps) => {
 	const { createThread, threads, activeThreadId } = useThread();
 	const router = useRouter();
 
@@ -41,12 +46,16 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 					activeThreadId === chat.id && "bg-gray-50"
 				)}
 			>
-				<div className="mb-1 flex items-start justify-between">
-					<h3 className="font-medium">{chat.title}</h3>
+				<div className="flex justify-center items-center mb-1">
+					<h3 className="flex-1 font-medium text-left">{chat.title}</h3>
 
-					<span className="text-xs text-gray-500">
+					<span className="mr-2 text-xs text-gray-500">
 						{new Date(chat.created_at).toLocaleDateString()}
 					</span>
+					<TrashIcon
+						className="cursor-pointer size-4"
+						onClick={() => deleteThread(chat.id)}
+					/>
 				</div>
 			</button>
 		));
@@ -55,17 +64,17 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 	return (
 		<>
 			{!isSidebarOpen && (
-				<div className="fixed left-4 top-4 z-30 flex flex-col gap-4">
+				<div className="flex fixed top-4 left-4 z-30 flex-col gap-4">
 					<button
 						type="button"
-						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm md:hidden"
+						className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm md:hidden"
 						onClick={() => setIsSidebarOpen(true)}
 					>
 						<AllSidesIcon className="size-6" />
 					</button>
 					<button
 						type="button"
-						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
+						className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm"
 						onClick={startNewChat}
 					>
 						<ChatBubbleIcon className="size-6" />
@@ -75,7 +84,7 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 
 			<aside
 				className={cn(
-					"sticky top-0 h-screen border-r border-gray-200 bg-white",
+					"sticky top-0 h-screen bg-white border-r border-gray-200",
 					"overflow-y-auto transition-all duration-300",
 					isSidebarOpen ? "w-80" : "w-16",
 					"z-30"
@@ -101,13 +110,13 @@ const SideBar = ({ isSidebarOpen, setIsSidebarOpen }: SideBarProps) => {
 						<ChatBubbleIcon className="size-6" />
 					</button>
 					<AllSidesIcon
-						className="size-6 cursor-pointer"
+						className="cursor-pointer size-6"
 						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 					/>
 				</div>
 
 				{isSidebarOpen && (
-					<div className="w-full justify-between divide-y divide-gray-200">
+					<div className="justify-between w-full divide-y divide-gray-200">
 						{renderChatList()}
 					</div>
 				)}

@@ -13,7 +13,7 @@ const Form = (
 ) => (
 	<form
 		onSubmit={onSubmit}
-		className="relative m-auto flex items-center justify-center gap-4"
+		className="flex relative gap-4 justify-center items-center m-auto"
 		ref={ref}
 	>
 		<input
