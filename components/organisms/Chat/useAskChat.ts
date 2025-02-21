@@ -60,6 +60,9 @@ const useAskChat = (threadId: string) => {
 				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
 			}
 		],
+		body: {
+			chatId: currentThreadId
+		},
 		onFinish: handleMessageFinish
 	});
 
