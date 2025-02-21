@@ -1,34 +1,30 @@
 "use client";
 
 import { Message, useChat } from "ai/react";
-import { useState, useEffect } from "react";
-import { useThread } from "@/providers/threadProvider";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
+import { useLiveQuery } from "dexie-react-hooks";
 
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
-	const {
-		threads,
-		activeThreadId,
-		addMessageToThread,
-		updateThread,
-		createThread,
-		deleteThread
-	} = useThread();
 	const router = useRouter();
 
 	let currentThreadId = threadId;
 
-	const activeThread = threads.find((thread) => thread.id === activeThreadId);
+	const activeThread = useLiveQuery(() =>
+		dxdb.threads.get(currentThreadId || "")
+	);
+
+	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
 
 	const handleMessageFinish = async (message: Message) => {
 		try {
-			await addMessageToThread(
-				message.content,
-				message.role as "user" | "assistant",
-				currentThreadId
-			);
+			await dxdb.addMessage({
+				content: message.content,
+				role: message.role as "user" | "assistant",
+				threadId: currentThreadId
+			});
 
 			if (activeThread?.title === "New Chat" || !threadId) {
 				const response = await fetch("/api/name-thread", {
@@ -40,7 +36,7 @@ const useAskChat = (threadId: string) => {
 				});
 
 				const title = await response.json();
-				await updateThread(currentThreadId, { title });
+				await dxdb.updateThread(currentThreadId, { title });
 			}
 
 			router.push(`/chat/${currentThreadId}`);
@@ -51,15 +47,25 @@ const useAskChat = (threadId: string) => {
 		setStreaming(false);
 	};
 
-	const chatConfig = useChat({
-		api: "/api/masters",
-		initialMessages: [
+	const initialMessages = useMemo(
+		() => [
 			{
 				id: "0",
 				role: "system",
 				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
-			}
+			},
+			...(messages?.map((msg) => ({
+				id: msg.id,
+				role: msg.role,
+				content: msg.content
+			})) || [])
 		],
+		[messages, currentThreadId]
+	);
+
+	const chatConfig = useChat({
+		api: "/api/masters",
+		initialMessages: initialMessages as Message[],
 		body: {
 			chatId: currentThreadId
 		},
@@ -69,7 +75,7 @@ const useAskChat = (threadId: string) => {
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
-				const messages = await dxdb.getThreadMessages(threadId);
+				const messages = await dxdb.getThreadMessages(currentThreadId);
 				const formattedMessages = messages.map((msg) => ({
 					id: msg.id,
 					role: msg.role,
@@ -81,32 +87,35 @@ const useAskChat = (threadId: string) => {
 			}
 		};
 
-		if (threadId) {
+		if (currentThreadId) {
 			fetchMessages();
 		}
-	}, [threadId]);
+	}, [currentThreadId, chatConfig.setMessages]);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (!threadId) {
-			currentThreadId = await createThread("New Chat");
+			currentThreadId = await dxdb.createThread({ title: "New Chat" });
 		}
 		if (chatConfig.input.trim()) {
-			await addMessageToThread(chatConfig.input, "user", currentThreadId);
+			await dxdb.addMessage({
+				content: chatConfig.input,
+				role: "user",
+				threadId: currentThreadId
+			});
 		}
 
 		chatConfig.handleSubmit(e);
 		setStreaming(true);
 	};
-
 	return {
 		...chatConfig,
 		streaming,
 		setStreaming,
 		threadId,
 		handleSubmit,
-		deleteThread
+		activeThread
 	};
 };
 

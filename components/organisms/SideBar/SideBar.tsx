@@ -1,65 +1,102 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { cn } from "@utils";
+import { DEX_Thread, dxdb } from "@/localdb/dexie";
 import { AllSidesIcon, ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
-import { useThread } from "@/providers/threadProvider";
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface SideBarProps {
 	isSidebarOpen: boolean;
 	setIsSidebarOpen: (isSidebarOpen: boolean) => void;
-	deleteThread: (threadId: string) => void;
+	activeThread: DEX_Thread | null;
 }
+
+const ChatItem = React.memo(
+	({
+		chat,
+		isActive,
+		onSelect,
+		onDelete
+	}: {
+		chat: { id: string; title: string; created_at: string };
+		isActive: boolean;
+		onSelect: (id: string) => void;
+		onDelete: (id: string) => void;
+	}) => (
+		<button
+			type="button"
+			onClick={() => onSelect(chat.id)}
+			className={cn(
+				"w-full cursor-pointer p-4 outline-none transition-colors hover:bg-gray-50",
+				isActive && "bg-gray-50"
+			)}
+		>
+			<div className="flex justify-center items-center mb-1">
+				<h3 className="flex-1 font-medium text-left">{chat.title}</h3>
+				<span className="mr-2 text-xs text-gray-500">
+					{new Date(chat.created_at).toLocaleDateString()}
+				</span>
+				<TrashIcon
+					className="cursor-pointer size-4"
+					onClick={(e) => {
+						e.stopPropagation();
+						onDelete(chat.id);
+					}}
+				/>
+			</div>
+		</button>
+	)
+);
 
 const SideBar = ({
 	isSidebarOpen,
 	setIsSidebarOpen,
-	deleteThread
+	activeThread
 }: SideBarProps) => {
-	const { createThread, threads, activeThreadId } = useThread();
+	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
+
 	const router = useRouter();
 
-	const startNewChat = async () => {
+	const deleteThread = useCallback(async (threadId: string) => {
+		await dxdb.deleteThread(threadId);
+	}, []);
+
+	const startNewChat = useCallback(async () => {
 		try {
-			const threadId = await createThread("New Chat");
+			const threadId = await dxdb.createThread({ title: "New Chat" });
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
 		}
-	};
+	}, [router]);
 
-	const renderChatList = () => {
-		if (threads.length === 0) {
+	const handleChatSelect = useCallback(
+		(chatId: string) => {
+			router.push(`/chat/${chatId}`);
+		},
+		[router]
+	);
+
+	const renderChatList = useCallback(() => {
+		if (threads?.length === 0) {
 			return <div className="p-4 text-center text-gray-500">No chats yet</div>;
 		}
 
-		return threads.map((chat) => (
-			<button
+		return threads?.map((chat) => (
+			<ChatItem
 				key={chat.id}
-				type="button"
-				onClick={() => {
-					router.push(`/chat/${chat.id}`);
+				chat={{
+					...chat,
+					created_at: chat.created_at.toISOString()
 				}}
-				className={cn(
-					"w-full cursor-pointer p-4 outline-none transition-colors hover:bg-gray-50",
-					activeThreadId === chat.id && "bg-gray-50"
-				)}
-			>
-				<div className="flex justify-center items-center mb-1">
-					<h3 className="flex-1 font-medium text-left">{chat.title}</h3>
-
-					<span className="mr-2 text-xs text-gray-500">
-						{new Date(chat.created_at).toLocaleDateString()}
-					</span>
-					<TrashIcon
-						className="cursor-pointer size-4"
-						onClick={() => deleteThread(chat.id)}
-					/>
-				</div>
-			</button>
+				isActive={activeThread?.id === chat.id}
+				onSelect={handleChatSelect}
+				onDelete={deleteThread}
+			/>
 		));
-	};
+	}, [threads, activeThread, handleChatSelect, deleteThread]);
 
 	return (
 		<>

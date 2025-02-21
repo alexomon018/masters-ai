@@ -100,14 +100,20 @@ class ChatDB extends Dexie {
 	}
 
 	async createThread(
-		thread: Omit<DEX_Thread, "created_at" | "updated_at" | "last_message_at">
+		thread: Omit<
+			DEX_Thread,
+			"created_at" | "updated_at" | "last_message_at" | "id"
+		>
 	) {
-		await this.threads.add({
+		const newThread = await this.threads.add({
 			...thread,
+			id: crypto.randomUUID(),
 			created_at: new Date(),
 			updated_at: new Date(),
 			last_message_at: new Date()
 		});
+
+		return newThread;
 	}
 
 	async updateThread(id: string, updates: Partial<DEX_Thread>) {

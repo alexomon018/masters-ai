@@ -19,6 +19,7 @@ const getCurrentTime = () => new Date().toLocaleString();
 
 const ragChat = new RAGChat({
 	ratelimit,
+	debug: true,
 	model: openai("gpt-4o-mini", {
 		organization: process.env.OPENAI_ORGANIZATION
 	}),
