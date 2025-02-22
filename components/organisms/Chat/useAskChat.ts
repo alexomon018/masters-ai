@@ -1,7 +1,7 @@
 "use client";
 
 import { Message, useChat } from "ai/react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -15,6 +15,17 @@ const useAskChat = (threadId: string) => {
 	const activeThread = useLiveQuery(() =>
 		dxdb.threads.get(currentThreadId || "")
 	);
+
+	useEffect(() => {
+		const checkThread = async () => {
+			const doesThreadExist = await dxdb.threads.get(currentThreadId || "");
+			if (!doesThreadExist) {
+				router.push("/chat");
+			}
+		};
+
+		checkThread();
+	}, [activeThread, router]);
 
 	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
 
@@ -74,7 +85,9 @@ const useAskChat = (threadId: string) => {
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
-				if (!messages) return;
+				if (!messages) {
+					return;
+				}
 				const formattedMessages = messages.map((msg) => ({
 					id: msg.id,
 					role: msg.role,
