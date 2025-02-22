@@ -128,10 +128,10 @@ class ChatDB extends Dexie {
 
 	async deleteThread(id: string) {
 		await this.transaction("rw", [this.threads, this.messages], async () => {
-			// Delete all messages in the thread
+			// Delete all messages in the thread first
 			await this.messages.where("threadId").equals(id).delete();
-			// Delete the thread itself
-			await this.threads.delete(id);
+			// Then delete the thread itself
+			await this.threads.where("id").equals(id).delete();
 		});
 	}
 }

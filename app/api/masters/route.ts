@@ -19,7 +19,8 @@ const getCurrentTime = () => new Date().toLocaleString();
 
 const ragChat = new RAGChat({
 	ratelimit,
-	model: openai("gpt-4o", {
+	debug: false,
+	model: openai("gpt-4o-mini", {
 		organization: process.env.OPENAI_ORGANIZATION
 	}),
 	vector: new Index({
@@ -27,7 +28,6 @@ const ragChat = new RAGChat({
 		token: process.env.UPSTASH_VECTOR_REST_TOKEN
 	}),
 	redis,
-
 	promptFn: ({ question, chatHistory, context }) => `
 You are a helpful AI assistant called Troll, designed to assist with programming and technical questions using a powerful vector database containing transcripts from all Frontend Masters courses in the past year. Follow these guidelines:
 
@@ -61,12 +61,8 @@ ${question}
 
 export const POST = async (req: NextRequest) => {
 	try {
-		const body = (await req.json()) as {
-			messages: VercelChatMessage[];
-			chatId: string;
-		};
-		const { messages, chatId } = body;
-		const question = messages.at(-1);
+		const body = (await req.json()) as { messages: VercelChatMessage[] };
+		const question = body.messages.at(-1);
 
 		if (!question) {
 			return new NextResponse("question not found", { status: 400 });
@@ -74,7 +70,6 @@ export const POST = async (req: NextRequest) => {
 
 		const response = await ragChat.chat(question.content, {
 			streaming: true,
-			sessionId: chatId,
 			onContextFetched: (context) =>
 				context.map((contextBit) => {
 					const metadata = contextBit.metadata as { url: string };
