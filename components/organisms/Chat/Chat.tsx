@@ -7,7 +7,35 @@ import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
 
-const Chat = ({ threadId }: { threadId: string }) => {
+const SidebarOverlay = React.memo(
+	({
+		isSidebarOpen,
+		setIsSidebarOpen
+	}: {
+		isSidebarOpen: boolean;
+		setIsSidebarOpen: (open: boolean) => void;
+	}) => {
+		if (!isSidebarOpen) return null;
+
+		const handleKeyDown = (e: React.KeyboardEvent) => {
+			if (e.key === "Enter" || e.key === " ") {
+				setIsSidebarOpen(false);
+			}
+		};
+
+		return (
+			<div
+				className="fixed inset-0 z-20 bg-black/20 md:hidden"
+				onClick={() => setIsSidebarOpen(false)}
+				role="button"
+				tabIndex={0}
+				onKeyDown={handleKeyDown}
+			/>
+		);
+	}
+);
+
+const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	const formRef = useRef<HTMLFormElement>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -20,21 +48,24 @@ const Chat = ({ threadId }: { threadId: string }) => {
 		setInput,
 		streaming,
 		setStreaming,
-		deleteThread
+		activeThread
 	} = useAskChat(threadId);
 
-	const onClickQuestion = (value: string) => {
-		setInput(value);
-		setTimeout(() => {
-			formRef.current?.dispatchEvent(
-				new Event("submit", { cancelable: true, bubbles: true })
-			);
-		}, 1);
-	};
+	const onClickQuestion = useCallback(
+		(value: string) => {
+			setInput(value);
+			setTimeout(() => {
+				formRef.current?.dispatchEvent(
+					new Event("submit", { cancelable: true, bubbles: true })
+				);
+			}, 1);
+		},
+		[setInput]
+	);
 
 	useEffect(() => {
 		if (messagesEndRef.current) {
-			messagesEndRef.current.scrollIntoView();
+			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 		}
 	}, [messages]);
 
@@ -44,7 +75,7 @@ const Chat = ({ threadId }: { threadId: string }) => {
 			handleSubmit(e);
 			setStreaming(true);
 		},
-		[handleSubmit]
+		[handleSubmit, setStreaming]
 	);
 
 	return (
@@ -52,28 +83,19 @@ const Chat = ({ threadId }: { threadId: string }) => {
 			<SideBar
 				isSidebarOpen={isSidebarOpen}
 				setIsSidebarOpen={setIsSidebarOpen}
-				deleteThread={deleteThread}
+				activeThread={activeThread || null}
 			/>
 			<main
 				className={cn(
 					"relative mx-auto max-w-screen-md flex-1 overflow-y-auto p-4 !pb-32 md:p-6 md:!pb-40"
 				)}
 			>
-				{isSidebarOpen && (
-					<div
-						className="fixed inset-0 z-20 bg-black/20 md:hidden"
-						onClick={() => setIsSidebarOpen(false)}
-						role="button"
-						tabIndex={0}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								setIsSidebarOpen(false);
-							}
-						}}
-					/>
-				)}
+				<SidebarOverlay
+					isSidebarOpen={isSidebarOpen}
+					setIsSidebarOpen={setIsSidebarOpen}
+				/>
 
-				<div className="w-full">
+				<div className="h-full w-full">
 					<MessageList
 						messages={messages}
 						streaming={streaming}
@@ -94,6 +116,6 @@ const Chat = ({ threadId }: { threadId: string }) => {
 			</main>
 		</div>
 	);
-};
+});
 
 export default Chat;
