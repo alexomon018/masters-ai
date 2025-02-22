@@ -1,7 +1,7 @@
 "use client";
 
 import { Message, useChat } from "ai/react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -75,7 +75,7 @@ const useAskChat = (threadId: string) => {
 	useEffect(() => {
 		const fetchMessages = async () => {
 			try {
-				const messages = await dxdb.getThreadMessages(currentThreadId);
+				if (!messages) return;
 				const formattedMessages = messages.map((msg) => ({
 					id: msg.id,
 					role: msg.role,

@@ -19,8 +19,7 @@ const getCurrentTime = () => new Date().toLocaleString();
 
 const ragChat = new RAGChat({
 	ratelimit,
-	debug: true,
-	model: openai("gpt-4o-mini", {
+	model: openai("gpt-4o", {
 		organization: process.env.OPENAI_ORGANIZATION
 	}),
 	vector: new Index({
@@ -66,8 +65,8 @@ export const POST = async (req: NextRequest) => {
 			messages: VercelChatMessage[];
 			chatId: string;
 		};
-		const question = body.messages.at(-1);
-		const chatId = body.chatId;
+		const { messages, chatId } = body;
+		const question = messages.at(-1);
 
 		if (!question) {
 			return new NextResponse("question not found", { status: 400 });

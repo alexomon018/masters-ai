@@ -33,13 +33,13 @@ const ChatItem = React.memo(
 				isActive && "bg-gray-50"
 			)}
 		>
-			<div className="flex justify-center items-center mb-1">
-				<h3 className="flex-1 font-medium text-left">{chat.title}</h3>
+			<div className="mb-1 flex items-center justify-center">
+				<h3 className="flex-1 text-left font-medium">{chat.title}</h3>
 				<span className="mr-2 text-xs text-gray-500">
 					{new Date(chat.created_at).toLocaleDateString()}
 				</span>
 				<TrashIcon
-					className="cursor-pointer size-4"
+					className="size-4 cursor-pointer"
 					onClick={(e) => {
 						e.stopPropagation();
 						onDelete(chat.id);
@@ -61,6 +61,7 @@ const SideBar = ({
 
 	const deleteThread = useCallback(async (threadId: string) => {
 		await dxdb.deleteThread(threadId);
+		router.push("/chat");
 	}, []);
 
 	const startNewChat = useCallback(async () => {
@@ -101,17 +102,17 @@ const SideBar = ({
 	return (
 		<>
 			{!isSidebarOpen && (
-				<div className="flex fixed top-4 left-4 z-30 flex-col gap-4">
+				<div className="fixed left-4 top-4 z-30 flex flex-col gap-4">
 					<button
 						type="button"
-						className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm md:hidden"
+						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm md:hidden"
 						onClick={() => setIsSidebarOpen(true)}
 					>
 						<AllSidesIcon className="size-6" />
 					</button>
 					<button
 						type="button"
-						className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm"
+						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
 						onClick={startNewChat}
 					>
 						<ChatBubbleIcon className="size-6" />
@@ -121,7 +122,7 @@ const SideBar = ({
 
 			<aside
 				className={cn(
-					"sticky top-0 h-screen bg-white border-r border-gray-200",
+					"sticky top-0 h-screen border-r border-gray-200 bg-white",
 					"overflow-y-auto transition-all duration-300",
 					isSidebarOpen ? "w-80" : "w-16",
 					"z-30"
@@ -147,13 +148,13 @@ const SideBar = ({
 						<ChatBubbleIcon className="size-6" />
 					</button>
 					<AllSidesIcon
-						className="cursor-pointer size-6"
+						className="size-6 cursor-pointer"
 						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 					/>
 				</div>
 
 				{isSidebarOpen && (
-					<div className="justify-between w-full divide-y divide-gray-200">
+					<div className="w-full justify-between divide-y divide-gray-200">
 						{renderChatList()}
 					</div>
 				)}

@@ -14,7 +14,6 @@ const MessageList = ({
 	streaming,
 	messagesEndRef
 }: MessageListProps) => (
-	//hide scrollbar
 	<VList style={{ height: "100%" }}>
 		{messages.map((message: MessageProps) => (
 			<Message key={message.id} {...message} />

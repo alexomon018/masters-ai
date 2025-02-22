@@ -17,14 +17,11 @@ const SidebarOverlay = React.memo(
 	}) => {
 		if (!isSidebarOpen) return null;
 
-		const handleKeyDown = useCallback(
-			(e: React.KeyboardEvent) => {
-				if (e.key === "Enter" || e.key === " ") {
-					setIsSidebarOpen(false);
-				}
-			},
-			[setIsSidebarOpen]
-		);
+		const handleKeyDown = (e: React.KeyboardEvent) => {
+			if (e.key === "Enter" || e.key === " ") {
+				setIsSidebarOpen(false);
+			}
+		};
 
 		return (
 			<div
@@ -98,7 +95,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 					setIsSidebarOpen={setIsSidebarOpen}
 				/>
 
-				<div className="w-full h-full">
+				<div className="h-full w-full">
 					<MessageList
 						messages={messages}
 						streaming={streaming}
