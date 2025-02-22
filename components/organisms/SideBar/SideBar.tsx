@@ -59,10 +59,10 @@ const SideBar = ({
 
 	const router = useRouter();
 
-	const deleteThread = useCallback(async (threadId: string) => {
+	const deleteThread = async (threadId: string) => {
 		await dxdb.deleteThread(threadId);
 		router.push("/chat");
-	}, []);
+	};
 
 	const startNewChat = useCallback(async () => {
 		try {
@@ -80,7 +80,7 @@ const SideBar = ({
 		[router]
 	);
 
-	const renderChatList = useCallback(() => {
+	const renderChatList = () => {
 		if (threads?.length === 0) {
 			return <div className="p-4 text-center text-gray-500">No chats yet</div>;
 		}
@@ -97,7 +97,7 @@ const SideBar = ({
 				onDelete={deleteThread}
 			/>
 		));
-	}, [threads, activeThread, handleChatSelect, deleteThread]);
+	};
 
 	return (
 		<>

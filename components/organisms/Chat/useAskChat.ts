@@ -26,7 +26,9 @@ const useAskChat = (threadId: string) => {
 				threadId: currentThreadId
 			});
 
-			if (activeThread?.title === "New Chat" || !threadId) {
+			const thread = await dxdb.threads.get(currentThreadId || "");
+
+			if (thread?.title === "New Chat" || !currentThreadId) {
 				const response = await fetch("/api/name-thread", {
 					/* eslint-disable @typescript-eslint/no-use-before-define */
 					method: "POST",
@@ -47,21 +49,18 @@ const useAskChat = (threadId: string) => {
 		setStreaming(false);
 	};
 
-	const initialMessages = useMemo(
-		() => [
-			{
-				id: "0",
-				role: "system",
-				content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
-			},
-			...(messages?.map((msg) => ({
-				id: msg.id,
-				role: msg.role,
-				content: msg.content
-			})) || [])
-		],
-		[messages, currentThreadId]
-	);
+	const initialMessages = [
+		{
+			id: "0",
+			role: "system",
+			content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
+		},
+		...(messages?.map((msg) => ({
+			id: msg.id,
+			role: msg.role,
+			content: msg.content
+		})) || [])
+	];
 
 	const chatConfig = useChat({
 		api: "/api/masters",
@@ -95,7 +94,7 @@ const useAskChat = (threadId: string) => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		if (!threadId) {
+		if (!currentThreadId) {
 			currentThreadId = await dxdb.createThread({ title: "New Chat" });
 		}
 		if (chatConfig.input.trim()) {

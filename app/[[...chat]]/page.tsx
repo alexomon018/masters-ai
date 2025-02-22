@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 const ChatPage = () => {
 	const params = useParams();
-	const chatId = params.chat?.[0];
+	const chatId = params.chat?.[1];
 
 	return <Chat threadId={chatId || ""} />;
 };
