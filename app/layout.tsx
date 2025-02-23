@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@utils";
 
 const fontSans = FontSans({
@@ -19,18 +20,20 @@ const RootLayout = ({
 }: Readonly<{
 	children: React.ReactNode;
 }>) => (
-	<html lang="en">
-		<body
-			className={cn(
-				"min-h-screen bg-background font-sans antialiased",
-				fontSans.variable
-			)}
-		>
-			<div className="flex h-screen flex-col">
-				<main className="flex-1">{children}</main>
-			</div>
-		</body>
-	</html>
+	<ClerkProvider>
+		<html lang="en">
+			<body
+				className={cn(
+					"min-h-screen bg-background font-sans antialiased",
+					fontSans.variable
+				)}
+			>
+				<div className="flex h-screen flex-col">
+					<main className="flex-1">{children}</main>
+				</div>
+			</body>
+		</html>
+	</ClerkProvider>
 );
 
 export default RootLayout;
