@@ -11,7 +11,7 @@ import {
 } from "@/components/molecules";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
-export default async function SettingsPage() {
+const SettingsPage = async () => {
 	const { userId } = await auth();
 
 	// Protect the route by checking if the user is signed in
@@ -67,4 +67,6 @@ export default async function SettingsPage() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default SettingsPage;

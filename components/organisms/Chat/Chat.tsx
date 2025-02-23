@@ -1,44 +1,15 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { MessageList, InitialQuestions } from "@molecules";
 import { cn } from "@/utils";
 import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
 
-const SidebarOverlay = React.memo(
-	({
-		isSidebarOpen,
-		setIsSidebarOpen
-	}: {
-		isSidebarOpen: boolean;
-		setIsSidebarOpen: (open: boolean) => void;
-	}) => {
-		if (!isSidebarOpen) return null;
-
-		const handleKeyDown = (e: React.KeyboardEvent) => {
-			if (e.key === "Enter" || e.key === " ") {
-				setIsSidebarOpen(false);
-			}
-		};
-
-		return (
-			<div
-				className="fixed inset-0 z-20 bg-black/20 md:hidden"
-				onClick={() => setIsSidebarOpen(false)}
-				role="button"
-				tabIndex={0}
-				onKeyDown={handleKeyDown}
-			/>
-		);
-	}
-);
-
 const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	const formRef = useRef<HTMLFormElement>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
 	const {
 		messages,
@@ -86,7 +57,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 					"relative mx-auto max-w-screen-md flex-1 overflow-y-auto p-4 !pb-32 md:p-6 md:!pb-40"
 				)}
 			>
-				<div className="h-full w-full">
+				<div className="size-full">
 					<MessageList
 						messages={messages}
 						streaming={streaming}
@@ -102,7 +73,6 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 					input={input}
 					handleInputChange={handleInputChange}
 					streaming={streaming}
-					isSidebarOpen={isSidebarOpen}
 				/>
 			</main>
 		</div>

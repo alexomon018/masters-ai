@@ -7,7 +7,6 @@ interface ChatFormProps {
 	input: string;
 	handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	streaming: boolean;
-	isSidebarOpen: boolean;
 }
 
 const ChatForm = ({
@@ -15,22 +14,19 @@ const ChatForm = ({
 	onSubmit,
 	input,
 	handleInputChange,
-	streaming,
-	isSidebarOpen
+	streaming
 }: ChatFormProps) => (
 	<div
 		className={cn(
 			"fixed inset-x-0 bottom-0 z-10",
 			"flex items-center justify-center",
-			"bg-white",
-			isSidebarOpen && "ml-80"
+			"bg-white"
 		)}
 	>
-		<span className="absolute inset-x-0 bottom-full h-10 bg-gradient-to-b to-white pointer-events-none from-white/0" />
+		<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
 		<div
 			className={cn(
-				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5",
-				!isSidebarOpen && "pl-[5rem]"
+				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5"
 			)}
 		>
 			<CustomForm

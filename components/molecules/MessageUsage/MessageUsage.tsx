@@ -6,11 +6,7 @@ interface MessageUsageProps {
 	resetsAt: string;
 }
 
-export default function MessageUsage({
-	used,
-	total,
-	resetsAt
-}: MessageUsageProps) {
+const MessageUsage = ({ used, total, resetsAt }: MessageUsageProps) => {
 	const percentage = (used / total) * 100;
 
 	return (
@@ -29,4 +25,6 @@ export default function MessageUsage({
 			</p>
 		</div>
 	);
-}
+};
+
+export default MessageUsage;

@@ -3,25 +3,23 @@ interface ShortcutProps {
 	keys: string[];
 }
 
-function Shortcut({ action, keys }: ShortcutProps) {
-	return (
-		<div className="flex items-center justify-between">
-			<span className="text-sm">{action}</span>
-			<div className="flex gap-1">
-				{keys.map((key, index) => (
-					<kbd
-						key={index}
-						className="flex h-5 min-w-[20px] items-center justify-center rounded bg-secondary px-1 text-xs"
-					>
-						{key}
-					</kbd>
-				))}
-			</div>
+const Shortcut = ({ action, keys }: ShortcutProps) => (
+	<div className="flex items-center justify-between">
+		<span className="text-sm">{action}</span>
+		<div className="flex gap-1">
+			{keys.map((key, index) => (
+				<kbd
+					key={index}
+					className="flex h-5 min-w-[20px] items-center justify-center rounded bg-secondary px-1 text-xs"
+				>
+					{key}
+				</kbd>
+			))}
 		</div>
-	);
-}
+	</div>
+);
 
-export default function KeyboardShortcuts() {
+const KeyboardShortcuts = () => {
 	const shortcuts = [
 		{ action: "Search", keys: ["⌘", "K"] },
 		{ action: "New Chat", keys: ["⌘", "0"] }
@@ -41,4 +39,6 @@ export default function KeyboardShortcuts() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default KeyboardShortcuts;

@@ -15,6 +15,7 @@ import {
 } from "./Card/Card";
 import { Avatar, AvatarImage, AvatarFallback } from "./Avatar/Avatar";
 import Progress from "./Progress/Progress";
+
 export {
 	Button,
 	Label,

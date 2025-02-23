@@ -4,9 +4,7 @@ interface SettingsNavigationProps {
 	activeTab: string;
 }
 
-export default function SettingsNavigation({
-	activeTab
-}: SettingsNavigationProps) {
+const SettingsNavigation = ({ activeTab }: SettingsNavigationProps) => {
 	const tabs = [
 		"Account",
 		"Customization",
@@ -29,4 +27,6 @@ export default function SettingsNavigation({
 			))}
 		</nav>
 	);
-}
+};
+
+export default SettingsNavigation;
