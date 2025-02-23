@@ -7,6 +7,14 @@ import Message from "./Message/Message";
 import PoweredBy from "./PoweredBy/PoweredBy";
 import InitialQuestions from "./InitialQuestions/InitialQuestions";
 import MessageList from "./MessageList/MessageList";
+import SettingsHeader from "./SettingsHeader/SettingsHeader";
+import SettingsNavigation from "./SettingsNavigation/SettingsNavigation";
+import CloudSyncSection from "./CloudSyncSection/CloudSyncSection";
+import MessageHistorySection from "./MessageHistorySection/MessageHistorySection";
+import DangerZoneSection from "./DangerZoneSection/DangerZoneSection";
+import UserProfile from "./UserProfile/UserProfile";
+import MessageUsage from "./MessageUsage/MessageUsage";
+import KeyboardShortcuts from "./KeyboardShortcuts/KeyboardShortcuts";
 
 export {
 	ExpertCard,
@@ -17,5 +25,13 @@ export {
 	Message,
 	PoweredBy,
 	InitialQuestions,
-	MessageList
+	MessageList,
+	SettingsHeader,
+	SettingsNavigation,
+	CloudSyncSection,
+	MessageHistorySection,
+	DangerZoneSection,
+	UserProfile,
+	MessageUsage,
+	KeyboardShortcuts
 };

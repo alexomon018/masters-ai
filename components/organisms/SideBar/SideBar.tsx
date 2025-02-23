@@ -3,13 +3,13 @@
 import React, { useCallback } from "react";
 import { cn } from "@utils";
 import { DEX_Thread, dxdb } from "@/localdb/dexie";
-import { AllSidesIcon, ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
+import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { Settings2Icon } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 interface SideBarProps {
-	isSidebarOpen: boolean;
-	setIsSidebarOpen: (isSidebarOpen: boolean) => void;
 	activeThread: DEX_Thread | null;
 }
 
@@ -50,14 +50,12 @@ const ChatItem = React.memo(
 	)
 );
 
-const SideBar = ({
-	isSidebarOpen,
-	setIsSidebarOpen,
-	activeThread
-}: SideBarProps) => {
+const SideBar = ({ activeThread }: SideBarProps) => {
 	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
-
 	const router = useRouter();
+	const { user, isLoaded } = useUser();
+
+	console.log("user", user);
 
 	const deleteThread = async (threadId: string) => {
 		await dxdb.deleteThread(threadId);
@@ -100,66 +98,55 @@ const SideBar = ({
 	};
 
 	return (
-		<>
-			{!isSidebarOpen && (
-				<div className="fixed left-4 top-4 z-30 flex flex-col gap-4">
-					<button
-						type="button"
-						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm md:hidden"
-						onClick={() => setIsSidebarOpen(true)}
-					>
-						<AllSidesIcon className="size-6" />
-					</button>
-					<button
-						type="button"
-						className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
-						onClick={startNewChat}
-					>
-						<ChatBubbleIcon className="size-6" />
-					</button>
-				</div>
-			)}
-
-			<aside
-				className={cn(
-					"sticky top-0 h-screen border-r border-gray-200 bg-white",
-					"overflow-y-auto transition-all duration-300",
-					isSidebarOpen ? "w-80" : "w-16",
-					"z-30"
-				)}
-			>
-				<div
-					className={cn(
-						"flex items-center justify-between border-b border-gray-200 p-4",
-						!isSidebarOpen && "flex-col items-center justify-center gap-5"
-					)}
+		<aside className="sticky top-0 z-30 flex h-screen w-80 flex-col border-r border-gray-200 bg-white">
+			<div className="flex items-center justify-between border-b border-gray-200 p-4">
+				<h2 className="flex-1 text-xl font-semibold">Chat History</h2>
+				<button
+					type="button"
+					className="size-6 cursor-pointer"
+					onClick={startNewChat}
 				>
-					{isSidebarOpen && (
-						<h2 className="flex-1 text-xl font-semibold">Chat History</h2>
-					)}
+					<ChatBubbleIcon className="size-6" />
+				</button>
+			</div>
+
+			<div className="flex-1 overflow-y-auto">
+				<div className="w-full divide-y divide-gray-200">
+					{renderChatList()}
+				</div>
+			</div>
+
+			{isLoaded &&
+				(user ? (
+					<div className="flex items-center justify-between border-t border-gray-200 bg-white p-4">
+						<div className="flex items-center gap-3">
+							<img
+								src={user.imageUrl}
+								alt="User avatar"
+								className="size-8 rounded-full"
+							/>
+							<span className="font-medium">
+								{user.fullName || user.username}
+							</span>
+						</div>
+						<button
+							type="button"
+							className="size-8 rounded-full p-1 hover:bg-gray-100"
+							onClick={() => router.push("/settings")}
+						>
+							<Settings2Icon className="size-6" />
+						</button>
+					</div>
+				) : (
 					<button
 						type="button"
-						className={cn(
-							"mr-5 size-6 cursor-pointer",
-							!isSidebarOpen && "mr-0"
-						)}
-						onClick={startNewChat}
+						className="w-full border-t border-gray-200 bg-white p-4 text-left font-medium hover:bg-gray-50"
+						onClick={() => router.push("/auth")}
 					>
-						<ChatBubbleIcon className="size-6" />
+						Login
 					</button>
-					<AllSidesIcon
-						className="size-6 cursor-pointer"
-						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-					/>
-				</div>
-
-				{isSidebarOpen && (
-					<div className="w-full justify-between divide-y divide-gray-200">
-						{renderChatList()}
-					</div>
-				)}
-			</aside>
-		</>
+				))}
+		</aside>
 	);
 };
 
