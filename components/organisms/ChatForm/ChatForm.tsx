@@ -20,7 +20,8 @@ const ChatForm = ({
 		className={cn(
 			"fixed inset-x-0 bottom-0 z-10",
 			"flex items-center justify-center",
-			"bg-white"
+			"bg-white",
+			"ml-80"
 		)}
 	>
 		<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
