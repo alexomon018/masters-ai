@@ -1,19 +1,22 @@
+import { cn } from "@/utils";
 import { Button } from "@atoms";
 
-const DangerZoneSection = () => (
-	<section>
-		<h2 className="mb-2 text-xl font-semibold text-destructive sm:text-2xl">
-			Danger Zone
-		</h2>
-		<p className="mb-4 text-sm text-muted-foreground sm:text-base">
-			Permanently delete your history from both your local device and our
-			servers.*
-		</p>
-		<Button
-			variant="destructive"
-			className="w-full text-sm sm:w-auto sm:text-base"
-		>
-			Delete Chat History
+type DangerZoneSectionProps = {
+	className?: string;
+	title?: string;
+	description?: string;
+};
+
+const DangerZoneSection = ({
+	className,
+	title = "Danger Zone",
+	description = "Permanently delete your account and all associated data."
+}: DangerZoneSectionProps) => (
+	<section className={cn(className)}>
+		<h2 className="mb-2 text-2xl font-semibold text-destructive">{title}</h2>
+		<p className="mb-4 text-muted-foreground">{description}</p>
+		<Button variant="destructive" className="w-full sm:w-auto">
+			Delete Account
 		</Button>
 	</section>
 );

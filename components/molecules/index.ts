@@ -15,6 +15,7 @@ import DangerZoneSection from "./DangerZoneSection/DangerZoneSection";
 import UserProfile from "./UserProfile/UserProfile";
 import MessageUsage from "./MessageUsage/MessageUsage";
 import KeyboardShortcuts from "./KeyboardShortcuts/KeyboardShortcuts";
+import UpgradeSection from "./UpgradeSection/UpgradeSection";
 
 export {
 	ExpertCard,
@@ -33,5 +34,6 @@ export {
 	DangerZoneSection,
 	UserProfile,
 	MessageUsage,
-	KeyboardShortcuts
+	KeyboardShortcuts,
+	UpgradeSection
 };

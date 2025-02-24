@@ -55,8 +55,6 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
 
-	console.log("user", user);
-
 	const deleteThread = async (threadId: string) => {
 		await dxdb.deleteThread(threadId);
 		router.push("/chat");
@@ -132,7 +130,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 						<button
 							type="button"
 							className="size-8 rounded-full p-1 hover:bg-gray-100"
-							onClick={() => router.push("/settings")}
+							onClick={() => router.push("/settings/account")}
 						>
 							<Settings2Icon className="size-6" />
 						</button>
