@@ -1,8 +1,14 @@
 import { SettingsNavigation } from "@molecules";
 import { HistoryAndSync, AccountUpgrade, Customization } from "@organisms";
 
-const SettingsPage = async ({ params }: { params: { tab: string } }) => {
-	const { tab } = params;
+type Params = Promise<{ tab: string }>;
+
+interface PageProps {
+	params: Params;
+}
+
+const SettingsPage = async ({ params }: PageProps) => {
+	const { tab } = await params;
 
 	const renderTabContent = () => {
 		switch (tab) {

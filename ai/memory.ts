@@ -64,8 +64,6 @@ export const updateSummary = async () => {
 		return msg;
 	});
 
-	console.log({ messagesToSummarize });
-
 	const summary = await summarizeMessages(messagesToSummarize);
 	db.data.summary = summary || "";
 	await db.write();

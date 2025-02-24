@@ -55,8 +55,6 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
 
-	console.log("user", user);
-
 	const deleteThread = async (threadId: string) => {
 		await dxdb.deleteThread(threadId);
 		router.push("/chat");
