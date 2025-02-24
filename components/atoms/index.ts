@@ -15,6 +15,7 @@ import {
 } from "./Card/Card";
 import { Avatar, AvatarImage, AvatarFallback } from "./Avatar/Avatar";
 import Progress from "./Progress/Progress";
+import Textarea from "./TextArea/TextArea";
 
 export {
 	Button,
@@ -33,5 +34,6 @@ export {
 	Avatar,
 	AvatarImage,
 	AvatarFallback,
-	Progress
+	Progress,
+	Textarea
 };

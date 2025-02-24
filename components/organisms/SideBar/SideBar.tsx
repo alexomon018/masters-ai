@@ -132,7 +132,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 						<button
 							type="button"
 							className="size-8 rounded-full p-1 hover:bg-gray-100"
-							onClick={() => router.push("/settings")}
+							onClick={() => router.push("/settings/account")}
 						>
 							<Settings2Icon className="size-6" />
 						</button>

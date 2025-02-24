@@ -15,6 +15,9 @@ import DiveInQuestions from "./DiveInQuestions/DiveInQuestions";
 import InsightfulClips from "./InsightfulClips/InsightfulClips";
 import CustomForm from "./CustomForm/CustomForm";
 import Chat from "./Chat/Chat";
+import HistoryAndSync from "./HistoryAndSync/HistoryAndSync";
+import AccountUpgrade from "./AccountUpgrade/AccountUpgrade";
+import Customization from "./Customization/Customization";
 
 export {
 	Form,
@@ -31,5 +34,8 @@ export {
 	DiveInQuestions,
 	InsightfulClips,
 	CustomForm,
-	Chat
+	Chat,
+	HistoryAndSync,
+	AccountUpgrade,
+	Customization
 };
