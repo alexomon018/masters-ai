@@ -1,17 +1,29 @@
-import { pgTable, text, timestamp, index, uuid } from "drizzle-orm/pg-core";
+import {
+	pgTable,
+	text,
+	timestamp,
+	index,
+	uuid,
+	integer,
+	json
+} from "drizzle-orm/pg-core";
 
 // Define the projects table (new)
 export const projects = pgTable(
 	"projects",
 	{
-		id: uuid("id").primaryKey().defaultRandom(),
+		id: integer("id").notNull().primaryKey(),
+		userProviderId: text("user_provider_id").notNull().unique(),
+		userId: text("user_id").notNull(),
 		name: text("name").notNull(),
 		description: text("description"),
-		userId: text("user_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()
 	},
-	(table) => [index("projects_user_id_idx").on(table.userId)]
+	(table) => [
+		index("projects_user_provider_id_idx").on(table.userProviderId),
+		index("projects_user_id_idx").on(table.userId)
+	]
 );
 
 // Updated chats table (renamed to threads for consistency)
@@ -21,14 +33,16 @@ export const threads = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		title: text("title").notNull(),
 		projectId: uuid("project_id").references(() => projects.id),
-		userId: text("user_id"),
+		userProviderId: text("user_provider_id").notNull(),
+		userId: text("user_id").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 		lastMessageAt: timestamp("last_message_at").defaultNow().notNull()
 	},
 	(table) => [
-		index("threads_user_id_idx").on(table.userId),
-		index("threads_project_id_idx").on(table.projectId)
+		index("threads_user_provider_id_idx").on(table.userProviderId),
+		index("threads_project_id_idx").on(table.projectId),
+		index("threads_user_id_idx").on(table.userId)
 	]
 );
 
@@ -36,13 +50,18 @@ export const threads = pgTable(
 export const messages = pgTable(
 	"messages",
 	{
-		id: uuid("id").primaryKey().defaultRandom(), // Changed from serial to uuid
-		threadId: uuid("thread_id") // Renamed from chatId
+		id: uuid("id").primaryKey().defaultRandom(),
+		userProviderId: text("user_provider_id").notNull(),
+		userId: text("user_id").notNull(),
+		threadId: uuid("thread_id")
 			.notNull()
 			.references(() => threads.id),
-		content: text("content").notNull(),
-		role: text("role").notNull(),
-		createdAt: timestamp("created_at").defaultNow().notNull()
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		data: json()
 	},
-	(table) => [index("thread_id_idx").on(table.threadId)]
+	(table) => [
+		index("messages_user_provider_id_idx").on(table.userProviderId),
+		index("messages_user_id_idx").on(table.userId),
+		index("messages_thread_id_idx").on(table.threadId)
+	]
 );
