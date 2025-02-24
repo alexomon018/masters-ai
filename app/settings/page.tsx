@@ -24,7 +24,10 @@ const SettingsPage = async () => {
 	return (
 		<div className="min-h-screen bg-background">
 			<SettingsHeader />
-
+			<SettingsNavigation
+				activeTab="History & Sync"
+				className="flex lg:hidden"
+			/>
 			{/* Main Content */}
 			<div className="container mx-auto px-4 py-8 sm:px-6 sm:py-10 md:py-12">
 				<div className="mx-auto flex max-w-7xl flex-col gap-10 lg:flex-row lg:gap-16">
@@ -48,7 +51,10 @@ const SettingsPage = async () => {
 
 					{/* Main Settings */}
 					<main className="flex-1 lg:max-w-[700px]">
-						<SettingsNavigation activeTab="History & Sync" />
+						<SettingsNavigation
+							activeTab="History & Sync"
+							className="hidden lg:flex"
+						/>
 
 						{/* Settings Sections */}
 						<div className="mt-8 space-y-8">
