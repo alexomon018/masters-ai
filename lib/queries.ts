@@ -1,15 +1,16 @@
-import { DEX_Message, DEX_Thread } from "@/localdb/dexie";
-import { and, eq, gte, sql, SQL } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import SuperJSON from "superjson";
-import { messages, threads } from "./schema";
-import { REAL_DB } from ".";
+import { messagesTable, threadsTable } from "./schema";
+import db from "./db";
+import type { Message, Thread } from "./schema";
 
 /**
  * Syncs messages from local IndexedDB to the server database
  */
+
 export async function syncMessagesToDb(input: {
 	userId: string;
-	messages: DEX_Message[];
+	messages: Message[];
 }) {
 	if (input.messages.length === 0) {
 		return;
@@ -17,16 +18,20 @@ export async function syncMessagesToDb(input: {
 
 	const messagesToInsert = input.messages.map((message) => ({
 		userId: input.userId,
-		userProviderId: `${input.userId}_${message.id}`,
+		userProvidedId: `${input.userId}_${message.id}`,
+		threadId: message.threadId,
+		createdAt: message.created_at,
 		data: SuperJSON.serialize(message)
 	}));
 
-	await REAL_DB.insert(messages)
+	await db
+		.insert(messagesTable)
 		.values(messagesToInsert)
-		.onDuplicateKeyUpdate({
+		.onConflictDoUpdate({
+			target: messagesTable.userProvidedId,
 			set: {
-				data: sql`VALUES(${messages.data})`,
-				updatedAt: sql`VALUES(${messages.updatedAt})`
+				data: sql`VALUES(${messagesTable.data})`,
+				updated_at: sql`VALUES(${messagesTable.updated_at})`
 			}
 		});
 }
@@ -34,9 +39,9 @@ export async function syncMessagesToDb(input: {
 /**
  * Syncs threads from local IndexedDB to the server database
  */
-export async function syncThreadsToDB(input: {
+export async function syncThreadsToDb(input: {
 	userId: string;
-	threads: DEX_Thread[];
+	threads: Thread[];
 }) {
 	if (input.threads.length === 0) {
 		return;
@@ -44,94 +49,56 @@ export async function syncThreadsToDB(input: {
 
 	const threadsToInsert = input.threads.map((thread) => ({
 		userId: input.userId,
-		userProviderId: `${input.userId}_${thread.id}`,
+		userProvidedId: `${input.userId}_${thread.id}`,
 		title: thread.title,
 		projectId: thread.projectId,
 		createdAt: thread.created_at,
 		updatedAt: thread.updated_at,
-		lastMessageAt: thread.last_message_at
+		lastMessageAt: thread.last_message_at,
+		data: SuperJSON.serialize(thread)
 	}));
 
-	await REAL_DB.insert(threads)
+	await db
+		.insert(threadsTable)
 		.values(threadsToInsert)
-		.onDuplicateKeyUpdate({
+		.onConflictDoUpdate({
+			target: threadsTable.userProvidedId,
 			set: {
-				title: sql`VALUES(${threads.title})`,
-				updatedAt: sql`VALUES(${threads.updatedAt})`,
-				lastMessageAt: sql`VALUES(${threads.lastMessageAt})`
+				data: sql`VALUES(${threadsTable.data})`,
+				updated_at: sql`VALUES(${threadsTable.updated_at})`
 			}
 		});
 }
 
 /**
- * Fetches messages from the server database that are newer than the provided timestamp
+ * Gets all threads for a user
  */
-export async function fetchNewMessages(input: {
-	userId: string;
-	since?: Date;
-}) {
-	const query = REAL_DB.select()
-		.from(messages)
-		.where(eq(messages.userId, input.userId));
-
-	if (input.since) {
-		query.where(gte(messages.updatedAt, input.since));
-	}
-
-	return await query;
+export async function getAllThreads(userId: string) {
+	return db
+		.select()
+		.from(threadsTable)
+		.where(eq(threadsTable.userId, userId))
+		.orderBy(threadsTable.last_message_at);
 }
 
-/**
- * Fetches threads from the server database that are newer than the provided timestamp
- */
-export async function fetchNewThreads(input: { userId: string; since?: Date }) {
-	const query = REAL_DB.select()
-		.from(threads)
-		.where(eq(threads.userId, input.userId));
+export async function getAllThreadsAndMessagesFromDb(userId: string) {
+	const userThreads = await getAllThreads(userId);
 
-	if (input.since) {
-		query.where(gte(threads.updatedAt, input.since));
-	}
+	// Get all thread IDs
+	const threadIds = userThreads.map((thread) => thread.id);
 
-	return await query;
-}
-
-/**
- * Syncs data between local IndexedDB and server database
- */
-export async function syncData(input: {
-	userId: string;
-	localMessages: DEX_Message[];
-	localThreads: DEX_Thread[];
-	lastSyncTimestamp?: Date;
-}) {
-	// First, push local data to server
-	await Promise.all([
-		syncMessagesToDb({
-			userId: input.userId,
-			messages: input.localMessages
-		}),
-		syncThreadsToDB({
-			userId: input.userId,
-			threads: input.localThreads
-		})
-	]);
-
-	// Then, fetch new data from server
-	const [newMessages, newThreads] = await Promise.all([
-		fetchNewMessages({
-			userId: input.userId,
-			since: input.lastSyncTimestamp
-		}),
-		fetchNewThreads({
-			userId: input.userId,
-			since: input.lastSyncTimestamp
-		})
-	]);
+	// Get all messages for these threads in a single query
+	const allMessages =
+		threadIds.length > 0
+			? await db
+					.select()
+					.from(messagesTable)
+					.where(sql`${messagesTable.threadId} IN ${threadIds}`)
+					.orderBy(messagesTable.created_at)
+			: [];
 
 	return {
-		messages: newMessages,
-		threads: newThreads,
-		syncTimestamp: new Date()
+		threads: userThreads,
+		messages: allMessages
 	};
 }

@@ -5,7 +5,7 @@ import {
 	getAllThreadsAndMessagesFromDb,
 	syncMessagesToDb,
 	syncThreadsToDb
-} from "@lib/queries";
+} from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
@@ -15,15 +15,56 @@ export async function GET() {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const { threads, messages } = await getAllThreadsAndMessagesFromDb(user.id);
+	try {
+		const { threads, messages } = await getAllThreadsAndMessagesFromDb(user.id);
 
-	const syncedThreads = await syncThreadsToDb(threads);
-	const syncedMessages = await syncMessagesToDb(messages);
+		const parsedThreads = threads.map(
+			(t) => SuperJSON.deserialize(t.data!) as DEX_Thread
+		);
+		const parsedMessages = messages.map(
+			(m) => SuperJSON.deserialize(m.data!) as DEX_Message
+		);
 
-	const response = SuperJSON.stringify({
-		syncedThreads,
-		syncedMessages
-	});
+		const response = SuperJSON.stringify({
+			threads: parsedThreads,
+			messages: parsedMessages
+		});
 
-	return new Response(response, {});
+		return new Response(response, {
+			headers: { "Content-Type": "application/json" }
+		});
+	} catch (error) {
+		console.error("Error fetching data:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch data" },
+			{ status: 500 }
+		);
+	}
+}
+
+export async function POST(request: Request) {
+	const user = await currentUser();
+
+	if (!user) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const { threads, messages } = await request.json();
+
+	// Sync threads and messages to the database
+	if (threads && threads.length > 0) {
+		await syncThreadsToDb({
+			userId: user.id,
+			threads
+		});
+	}
+
+	if (messages && messages.length > 0) {
+		await syncMessagesToDb({
+			userId: user.id,
+			messages
+		});
+	}
+
+	return NextResponse.json({ success: true });
 }
