@@ -3,7 +3,6 @@ import {
 	timestamp,
 	index,
 	uuid,
-	integer,
 	json,
 	pgTableCreator
 } from "drizzle-orm/pg-core";
@@ -15,7 +14,7 @@ export const createPgTable = pgTableCreator((name) => `master_sync_.${name}`);
 export const projectsTable = createPgTable(
 	"projects_table",
 	{
-		id: integer("id").notNull().primaryKey(),
+		id: uuid("id").primaryKey().defaultRandom(), // Change from integer to uuid
 		userProvidedId: text("user_provided_id").notNull().unique(),
 		userId: text("user_id").notNull(),
 		name: text("name").notNull(),
@@ -34,8 +33,8 @@ export const threadsTable = createPgTable(
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		title: text("title").notNull(),
-		projectId: uuid("project_id").references(() => projectsTable.id),
-		userProvidedId: text("user_provided_id").notNull(),
+		projectId: uuid("project_id").references(() => projectsTable.id), // UUID type to match referenced column, implicitly nullable
+		userProvidedId: text("user_provided_id").notNull().unique(),
 		userId: text("user_id").notNull(),
 		created_at: timestamp("created_at").defaultNow().notNull(),
 		updated_at: timestamp("updated_at").defaultNow().notNull(),
@@ -71,7 +70,7 @@ export const messagesTable = createPgTable(
 );
 
 export type Project = {
-	id: number;
+	id: string; // Changed from number to string (UUID)
 	userProvidedId: string;
 	userId: string;
 	name: string;

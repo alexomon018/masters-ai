@@ -2,7 +2,9 @@ export const syncJsonToDb = async (json: string) => {
 	try {
 		const resposne = await fetch("/api/sync", {
 			method: "POST",
-			body: json,
+			body: JSON.stringify({
+				json
+			}),
 			headers: {
 				"Content-Type": "application/json"
 			}

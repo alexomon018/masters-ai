@@ -7,6 +7,7 @@ import {
 	syncThreadsToDb
 } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
+import type { Message, Thread } from "@/lib/schema";
 
 export async function GET() {
 	const user = await currentUser();
@@ -49,20 +50,25 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const { threads, messages } = await request.json();
+	const { json } = await request.json();
+
+	const { threads, messages } = SuperJSON.parse(json) as {
+		threads: DEX_Thread[];
+		messages: DEX_Message[];
+	};
 
 	// Sync threads and messages to the database
 	if (threads && threads.length > 0) {
 		await syncThreadsToDb({
 			userId: user.id,
-			threads
+			threads: threads as unknown as Thread[]
 		});
 	}
 
 	if (messages && messages.length > 0) {
 		await syncMessagesToDb({
 			userId: user.id,
-			messages
+			messages: messages as unknown as Message[]
 		});
 	}
 

@@ -19,6 +19,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 		setInput,
 		streaming,
 		setStreaming,
+		syncData,
 		activeThread
 	} = useAskChat(threadId);
 
@@ -67,6 +68,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 						<InitialQuestions onClickQuestion={onClickQuestion} />
 					)}
 				</div>
+				<button onClick={syncData}>Sync Data</button>
 				<ChatForm
 					formRef={formRef as React.RefObject<HTMLFormElement>}
 					onSubmit={onSubmit}

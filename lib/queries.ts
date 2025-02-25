@@ -30,8 +30,8 @@ export async function syncMessagesToDb(input: {
 		.onConflictDoUpdate({
 			target: messagesTable.userProvidedId,
 			set: {
-				data: sql`VALUES(${messagesTable.data})`,
-				updated_at: sql`VALUES(${messagesTable.updated_at})`
+				data: sql`excluded.data`,
+				updated_at: sql`CURRENT_TIMESTAMP`
 			}
 		});
 }
@@ -64,8 +64,8 @@ export async function syncThreadsToDb(input: {
 		.onConflictDoUpdate({
 			target: threadsTable.userProvidedId,
 			set: {
-				data: sql`VALUES(${threadsTable.data})`,
-				updated_at: sql`VALUES(${threadsTable.updated_at})`
+				data: sql`excluded.data`,
+				updated_at: sql`CURRENT_TIMESTAMP`
 			}
 		});
 }
