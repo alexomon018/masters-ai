@@ -86,7 +86,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 				key={chat.id}
 				chat={{
 					...chat,
-					created_at: chat.created_at.toISOString()
+					created_at: new Date(chat.created_at).toISOString()
 				}}
 				isActive={activeThread?.id === chat.id}
 				onSelect={handleChatSelect}

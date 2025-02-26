@@ -27,6 +27,14 @@ const useAskChat = (threadId: string) => {
 		checkThread();
 	}, [activeThread, router]);
 
+	const syncData = async () => {
+		await dxdb.exportDBToServer();
+	};
+
+	const importData = async () => {
+		await dxdb.importDBFromServer();
+	};
+
 	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
 
 	const handleMessageFinish = async (message: Message) => {
@@ -41,7 +49,6 @@ const useAskChat = (threadId: string) => {
 
 			if (thread?.title === "New Chat" || !currentThreadId) {
 				const response = await fetch("/api/name-thread", {
-					/* eslint-disable @typescript-eslint/no-use-before-define */
 					method: "POST",
 					body: JSON.stringify({
 						messages: [message]
@@ -127,7 +134,9 @@ const useAskChat = (threadId: string) => {
 		setStreaming,
 		threadId,
 		handleSubmit,
-		activeThread
+		activeThread,
+		syncData,
+		importData
 	};
 };
 

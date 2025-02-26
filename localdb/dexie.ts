@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Dexie, type Table } from "dexie";
+import SuperJSON from "superjson";
+import { syncJsonToDb, syncDbFromServer } from "./sync/utils";
 
 export interface DEX_Project {
 	id: string;
@@ -37,13 +40,6 @@ class ChatDB extends Dexie {
 			projects: "id, name, created_at, updated_at",
 			threads: "id, projectId, created_at, updated_at, last_message_at",
 			messages: "id, threadId, created_at, [threadId+created_at]"
-		});
-
-		// Add hooks for automatic timestamps
-		this.threads.hook("creating", (primKey, obj) => {
-			obj.created_at = new Date();
-			obj.updated_at = new Date();
-			obj.last_message_at = new Date();
 		});
 	}
 
@@ -132,6 +128,38 @@ class ChatDB extends Dexie {
 			await this.messages.where("threadId").equals(id).delete();
 			// Then delete the thread itself
 			await this.threads.where("id").equals(id).delete();
+		});
+	}
+
+	async deleteEverything() {
+		await this.delete();
+	}
+
+	async exportDBToServer() {
+		const threads = await this.threads.toArray();
+		const messages = await this.messages.toArray();
+
+		const jsonString = SuperJSON.stringify({
+			threads,
+			messages
+		});
+
+		await syncJsonToDb(jsonString);
+	}
+
+	async importDBFromServer() {
+		const { threads, messages } = await syncDbFromServer();
+
+		await this.transaction("rw", [this.threads, this.messages], async () => {
+			await this.threads.clear();
+			await this.messages.clear();
+			// Use bulkAdd instead of add for arrays
+			if (threads && threads.length > 0) {
+				await this.threads.bulkAdd(threads);
+			}
+			if (messages && messages.length > 0) {
+				await this.messages.bulkAdd(messages);
+			}
 		});
 	}
 }
