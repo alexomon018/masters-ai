@@ -62,12 +62,26 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 
 	const startNewChat = useCallback(async () => {
 		try {
+			if (threads.length === 0) {
+				const threadId = await dxdb.createThread({ title: "New Chat" });
+				router.push(`/chat/${threadId}`);
+				return;
+			}
+
+			const existingThread = threads.find(
+				(thread) => thread.title === "New Chat"
+			);
+
+			if (existingThread) {
+				return;
+			}
+
 			const threadId = await dxdb.createThread({ title: "New Chat" });
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
 		}
-	}, [router]);
+	}, [router, threads]);
 
 	const handleChatSelect = useCallback(
 		(chatId: string) => {
