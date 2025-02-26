@@ -55,17 +55,13 @@ export const messagesTable = createPgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		userProvidedId: text("user_provided_id").notNull().unique(),
 		userId: text("user_id").notNull(),
-		threadId: uuid("thread_id")
-			.notNull()
-			.references(() => threadsTable.id),
 		created_at: timestamp("created_at").defaultNow().notNull(),
 		data: json().$type<SuperJSONResult>(),
 		updated_at: timestamp("updated_at").defaultNow().notNull()
 	},
 	(table) => [
 		index("messages_user_provided_id_idx").on(table.userProvidedId),
-		index("messages_user_id_idx").on(table.userId),
-		index("messages_thread_id_idx").on(table.threadId)
+		index("messages_user_id_idx").on(table.userId)
 	]
 );
 

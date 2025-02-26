@@ -29,7 +29,7 @@ export const syncDbFromServer = async () => {
 			throw new Error("Failed to sync db from server");
 		}
 
-		const json = await response.json();
+		const { json } = await response.json();
 
 		const { threads, messages } = json;
 

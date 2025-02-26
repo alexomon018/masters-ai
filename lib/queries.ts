@@ -85,7 +85,10 @@ export async function getAllThreadsAndMessagesFromDb(userId: string) {
 	const userThreads = await getAllThreads(userId);
 
 	// Get all thread IDs
-	const threadIds = userThreads.map((thread) => thread.id);
+	const threadIds = userThreads.map((thread) => {
+		const parsedData = SuperJSON.deserialize(thread.data!) as Thread;
+		return parsedData.id;
+	});
 
 	// Get all messages for these threads in a single query
 	const allMessages =
@@ -93,12 +96,20 @@ export async function getAllThreadsAndMessagesFromDb(userId: string) {
 			? await db
 					.select()
 					.from(messagesTable)
-					.where(sql`${messagesTable.threadId} IN ${threadIds}`)
+					.where(eq(messagesTable.userId, userId))
 					.orderBy(messagesTable.created_at)
 			: [];
 
+	// Filter messages by threadId from the data field
+	const filteredMessages = allMessages.filter((message) => {
+		if (!message.data) return false;
+		// Parse the data field using SuperJSON and cast it to the Message type
+		const parsedData = SuperJSON.deserialize(message.data) as Message;
+		return parsedData?.threadId && threadIds.includes(parsedData.threadId);
+	});
+
 	return {
 		threads: userThreads,
-		messages: allMessages
+		messages: filteredMessages
 	};
 }

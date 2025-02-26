@@ -31,6 +31,10 @@ const useAskChat = (threadId: string) => {
 		await dxdb.exportDBToServer();
 	};
 
+	const importData = async () => {
+		await dxdb.importDBFromServer();
+	};
+
 	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
 
 	const handleMessageFinish = async (message: Message) => {
@@ -131,7 +135,8 @@ const useAskChat = (threadId: string) => {
 		threadId,
 		handleSubmit,
 		activeThread,
-		syncData
+		syncData,
+		importData
 	};
 };
 

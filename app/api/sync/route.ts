@@ -50,27 +50,32 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const { json } = await request.json();
+	try {
+		const { json } = await request.json();
 
-	const { threads, messages } = SuperJSON.parse(json) as {
-		threads: DEX_Thread[];
-		messages: DEX_Message[];
-	};
+		const { threads, messages } = SuperJSON.parse(json) as {
+			threads: DEX_Thread[];
+			messages: DEX_Message[];
+		};
 
-	// Sync threads and messages to the database
-	if (threads && threads.length > 0) {
-		await syncThreadsToDb({
-			userId: user.id,
-			threads: threads as unknown as Thread[]
-		});
+		// Sync threads and messages to the database
+		if (threads && threads.length > 0) {
+			await syncThreadsToDb({
+				userId: user.id,
+				threads: threads as unknown as Thread[]
+			});
+		}
+
+		if (messages && messages.length > 0) {
+			await syncMessagesToDb({
+				userId: user.id,
+				messages: messages as unknown as Message[]
+			});
+		}
+
+		return NextResponse.json({ success: true });
+	} catch (error) {
+		console.error("Error syncing data:", error);
+		return NextResponse.json({ error: "Failed to sync data" }, { status: 500 });
 	}
-
-	if (messages && messages.length > 0) {
-		await syncMessagesToDb({
-			userId: user.id,
-			messages: messages as unknown as Message[]
-		});
-	}
-
-	return NextResponse.json({ success: true });
 }

@@ -41,13 +41,6 @@ class ChatDB extends Dexie {
 			threads: "id, projectId, created_at, updated_at, last_message_at",
 			messages: "id, threadId, created_at, [threadId+created_at]"
 		});
-
-		// Add hooks for automatic timestamps
-		this.threads.hook("creating", (primKey, obj) => {
-			obj.created_at = new Date();
-			obj.updated_at = new Date();
-			obj.last_message_at = new Date();
-		});
 	}
 
 	async getProjectThreads(projectId: string) {
@@ -160,8 +153,13 @@ class ChatDB extends Dexie {
 		await this.transaction("rw", [this.threads, this.messages], async () => {
 			await this.threads.clear();
 			await this.messages.clear();
-			await this.threads.add(threads);
-			await this.messages.add(messages);
+			// Use bulkAdd instead of add for arrays
+			if (threads && threads.length > 0) {
+				await this.threads.bulkAdd(threads);
+			}
+			if (messages && messages.length > 0) {
+				await this.messages.bulkAdd(messages);
+			}
 		});
 	}
 }
