@@ -5,7 +5,7 @@ import { Button } from "@atoms";
 import { ArrowLeft } from "lucide-react";
 import { getQueryClient } from "@/providers/getQueryClient";
 import Link from "next/link";
-import queryKeys from "@/constants/queryKeys";
+import { queryKeys } from "@/constants";
 
 const SettingsHeader = () => {
 	const queryClient = getQueryClient();

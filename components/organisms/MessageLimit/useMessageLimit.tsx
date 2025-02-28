@@ -1,5 +1,5 @@
-import queryKeys from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/constants";
 
 interface MessageLimitInfo {
 	userId: string;
@@ -8,9 +8,6 @@ interface MessageLimitInfo {
 	total: number;
 	resetsAt: string;
 }
-
-// TO DO:
-// Add react query to fetch message limit
 
 export const useMessageLimit = () => {
 	const {

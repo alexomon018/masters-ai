@@ -7,6 +7,7 @@ import { Index } from "@upstash/vector";
 import { RAGChat, openai } from "@upstash/rag-chat";
 import { aiUseChatAdapter } from "@upstash/rag-chat/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
+import { messageAllowed } from "@/constants";
 import redis from "@/lib/redis";
 
 const ratelimit = new Ratelimit({
@@ -72,11 +73,10 @@ export const POST = async (req: NextRequest) => {
 		if (!isAuthenticated) {
 			const messageCount = (await redis.get(messageKey)) || 0;
 
-			if (Number(messageCount) >= 10) {
+			if (Number(messageCount) >= messageAllowed.free) {
 				return NextResponse.json(
 					{
-						error:
-							"Free tier limit reached. Please create an account to continue."
+						error: "You've reached your daily message limit of 3 messages."
 					},
 					{ status: 403 }
 				);
@@ -88,10 +88,10 @@ export const POST = async (req: NextRequest) => {
 			// For authenticated users, check against 20 message limit
 			const messageCount = (await redis.get(messageKey)) || 0;
 
-			if (Number(messageCount) >= 20) {
+			if (Number(messageCount) >= messageAllowed.authenticated) {
 				return NextResponse.json(
 					{
-						error: "You've reached your monthly message limit of 20 messages."
+						error: "You've reached your daily message limit of 3 messages."
 					},
 					{ status: 403 }
 				);
@@ -100,7 +100,7 @@ export const POST = async (req: NextRequest) => {
 			// Increment authenticated user's message count
 			await redis.incr(messageKey);
 
-			// Optional: Set expiry to reset after a month if not already set
+			// Optional: Set expiry to reset after a day if not already set
 			// This checks if TTL returns -1 (key exists but no expiry set)
 			const ttl = await redis.ttl(messageKey);
 			if (ttl === -1) {

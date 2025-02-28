@@ -1,4 +1,5 @@
 import React from "react";
+import { useUser } from "@clerk/nextjs";
 import { useMessageLimit } from "./useMessageLimit";
 
 interface MessageLimitDisplayProps {
@@ -10,6 +11,8 @@ const MessageLimitDisplay: React.FC<MessageLimitDisplayProps> = ({
 }) => {
 	const { messageLimit, loading, error } = useMessageLimit();
 
+	const { user } = useUser();
+
 	if (loading) {
 		return (
 			<div className={`text-sm opacity-75 ${className}`}>
@@ -20,12 +23,30 @@ const MessageLimitDisplay: React.FC<MessageLimitDisplayProps> = ({
 
 	if (error) {
 		return (
-			<div className={`text-sm text-red-500 ${className}`}>Error: {error}</div>
+			<div className={`text-sm text-red-500 ${className}`}>
+				Error: {error instanceof Error ? error.message : String(error)}
+			</div>
 		);
 	}
 
 	if (!messageLimit) {
 		return null;
+	}
+
+	if (messageLimit.remaining === 0 && !user) {
+		return (
+			<div className={`text-sm text-amber-500 ${className}`}>
+				{`You've reached the message limit. Sign in to get a higher limit (it's free!).`}
+			</div>
+		);
+	}
+
+	if (messageLimit.remaining === 0 && user) {
+		return (
+			<div className={`text-sm text-amber-500 ${className}`}>
+				{`You've reached the message limit. Upgrade to a paid plan to continue.`}
+			</div>
+		);
 	}
 
 	return (

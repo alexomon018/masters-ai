@@ -1,22 +1,33 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import redis from "@/lib/redis";
+import { messageAllowed } from "@/constants";
 
 export async function GET(req: Request) {
 	const user = await currentUser();
 	const isAuthenticated = !!user;
 
+	let ipAddress = req.headers.get("x-real-ip") as string;
+
+	const forwardedFor = req.headers.get("x-forwarded-for") as string;
+	if (!ipAddress && forwardedFor) {
+		ipAddress = forwardedFor?.split(",").at(0) ?? "Unknown";
+	}
+
 	// Track message usage based on user ID or IP
 	const trackingId = isAuthenticated
 		? `user:${user!.id}`
-		: `anonymous:${req.headers.get("x-forwarded-for") || "unknown"}`;
+		: `anonymous:${ipAddress || "unknown"}`;
 	const messageKey = `message_count:${trackingId}`;
 
 	try {
-		const messageCount = Number((await redis.get(messageKey)) || 0);
+		// Get the message count from Redis, defaulting to 0 if it doesn't exist
+		const messageCount = (await redis.exists(messageKey))
+			? Number(await redis.get(messageKey))
+			: 0;
+
 		const ttl = await redis.ttl(messageKey);
 
-		// Calculate reset date (if TTL exists)
 		let resetsAt = "never";
 		if (ttl > 0) {
 			const resetDate = new Date();
@@ -25,7 +36,9 @@ export async function GET(req: Request) {
 		}
 
 		// Set limits based on authentication status
-		const maxMessages = isAuthenticated ? 20 : 10;
+		const maxMessages = isAuthenticated
+			? messageAllowed.authenticated
+			: messageAllowed.free;
 		const remainingMessages = Math.max(0, maxMessages - messageCount);
 
 		const usageData = {
