@@ -3,12 +3,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Message as VercelChatMessage } from "ai";
-import { Redis } from "@upstash/redis";
 import { Index } from "@upstash/vector";
 import { RAGChat, openai } from "@upstash/rag-chat";
 import { aiUseChatAdapter } from "@upstash/rag-chat/nextjs";
-
-const redis = Redis.fromEnv();
+import { currentUser } from "@clerk/nextjs/server";
+import { messageAllowed } from "@/constants";
+import redis from "@/lib/redis";
 
 const ratelimit = new Ratelimit({
 	redis,
@@ -61,6 +61,54 @@ ${question}
 
 export const POST = async (req: NextRequest) => {
 	try {
+		const user = await currentUser();
+		const isAuthenticated = !!user;
+
+		// Track message usage based on user ID or IP
+		const trackingId = isAuthenticated
+			? `user:${user!.id}`
+			: `anonymous:${req.headers.get("x-forwarded-for") || "unknown"}`;
+		const messageKey = `message_count:${trackingId}`;
+
+		if (!isAuthenticated) {
+			const messageCount = (await redis.get(messageKey)) || 0;
+
+			if (Number(messageCount) >= messageAllowed.free) {
+				return NextResponse.json(
+					{
+						error: "You've reached your daily message limit of 3 messages."
+					},
+					{ status: 403 }
+				);
+			}
+
+			// Increment their message count
+			await redis.incr(messageKey);
+		} else {
+			// For authenticated users, check against 20 message limit
+			const messageCount = (await redis.get(messageKey)) || 0;
+
+			if (Number(messageCount) >= messageAllowed.authenticated) {
+				return NextResponse.json(
+					{
+						error: "You've reached your daily message limit of 3 messages."
+					},
+					{ status: 403 }
+				);
+			}
+
+			// Increment authenticated user's message count
+			await redis.incr(messageKey);
+
+			// Optional: Set expiry to reset after a day if not already set
+			// This checks if TTL returns -1 (key exists but no expiry set)
+			const ttl = await redis.ttl(messageKey);
+			if (ttl === -1) {
+				// Set expiry to 1 day (in seconds)
+				await redis.expire(messageKey, 24 * 60 * 60);
+			}
+		}
+
 		const body = (await req.json()) as { messages: VercelChatMessage[] };
 		const question = body.messages.at(-1);
 

@@ -5,10 +5,13 @@ import { useState, useEffect } from "react";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
+import { getQueryClient } from "@/providers/getQueryClient";
+import { queryKeys } from "@/constants";
 
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
 	const router = useRouter();
+	const queryClient = getQueryClient();
 
 	let currentThreadId = threadId;
 
@@ -58,10 +61,12 @@ const useAskChat = (threadId: string) => {
 				const title = await response.json();
 				await dxdb.updateThread(currentThreadId, { title });
 			}
+			queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
 
-			router.push(`/chat/${currentThreadId}`);
+			// router.push(`/chat/${currentThreadId}`);
 		} catch (error) {
 			console.error("Failed to save message:", error);
+			setStreaming(false);
 		}
 
 		setStreaming(false);
@@ -85,6 +90,28 @@ const useAskChat = (threadId: string) => {
 		initialMessages: initialMessages as Message[],
 		body: {
 			chatId: currentThreadId
+		},
+
+		onResponse: async (response) => {
+			if (response.status === 403) {
+				await dxdb.addMessage({
+					content: "You've reached your daily message limit of 3 messages.",
+					role: "assistant",
+					threadId: currentThreadId
+				});
+
+				chatConfig.setMessages([
+					...chatConfig.messages,
+					{
+						id: "403",
+						role: "assistant",
+						content: "You've reached your daily message limit of 3 messages."
+					}
+				]);
+				setStreaming(false);
+
+				chatConfig.stop();
+			}
 		},
 		onFinish: handleMessageFinish
 	});

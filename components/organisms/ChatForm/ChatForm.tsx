@@ -1,5 +1,6 @@
 import { cn } from "@utils";
 import CustomForm from "../CustomForm/CustomForm";
+import MessageLimit from "../MessageLimit/MessageLimit";
 
 interface ChatFormProps {
 	formRef: React.RefObject<HTMLFormElement>;
@@ -19,11 +20,12 @@ const ChatForm = ({
 	<div
 		className={cn(
 			"fixed inset-x-0 bottom-0 z-10",
-			"flex items-center justify-center",
+			"flex flex-col items-center justify-center",
 			"bg-white",
 			"ml-80"
 		)}
 	>
+		<MessageLimit />
 		<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
 		<div
 			className={cn(
