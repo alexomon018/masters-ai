@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Dexie, type Table } from "dexie";
-import SuperJSON from "superjson";
-import { syncJsonToDb, syncDbFromServer } from "./sync/utils";
 
 export interface DEX_Project {
 	id: string;
@@ -133,34 +131,6 @@ class ChatDB extends Dexie {
 
 	async deleteEverything() {
 		await this.delete();
-	}
-
-	async exportDBToServer() {
-		const threads = await this.threads.toArray();
-		const messages = await this.messages.toArray();
-
-		const jsonString = SuperJSON.stringify({
-			threads,
-			messages
-		});
-
-		await syncJsonToDb(jsonString);
-	}
-
-	async importDBFromServer() {
-		const { threads, messages } = await syncDbFromServer();
-
-		await this.transaction("rw", [this.threads, this.messages], async () => {
-			await this.threads.clear();
-			await this.messages.clear();
-			// Use bulkAdd instead of add for arrays
-			if (threads && threads.length > 0) {
-				await this.threads.bulkAdd(threads);
-			}
-			if (messages && messages.length > 0) {
-				await this.messages.bulkAdd(messages);
-			}
-		});
 	}
 }
 

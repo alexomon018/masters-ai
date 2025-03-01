@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { getQueryClient } from "@/providers/getQueryClient";
 import Link from "next/link";
 import { queryKeys } from "@/constants";
+import { dxdb } from "@/localdb/dexie";
 
 const SettingsHeader = () => {
 	const queryClient = getQueryClient();
@@ -15,6 +16,7 @@ const SettingsHeader = () => {
 	const onSignOut = async () => {
 		await queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
 		await signOut();
+		await dxdb.deleteEverything();
 	};
 
 	return (

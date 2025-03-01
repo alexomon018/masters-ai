@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { MessageList, InitialQuestions } from "@molecules";
 import { cn } from "@/utils";
+import useSync from "@/components/molecules/CloudSyncSection/useSync";
 import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
@@ -21,6 +22,8 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 		setStreaming,
 		activeThread
 	} = useAskChat(threadId);
+
+	useSync();
 
 	const onClickQuestion = useCallback(
 		(value: string) => {
