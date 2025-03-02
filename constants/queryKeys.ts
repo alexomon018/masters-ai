@@ -1,5 +1,6 @@
 const queryKeys = {
-	messageLimit: () => ["message-limit"]
+	messageLimit: () => ["message-limit"],
+	sync: () => ["sync"]
 };
 
 export default queryKeys;

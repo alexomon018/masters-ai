@@ -40,8 +40,6 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 			total: 20,
 			resetsAt
 		};
-
-		console.log("usageData", usageData);
 	} catch (error) {
 		console.error("Error fetching usage data:", error);
 		// Will use the fallback data defined above
