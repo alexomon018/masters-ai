@@ -51,6 +51,7 @@ export async function syncThreadsToDb(input: {
 		userId: input.userId,
 		userProvidedId: `${input.userId}_${thread.id}`,
 		title: thread.title,
+		threadId: thread.id,
 		projectId: thread.projectId,
 		createdAt: thread.created_at,
 		updatedAt: thread.updated_at,
@@ -111,5 +112,28 @@ export async function getAllThreadsAndMessagesFromDb(userId: string) {
 	return {
 		threads: userThreads,
 		messages: filteredMessages
+	};
+}
+
+export async function deleteThreadFromDb(threadId: string) {
+	// Delete all messages for this thread in a single query
+	const deletedMessages = await db
+		.delete(messagesTable)
+		.where(eq(messagesTable.threadId, threadId))
+		.returning();
+
+	const deletedMessagesCount = deletedMessages.length;
+
+	// Delete the thread directly using the threadId column
+	const deletedThreads = await db
+		.delete(threadsTable)
+		.where(eq(threadsTable.threadId, threadId))
+		.returning();
+
+	const deletedThreadsCount = deletedThreads.length;
+
+	return {
+		deletedMessagesCount,
+		deletedThreadsCount
 	};
 }

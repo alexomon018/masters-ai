@@ -14,24 +14,13 @@ const useAskChat = (threadId: string) => {
 	const router = useRouter();
 	const queryClient = getQueryClient();
 
-	const { exportDBToServer } = useSync();
+	useSync();
 
 	let currentThreadId = threadId;
 
 	const activeThread = useLiveQuery(() =>
 		dxdb.threads.get(currentThreadId || "")
 	);
-
-	useEffect(() => {
-		const checkThread = async () => {
-			const doesThreadExist = await dxdb.threads.get(currentThreadId || "");
-			if (!doesThreadExist) {
-				router.push("/chat");
-			}
-		};
-
-		checkThread();
-	}, [activeThread, router]);
 
 	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
 
@@ -57,8 +46,6 @@ const useAskChat = (threadId: string) => {
 				await dxdb.updateThread(currentThreadId, { title });
 			}
 			queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
-
-			await exportDBToServer();
 
 			router.push(`/chat/${currentThreadId}`);
 		} catch (error) {

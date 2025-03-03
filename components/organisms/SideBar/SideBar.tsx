@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React from "react";
 import { cn } from "@utils";
-import { DEX_Thread, dxdb } from "@/localdb/dexie";
+import { DEX_Thread } from "@/localdb/dexie";
 import { Avatar, AvatarFallback, AvatarImage } from "@atoms";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { Settings2Icon } from "lucide-react";
-import { useLiveQuery } from "dexie-react-hooks";
+import useSideBar from "./useSideBar";
 
 interface SideBarProps {
 	activeThread: DEX_Thread | null;
@@ -52,47 +51,16 @@ const ChatItem = React.memo(
 );
 
 const SideBar = ({ activeThread }: SideBarProps) => {
-	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
 	const router = useRouter();
-	const { user, isLoaded } = useUser();
 
-	const deleteThread = async (threadId: string) => {
-		await dxdb.deleteThread(threadId);
-		router.push("/chat");
-	};
-
-	const startNewChat = useCallback(async () => {
-		try {
-			if (threads.length === 0) {
-				const threadId = await dxdb.createThread({ title: "New Chat" });
-				router.push(`/chat/${threadId}`);
-				return;
-			}
-
-			const existingThread = threads.find(
-				(thread) => thread.title === "New Chat"
-			);
-
-			if (existingThread) {
-				return;
-			}
-
-			const threadId = await dxdb.createThread({ title: "New Chat" });
-
-			console.log(threadId);
-
-			router.push(`/chat/${threadId}`);
-		} catch (error) {
-			console.error("Failed to create chat:", error);
-		}
-	}, [router, threads]);
-
-	const handleChatSelect = useCallback(
-		(chatId: string) => {
-			router.push(`/chat/${chatId}`);
-		},
-		[router]
-	);
+	const {
+		threads,
+		deleteThread,
+		startNewChat,
+		handleChatSelect,
+		user,
+		isLoaded
+	} = useSideBar();
 
 	const renderChatList = () => {
 		if (threads?.length === 0) {

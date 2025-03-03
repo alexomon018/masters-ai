@@ -8,6 +8,7 @@ import {
 } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Message, Thread } from "@/lib/schema";
+import { deleteThreadFromDb } from "@/lib/queries";
 
 export async function GET() {
 	const user = await currentUser();
@@ -77,5 +78,38 @@ export async function POST(request: Request) {
 	} catch (error) {
 		console.error("Error syncing data:", error);
 		return NextResponse.json({ error: "Failed to sync data" }, { status: 500 });
+	}
+}
+
+export async function DELETE(request: Request) {
+	const user = await currentUser();
+
+	if (!user) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const { threadId } = await request.json();
+
+	if (!threadId) {
+		return NextResponse.json(
+			{ error: "Thread ID is required" },
+			{ status: 400 }
+		);
+	}
+
+	try {
+		const result = await deleteThreadFromDb(threadId);
+
+		return NextResponse.json({
+			success: true,
+			deletedMessagesCount: result.deletedMessagesCount,
+			deletedThreadsCount: result.deletedThreadsCount
+		});
+	} catch (error) {
+		console.error("Error deleting thread:", error);
+		return NextResponse.json(
+			{ error: "Failed to delete thread" },
+			{ status: 500 }
+		);
 	}
 }

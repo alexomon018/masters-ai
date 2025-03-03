@@ -119,12 +119,8 @@ export const POST = async (req: NextRequest) => {
 
 		const response = await ragChat.chat(question.content, {
 			streaming: true,
-			metadata: {
-				name: user?.unsafeMetadata.name || "",
-				occupation: user?.unsafeMetadata.occupation || "",
-				traits: user?.unsafeMetadata.traits || "",
-				preferences: user?.unsafeMetadata.preferences || ""
-			},
+			historyLength: 10,
+
 			onContextFetched: (context) =>
 				context.map((contextBit) => {
 					const metadata = contextBit.metadata as { url: string };
@@ -132,7 +128,13 @@ export const POST = async (req: NextRequest) => {
 						id: contextBit.id,
 						data: JSON.stringify({
 							text: contextBit.data,
-							url: metadata.url
+							url: metadata.url,
+							userData: {
+								name: user?.unsafeMetadata.name || "",
+								occupation: user?.unsafeMetadata.occupation || "",
+								traits: user?.unsafeMetadata.traits || "",
+								preferences: user?.unsafeMetadata.preferences || ""
+							}
 						}),
 						metadata: contextBit.metadata
 					};
