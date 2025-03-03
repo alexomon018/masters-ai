@@ -3,6 +3,7 @@
 import React, { useCallback } from "react";
 import { cn } from "@utils";
 import { DEX_Thread, dxdb } from "@/localdb/dexie";
+import { Avatar, AvatarFallback, AvatarImage } from "@atoms";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -77,6 +78,9 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 			}
 
 			const threadId = await dxdb.createThread({ title: "New Chat" });
+
+			console.log(threadId);
+
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
@@ -132,11 +136,12 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 				(user ? (
 					<div className="flex items-center justify-between border-t border-gray-200 bg-white p-4">
 						<div className="flex items-center gap-3">
-							<img
-								src={user.imageUrl}
-								alt="User avatar"
-								className="size-8 rounded-full"
-							/>
+							<Avatar>
+								<AvatarImage src={user.imageUrl} alt="User avatar" />
+								<AvatarFallback>
+									{user.fullName?.charAt(0) || user.username?.charAt(0)}
+								</AvatarFallback>
+							</Avatar>
 							<span className="font-medium">
 								{user.fullName || user.username}
 							</span>

@@ -6,12 +6,15 @@ import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getQueryClient } from "@/providers/getQueryClient";
+import useSync from "@/components/molecules/CloudSyncSection/useSync";
 import { queryKeys } from "@/constants";
 
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
 	const router = useRouter();
 	const queryClient = getQueryClient();
+
+	const { exportDBToServer } = useSync();
 
 	let currentThreadId = threadId;
 
@@ -55,7 +58,9 @@ const useAskChat = (threadId: string) => {
 			}
 			queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
 
-			// router.push(`/chat/${currentThreadId}`);
+			await exportDBToServer();
+
+			router.push(`/chat/${currentThreadId}`);
 		} catch (error) {
 			console.error("Failed to save message:", error);
 			setStreaming(false);

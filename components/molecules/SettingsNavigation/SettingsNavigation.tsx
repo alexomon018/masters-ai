@@ -18,7 +18,7 @@ const SettingsNavigation = ({ className }: SettingsNavigationProps) => {
 	return (
 		<nav
 			className={cn(
-				"flex overflow-x-auto gap-1 pb-2 mb-6 scrollbar-hide sm:mb-8 sm:gap-4 sm:pb-0",
+				"scrollbar-hide mb-6 flex justify-center gap-1 overflow-x-auto pb-2 sm:mb-8 sm:gap-4 sm:pb-0",
 				className
 			)}
 		>
@@ -27,7 +27,7 @@ const SettingsNavigation = ({ className }: SettingsNavigationProps) => {
 					<Button
 						key={tab.name}
 						variant={activeTab === tab.name ? "secondary" : "ghost"}
-						className="text-sm shrink-0 sm:text-base"
+						className="shrink-0 text-sm sm:text-base"
 					>
 						{tab.name}
 					</Button>

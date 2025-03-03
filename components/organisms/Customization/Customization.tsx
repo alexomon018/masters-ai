@@ -1,24 +1,52 @@
 "use client";
 
 import { Input, Textarea, Label, Button } from "@atoms";
-import { useState, ChangeEvent } from "react";
+import { useForm } from "react-hook-form";
+import { useUser } from "@clerk/nextjs";
+
+type FormValues = {
+	name: string;
+	occupation: string;
+	traits: string;
+	preferences: string;
+};
 
 const Customization = () => {
-	const [name, setName] = useState("");
-	const [occupation, setOccupation] = useState("");
-	const [traits, setTraits] = useState("");
-	const [preferences, setPreferences] = useState("");
+	const { user } = useUser();
 
-	const handleSave = () => {
-		// TODO: Implement save functionality
-		console.log({ name, occupation, traits, preferences });
+	// Get initial values from user metadata if available
+	const initialValues = {
+		name: (user?.unsafeMetadata?.name as string) || "",
+		occupation: (user?.unsafeMetadata?.occupation as string) || "",
+		traits: (user?.unsafeMetadata?.traits as string) || "",
+		preferences: (user?.unsafeMetadata?.preferences as string) || ""
+	};
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting }
+	} = useForm<FormValues>({
+		defaultValues: initialValues,
+		values: initialValues
+	});
+
+	const onSubmit = async (data: FormValues) => {
+		user?.update({
+			unsafeMetadata: {
+				name: data.name,
+				occupation: data.occupation,
+				traits: data.traits,
+				preferences: data.preferences
+			}
+		});
 	};
 
 	return (
-		<div className="flex flex-col gap-6 p-6 w-full max-w-3xl">
+		<div className="flex w-full max-w-3xl flex-col gap-6 p-6">
 			<h1 className="text-2xl font-semibold">Customize masters.chat</h1>
 
-			<div className="space-y-4">
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 				<div className="space-y-2">
 					<Label htmlFor="name" className="text-sm font-medium">
 						What should masters.chat call you?
@@ -26,11 +54,12 @@ const Customization = () => {
 					<Input
 						id="name"
 						placeholder="Enter your name"
-						value={name}
-						onChange={(e: ChangeEvent<HTMLInputElement>) =>
-							setName(e.target.value)
-						}
+						{...register("name")}
+						aria-invalid={errors.name ? "true" : "false"}
 					/>
+					{errors.name && (
+						<p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+					)}
 				</div>
 
 				<div className="space-y-2">
@@ -40,10 +69,8 @@ const Customization = () => {
 					<Input
 						id="occupation"
 						placeholder="Engineer, student, etc."
-						value={occupation}
-						onChange={(e: ChangeEvent<HTMLInputElement>) =>
-							setOccupation(e.target.value)
-						}
+						{...register("occupation")}
+						aria-invalid={errors.occupation ? "true" : "false"}
 					/>
 				</div>
 
@@ -54,10 +81,8 @@ const Customization = () => {
 					<Textarea
 						id="traits"
 						placeholder="Enter traits separated by commas (e.g. Chatty, Witty, Opinionated)"
-						value={traits}
-						onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-							setTraits(e.target.value)
-						}
+						{...register("traits")}
+						aria-invalid={errors.traits ? "true" : "false"}
 					/>
 				</div>
 
@@ -68,16 +93,15 @@ const Customization = () => {
 					<Textarea
 						id="preferences"
 						placeholder="Interests, values, or preferences to keep in mind"
-						value={preferences}
-						onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-							setPreferences(e.target.value)
-						}
+						{...register("preferences")}
+						aria-invalid={errors.preferences ? "true" : "false"}
 					/>
 				</div>
-			</div>
-			<Button onClick={handleSave} type="button" className="w-[30%]">
-				Save Preferences
-			</Button>
+
+				<Button type="submit" className="mt-4 w-[30%]" disabled={isSubmitting}>
+					{isSubmitting ? "Saving..." : "Save Preferences"}
+				</Button>
+			</form>
 		</div>
 	);
 };

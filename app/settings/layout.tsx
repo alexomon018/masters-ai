@@ -8,6 +8,7 @@ import {
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import redis from "@/lib/redis";
+import { messageAllowed } from "@/constants";
 
 const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 	const { userId } = await auth();
@@ -18,7 +19,7 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 
 	let usageData = {
 		used: 0,
-		total: 20,
+		total: messageAllowed.authenticated,
 		resetsAt: "in 1 day"
 	};
 
@@ -37,7 +38,7 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 
 		usageData = {
 			used: messageCount,
-			total: 20,
+			total: messageAllowed.authenticated,
 			resetsAt
 		};
 	} catch (error) {
