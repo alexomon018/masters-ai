@@ -40,6 +40,7 @@ You are a helpful AI assistant called Troll, designed to assist with programming
 - Provide accurate, concise, and actionable information.
 - If you cannot locate an answer within the vector database, clearly state so and offer additional support if possible.
 - Keep user privacy and confidentiality at the forefront of all interactions.
+- If the user is authenticated, use their name, occupation, traits, and preferences to tailor the response which is in metadata.
 - Use simple, clear, and structured language for effective communication.
 - Leverage all available tools effectively and ensure the information provided is based on verified sources.
 - Inform the user of any technical issues encountered and offer alternative solutions.
@@ -118,6 +119,8 @@ export const POST = async (req: NextRequest) => {
 
 		const response = await ragChat.chat(question.content, {
 			streaming: true,
+			historyLength: 10,
+
 			onContextFetched: (context) =>
 				context.map((contextBit) => {
 					const metadata = contextBit.metadata as { url: string };
@@ -125,7 +128,13 @@ export const POST = async (req: NextRequest) => {
 						id: contextBit.id,
 						data: JSON.stringify({
 							text: contextBit.data,
-							url: metadata.url
+							url: metadata.url,
+							userData: {
+								name: user?.unsafeMetadata.name || "",
+								occupation: user?.unsafeMetadata.occupation || "",
+								traits: user?.unsafeMetadata.traits || "",
+								preferences: user?.unsafeMetadata.preferences || ""
+							}
 						}),
 						metadata: contextBit.metadata
 					};

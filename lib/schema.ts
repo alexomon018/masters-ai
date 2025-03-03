@@ -36,6 +36,7 @@ export const threadsTable = createPgTable(
 		projectId: uuid("project_id").references(() => projectsTable.id), // UUID type to match referenced column, implicitly nullable
 		userProvidedId: text("user_provided_id").notNull().unique(),
 		userId: text("user_id").notNull(),
+		threadId: text("thread_id").notNull(), // Add explicit threadId column that matches the id in data
 		created_at: timestamp("created_at").defaultNow().notNull(),
 		updated_at: timestamp("updated_at").defaultNow().notNull(),
 		last_message_at: timestamp("last_message_at").defaultNow().notNull(),
@@ -44,7 +45,8 @@ export const threadsTable = createPgTable(
 	(table) => [
 		index("threads_user_provided_id_idx").on(table.userProvidedId),
 		index("threads_project_id_idx").on(table.projectId),
-		index("threads_user_id_idx").on(table.userId)
+		index("threads_user_id_idx").on(table.userId),
+		index("threads_thread_id_idx").on(table.threadId) // Add index for threadId
 	]
 );
 
@@ -55,13 +57,15 @@ export const messagesTable = createPgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		userProvidedId: text("user_provided_id").notNull().unique(),
 		userId: text("user_id").notNull(),
+		threadId: text("thread_id").notNull(),
 		created_at: timestamp("created_at").defaultNow().notNull(),
 		data: json().$type<SuperJSONResult>(),
 		updated_at: timestamp("updated_at").defaultNow().notNull()
 	},
 	(table) => [
 		index("messages_user_provided_id_idx").on(table.userProvidedId),
-		index("messages_user_id_idx").on(table.userId)
+		index("messages_user_id_idx").on(table.userId),
+		index("messages_thread_id_idx").on(table.threadId)
 	]
 );
 
@@ -81,6 +85,7 @@ export type Thread = {
 	title: string;
 	projectId: string | null; // UUID, optional reference to Project
 	userProvidedId: string;
+	threadId: string;
 	userId: string;
 	created_at: Date;
 	updated_at: Date;
