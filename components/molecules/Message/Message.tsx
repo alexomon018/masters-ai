@@ -8,9 +8,11 @@ import {
 	AvatarImage
 } from "@/components/atoms/Avatar/Avatar";
 import { AvatarIcon } from "@radix-ui/react-icons";
+import { useUser } from "@clerk/nextjs";
 
 const Message: React.FC<MessageProps> = ({ content, role }) => {
 	const isUser = role === "user";
+	const { user } = useUser();
 
 	return (
 		<article
@@ -21,8 +23,9 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 		>
 			{isUser ? (
 				<Avatar>
+					<AvatarImage src={user?.imageUrl} alt="User avatar" />
 					<AvatarFallback>
-						<AvatarIcon className="size-10" />
+						{user?.fullName?.charAt(0) || user?.username?.charAt(0)}
 					</AvatarFallback>
 				</Avatar>
 			) : (

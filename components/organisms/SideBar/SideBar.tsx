@@ -67,18 +67,23 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 			return <div className="p-4 text-center text-gray-500">No chats yet</div>;
 		}
 
-		return threads?.map((chat) => (
-			<ChatItem
-				key={chat.id}
-				chat={{
-					...chat,
-					created_at: new Date(chat.created_at).toISOString()
-				}}
-				isActive={activeThread?.id === chat.id}
-				onSelect={handleChatSelect}
-				onDelete={deleteThread}
-			/>
-		));
+		return threads
+			?.sort(
+				(a, b) =>
+					new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+			)
+			.map((chat) => (
+				<ChatItem
+					key={chat.id}
+					chat={{
+						...chat,
+						created_at: new Date(chat.created_at).toISOString()
+					}}
+					isActive={activeThread?.id === chat.id}
+					onSelect={handleChatSelect}
+					onDelete={deleteThread}
+				/>
+			));
 	};
 
 	return (
