@@ -4,11 +4,12 @@ import type { DEX_Message, DEX_Thread } from "@/localdb/dexie";
 import {
 	getAllThreadsAndMessagesFromDb,
 	syncMessagesToDb,
-	syncThreadsToDb
+	syncThreadsToDb,
+	deleteThreadFromDb,
+	deleteAllUserDataFromDb
 } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Message, Thread } from "@/lib/schema";
-import { deleteThreadFromDb } from "@/lib/queries";
 
 export async function GET() {
 	const user = await currentUser();
@@ -88,7 +89,29 @@ export async function DELETE(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const { threadId } = await request.json();
+	const data = await request.json();
+
+	// If deleteAll flag is true, delete all user data
+	if (data.deleteAll) {
+		try {
+			const result = await deleteAllUserDataFromDb(user.id);
+
+			return NextResponse.json({
+				success: true,
+				deletedMessagesCount: result.deletedMessagesCount,
+				deletedThreadsCount: result.deletedThreadsCount
+			});
+		} catch (error) {
+			console.error("Error deleting all user data:", error);
+			return NextResponse.json(
+				{ error: "Failed to delete all user data" },
+				{ status: 500 }
+			);
+		}
+	}
+
+	// Handle single thread deletion (existing functionality)
+	const { threadId } = data;
 
 	if (!threadId) {
 		return NextResponse.json(

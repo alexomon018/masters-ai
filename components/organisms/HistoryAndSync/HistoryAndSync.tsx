@@ -12,7 +12,11 @@ const HistoryAndSync = () => (
 		<Separator className="my-8" />
 		<MessageHistorySection />
 		<Separator className="my-8" />
-		<DangerZoneSection />
+		<DangerZoneSection
+			description="Permanently delete your history from both your local device and our servers.*"
+			title="Danger Zone"
+			buttonText="Delete Chat History"
+		/>
 
 		<p className="mt-10 text-xs text-muted-foreground sm:text-sm">
 			*The retention policies of our LLM hosting partners may vary.

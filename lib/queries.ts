@@ -137,3 +137,29 @@ export async function deleteThreadFromDb(threadId: string) {
 		deletedThreadsCount
 	};
 }
+
+/**
+ * Deletes all threads and messages for a user from the database
+ */
+export async function deleteAllUserDataFromDb(userId: string) {
+	// Delete all messages for this user
+	const deletedMessages = await db
+		.delete(messagesTable)
+		.where(eq(messagesTable.userId, userId))
+		.returning();
+
+	const deletedMessagesCount = deletedMessages.length;
+
+	// Delete all threads for this user
+	const deletedThreads = await db
+		.delete(threadsTable)
+		.where(eq(threadsTable.userId, userId))
+		.returning();
+
+	const deletedThreadsCount = deletedThreads.length;
+
+	return {
+		deletedMessagesCount,
+		deletedThreadsCount
+	};
+}
