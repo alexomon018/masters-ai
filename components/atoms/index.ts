@@ -16,6 +16,14 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "./Avatar/Avatar";
 import Progress from "./Progress/Progress";
 import Textarea from "./TextArea/TextArea";
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle
+} from "./AlertDialog/AlertDialog";
 
 export {
 	Button,
@@ -35,5 +43,11 @@ export {
 	AvatarImage,
 	AvatarFallback,
 	Progress,
-	Textarea
+	Textarea,
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle
 };
