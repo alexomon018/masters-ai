@@ -33,7 +33,7 @@ const Form = (
 				return cn(
 					baseStyles,
 					"h-12 rounded-full bg-white pl-5 pr-14 md:h-14",
-					"border-2 border-gray-300 text-base focus:border-primary focus:ring-2 focus:ring-primary/20",
+					"border-2 border-gray-300 text-base focus:border-primary focus-outline-none",
 					"disabled:bg-gray-100",
 					inputProps.className
 				);

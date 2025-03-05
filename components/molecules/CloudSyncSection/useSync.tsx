@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { DEX_Message, DEX_Thread, dxdb } from "@/localdb/dexie";
 import { useEffect, useState } from "react";
@@ -199,6 +198,7 @@ const useSync = () => {
 	};
 
 	// Trigger sync when enabled
+	// TODO: Needs checking runs twice
 	useEffect(() => {
 		if (isCloudSyncEnabled && !!user?.id && !isSyncDataLoading && !isSyncing) {
 			importDBFromServer();

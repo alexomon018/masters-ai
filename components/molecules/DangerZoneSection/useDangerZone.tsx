@@ -1,56 +1,100 @@
 import { dxdb } from "@/localdb/dexie";
-import {
-	UseMutateFunction,
-	useMutation,
-	useQueryClient
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface UseDangerZoneReturn {
-	isPending: boolean;
-	deleteAllData: UseMutateFunction<void, Error, void, unknown>;
+	isDeletingAllData: boolean;
+	isDeletingUser: boolean;
+	handleDelete: () => Promise<void>;
+	isAlertOpen: boolean;
+	setIsAlertOpen: (isOpen: boolean) => void;
 }
 
-export function useDangerZone(): UseDangerZoneReturn {
+export const useDangerZone = ({
+	isAccountDeletion = true
+}: {
+	isAccountDeletion?: boolean;
+}): UseDangerZoneReturn => {
 	const queryClient = useQueryClient();
+	const [isAlertOpen, setIsAlertOpen] = useState(false);
 
 	// Create a mutation for deleting all user data
-	const { mutate: deleteAllDataMutation, isPending } = useMutation({
-		mutationFn: async () => {
-			try {
-				// 1. Delete from server first
-				const response = await fetch("/api/sync", {
-					method: "DELETE",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ deleteAll: true })
-				});
+	const { mutate: deleteAllDataMutation, isPending: isDeletingAllData } =
+		useMutation({
+			mutationFn: async () => {
+				try {
+					const response = await fetch("/api/sync", {
+						method: "DELETE",
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({ deleteAll: true })
+					});
 
-				const result = await response.json();
+					const result = await response.json();
 
-				// 2. Delete from local IndexedDB
-				await dxdb.deleteEverything();
+					await Promise.all([dxdb.messages.clear(), dxdb.threads.clear()]);
 
-				// 3. Invalidate all queries to refresh data
-				queryClient.invalidateQueries();
+					queryClient.invalidateQueries();
 
-				return result;
-			} catch (error) {
-				console.error("Error deleting data:", error);
-				const errorMessage =
-					error instanceof Error ? error.message : "Failed to delete data";
-				console.error(errorMessage);
-				throw error;
+					return result;
+				} catch (error) {
+					console.error("Error deleting data:", error);
+					const errorMessage =
+						error instanceof Error ? error.message : "Failed to delete data";
+					console.error(errorMessage);
+					throw error;
+				}
+			}
+		});
+
+	const { mutate: deleteUserMutation, isPending: isDeletingUser } = useMutation(
+		{
+			mutationFn: async () => {
+				try {
+					const response = await fetch("/api/delete-user", {
+						method: "DELETE"
+					});
+
+					const result = await response.json();
+
+					// Clear all React Query cache and invalidate queries
+					await queryClient.resetQueries();
+					queryClient.clear();
+
+					// Force a hard navigation to clear all client state
+					window.location.href = "/";
+
+					return result;
+				} catch (error) {
+					console.error("Error deleting user:", error);
+					throw error;
+				}
 			}
 		}
-	});
+	);
 
-	/**
-	 * Deletes all threads and messages from both local IndexedDB and the server
-	 */
+	const handleDelete = async () => {
+		try {
+			if (isAccountDeletion) {
+				// First delete all data, then delete user
+				deleteAllDataMutation();
+				deleteUserMutation();
+			} else {
+				deleteAllDataMutation();
+			}
+			setIsAlertOpen(false);
+		} catch (error) {
+			console.error("Error during deletion:", error);
+			setIsAlertOpen(false);
+		}
+	};
 
 	return {
-		isPending,
-		deleteAllData: deleteAllDataMutation
+		isDeletingAllData,
+		isDeletingUser,
+		handleDelete,
+		isAlertOpen,
+		setIsAlertOpen
 	};
-}
+};
