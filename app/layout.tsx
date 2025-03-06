@@ -12,9 +12,9 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-	title: "Masters AI",
+	title: "FE Masters Chat",
 	description:
-		"Masters AI is an AI-powered chatbot that helps you learn and grow. Gives you access to a wide range of resources and tools to help you achieve your goals."
+		"FE Masters Chat is an AI-powered chatbot that helps you learn and grow. Gives you access to a wide range of resources and tools to help you achieve your goals."
 };
 
 const RootLayout = ({

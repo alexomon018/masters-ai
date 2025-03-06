@@ -67,22 +67,31 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 			return <div className="p-4 text-center text-gray-500">No chats yet</div>;
 		}
 
-		return threads?.map((chat) => (
-			<ChatItem
-				key={chat.id}
-				chat={{
-					...chat,
-					created_at: new Date(chat.created_at).toISOString()
-				}}
-				isActive={activeThread?.id === chat.id}
-				onSelect={handleChatSelect}
-				onDelete={deleteThread}
-			/>
-		));
+		return threads
+			?.sort(
+				(a, b) =>
+					new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+			)
+			.map((chat) => (
+				<ChatItem
+					key={chat.id}
+					chat={{
+						...chat,
+						created_at: new Date(chat.created_at).toISOString()
+					}}
+					isActive={activeThread?.id === chat.id}
+					onSelect={handleChatSelect}
+					onDelete={deleteThread}
+				/>
+			));
 	};
 
 	return (
-		<aside className="sticky top-0 z-30 flex h-screen w-80 flex-col border-r border-gray-200 bg-white">
+		<aside
+			className={cn(
+				"sticky top-0 z-30 hidden h-screen w-80 flex-col border-r border-gray-200 bg-white md:flex"
+			)}
+		>
 			<div className="flex items-center justify-between border-b border-gray-200 p-4">
 				<h2 className="flex-1 text-xl font-semibold">Chat History</h2>
 				<button

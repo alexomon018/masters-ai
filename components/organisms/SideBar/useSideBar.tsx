@@ -2,7 +2,7 @@ import { dxdb } from "@/localdb/dexie";
 import { useUser } from "@clerk/nextjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 const useSideBar = () => {
@@ -39,8 +39,6 @@ const useSideBar = () => {
 
 			const threadId = await dxdb.createThread({ title: "New Chat" });
 
-			console.log(threadId);
-
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
@@ -53,6 +51,22 @@ const useSideBar = () => {
 		},
 		[router]
 	);
+
+	useEffect(() => {
+		const handleKeyPress = (event: KeyboardEvent) => {
+			if (
+				(event.metaKey || event.ctrlKey) &&
+				event.shiftKey &&
+				event.key === "0"
+			) {
+				event.preventDefault();
+				startNewChat();
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyPress);
+		return () => window.removeEventListener("keydown", handleKeyPress);
+	}, [startNewChat]);
 
 	return {
 		threads,

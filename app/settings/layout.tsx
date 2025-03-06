@@ -54,7 +54,6 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 			<SettingsNavigation className="flex lg:hidden" />
 			<div className="container mx-auto px-4 py-8 sm:px-6 sm:py-10 md:py-12">
 				<div className="mx-auto flex max-w-7xl flex-col gap-10 lg:flex-row lg:gap-16">
-					{/* Sidebar - Mobile: Top, Desktop: Left */}
 					<aside className="flex w-full flex-col space-y-8 lg:w-[340px]">
 						<UserProfile
 							name={user?.fullName || ""}

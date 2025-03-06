@@ -6,7 +6,7 @@ interface ChatFormProps {
 	formRef: React.RefObject<HTMLFormElement>;
 	onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 	input: string;
-	handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 	streaming: boolean;
 }
 
@@ -22,7 +22,7 @@ const ChatForm = ({
 			"fixed inset-x-0 bottom-0 z-10",
 			"flex flex-col items-center justify-center",
 			"bg-white",
-			"ml-80"
+			"md:ml-80"
 		)}
 	>
 		<MessageLimit />

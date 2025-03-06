@@ -16,6 +16,7 @@ const HistoryAndSync = () => (
 			description="Permanently delete your history from both your local device and our servers.*"
 			title="Danger Zone"
 			buttonText="Delete Chat History"
+			isAccountDeletion={false}
 		/>
 
 		<p className="mt-10 text-xs text-muted-foreground sm:text-sm">
