@@ -19,7 +19,7 @@ export const useDangerZone = ({
 	const [isAlertOpen, setIsAlertOpen] = useState(false);
 
 	// Create a mutation for deleting all user data
-	const { mutate: deleteAllDataMutation, isPending: isDeletingAllData } =
+	const { mutateAsync: deleteAllDataMutation, isPending: isDeletingAllData } =
 		useMutation({
 			mutationFn: async () => {
 				try {
@@ -48,8 +48,8 @@ export const useDangerZone = ({
 			}
 		});
 
-	const { mutate: deleteUserMutation, isPending: isDeletingUser } = useMutation(
-		{
+	const { mutateAsync: deleteUserMutation, isPending: isDeletingUser } =
+		useMutation({
 			mutationFn: async () => {
 				try {
 					const response = await fetch("/api/delete-user", {
@@ -62,8 +62,8 @@ export const useDangerZone = ({
 					await queryClient.resetQueries();
 					queryClient.clear();
 
-					// Force a hard navigation to clear all client state
-					window.location.href = "/";
+					// Redirect to login page after successful deletion
+					window.location.href = "/auth";
 
 					return result;
 				} catch (error) {
@@ -71,17 +71,16 @@ export const useDangerZone = ({
 					throw error;
 				}
 			}
-		}
-	);
+		});
 
 	const handleDelete = async () => {
 		try {
 			if (isAccountDeletion) {
 				// First delete all data, then delete user
-				deleteAllDataMutation();
-				deleteUserMutation();
+				await deleteAllDataMutation();
+				await deleteUserMutation();
 			} else {
-				deleteAllDataMutation();
+				await deleteAllDataMutation();
 			}
 			setIsAlertOpen(false);
 		} catch (error) {
