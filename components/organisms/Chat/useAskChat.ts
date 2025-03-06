@@ -60,7 +60,7 @@ const useAskChat = (threadId: string) => {
 		{
 			id: "0",
 			role: "system",
-			content: `**Welcome to Masters AI** Your ultimate companion in navigating Frontend Masters courses.`
+			content: `**Welcome to Masters Chat** Your ultimate companion in navigating Frontend Masters courses.`
 		},
 		...(messages?.map((msg) => ({
 			id: msg.id,

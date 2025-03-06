@@ -7,10 +7,10 @@ const Page = () => (
 	<div className="flex min-h-screen items-center justify-center bg-background">
 		<div className="flex flex-col items-center gap-4">
 			<h1 className="text-4xl font-bold text-foreground">
-				Welcome to Masters AI
+				Welcome to FE Masters Chat
 			</h1>
 			<p className="text-muted-foreground">
-				Sign in below (we&apos;ll increase your message limits if you do 😉)
+				{`Sign in below (we'll increase your message limits if you do 😉)`}
 			</p>
 			<SignInButton>
 				<Button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">

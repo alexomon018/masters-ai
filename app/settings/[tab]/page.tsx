@@ -20,9 +20,13 @@ const SettingsPage = async ({ params }: PageProps) => {
 			case "customization":
 				return <Customization />;
 			case "models":
-				return <div>User Preferences</div>;
+				return (
+					<div className="text-center text-muted-foreground">Coming Soon</div>
+				);
 			case "attachments":
-				return <div>User Preferences</div>;
+				return (
+					<div className="text-center text-muted-foreground">Coming Soon</div>
+				);
 			default:
 				return <AccountUpgrade />;
 		}

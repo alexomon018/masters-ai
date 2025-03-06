@@ -22,7 +22,7 @@ const Shortcut = ({ action, keys }: ShortcutProps) => (
 const KeyboardShortcuts = () => {
 	const shortcuts = [
 		{ action: "Search", keys: ["⌘", "K"] },
-		{ action: "New Chat", keys: ["⌘", "0"] }
+		{ action: "New Chat", keys: ["⌘", "⇧", "0"] }
 	];
 
 	return (

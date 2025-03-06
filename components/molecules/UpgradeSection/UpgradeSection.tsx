@@ -38,9 +38,7 @@ const UpgradeSection = () => (
 			</div>
 		</div>
 
-		<Button className="h-12 rounded-xl bg-primary text-lg font-medium">
-			Upgrade Now
-		</Button>
+		<Button className="rounded-xl bg-primary font-medium">Upgrade Now</Button>
 
 		<p className="text-sm text-muted-foreground">
 			*Claude usage is limited to 100 messages per month. Premium credits can be
