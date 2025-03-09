@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-
-import models from "./models";
+import { modelCards } from "@constants";
 
 type Feature = {
 	name: string;
@@ -146,7 +145,7 @@ const ModelSelector = () => {
 				</div>
 
 				<div className="space-y-4">
-					{models
+					{modelCards
 						.filter(
 							(model) =>
 								selectedFeatures.size === 0 ||

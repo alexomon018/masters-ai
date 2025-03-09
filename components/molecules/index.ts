@@ -16,6 +16,7 @@ import UserProfile from "./UserProfile/UserProfile";
 import MessageUsage from "./MessageUsage/MessageUsage";
 import KeyboardShortcuts from "./KeyboardShortcuts/KeyboardShortcuts";
 import UpgradeSection from "./UpgradeSection/UpgradeSection";
+import ChatModelSelector from "./ChatModelSelector/ChatModelSelector";
 
 export {
 	ExpertCard,
@@ -35,5 +36,6 @@ export {
 	UserProfile,
 	MessageUsage,
 	KeyboardShortcuts,
-	UpgradeSection
+	UpgradeSection,
+	ChatModelSelector
 };

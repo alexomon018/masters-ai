@@ -3,7 +3,7 @@ import grok from "@/public/grok.svg";
 import openai from "@/public/openai.svg";
 import { EyeIcon, WholeWordIcon, BrainIcon, ZapIcon } from "lucide-react";
 
-interface Model {
+export interface Model {
 	id: string;
 	name: string;
 	shortDescription: string;
@@ -17,7 +17,7 @@ interface Model {
 	isDefault?: boolean;
 }
 
-const models: Model[] = [
+const modelCards: Model[] = [
 	{
 		id: "gpt-4o-mini",
 		name: "GPT-4o-mini",
@@ -77,4 +77,4 @@ const models: Model[] = [
 	}
 ];
 
-export default models;
+export default modelCards;
