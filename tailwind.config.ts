@@ -56,6 +56,9 @@ module.exports = {
 				md: `calc(var(--radius) - 2px)`,
 				sm: "calc(var(--radius) - 4px)"
 			},
+			maxWidth: {
+				"8xl": "90rem"
+			},
 			keyframes: {
 				"accordion-down": {
 					from: { height: "0" },

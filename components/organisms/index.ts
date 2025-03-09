@@ -18,6 +18,7 @@ import Chat from "./Chat/Chat";
 import HistoryAndSync from "./HistoryAndSync/HistoryAndSync";
 import AccountUpgrade from "./AccountUpgrade/AccountUpgrade";
 import Customization from "./Customization/Customization";
+import ModelsPicker from "./ModelsPicker/ModelsPicker";
 
 export {
 	Form,
@@ -37,5 +38,6 @@ export {
 	Chat,
 	HistoryAndSync,
 	AccountUpgrade,
-	Customization
+	Customization,
+	ModelsPicker
 };
