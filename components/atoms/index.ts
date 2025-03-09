@@ -24,6 +24,15 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle
 } from "./AlertDialog/AlertDialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+	DropdownMenuCheckboxItem
+} from "./Dropdown/Dropdown";
 
 export {
 	Button,
@@ -49,5 +58,12 @@ export {
 	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogTitle
+	AlertDialogTitle,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+	DropdownMenuCheckboxItem
 };

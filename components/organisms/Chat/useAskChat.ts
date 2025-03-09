@@ -73,7 +73,8 @@ const useAskChat = (threadId: string) => {
 		api: "/api/masters",
 		initialMessages: initialMessages as Message[],
 		body: {
-			chatId: currentThreadId
+			chatId: currentThreadId,
+			model: "openai"
 		},
 
 		onResponse: async (response) => {

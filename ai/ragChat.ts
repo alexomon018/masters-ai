@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Index } from "@upstash/vector";
-import { RAGChat, openai, anthropic, groq } from "@upstash/rag-chat";
+import { RAGChat, openai, anthropic, custom } from "@upstash/rag-chat";
 import redis from "@/lib/redis";
 
 const ratelimit = new Ratelimit({
@@ -78,7 +78,9 @@ export const openAIRagChat = new RAGChat({
 export const anthropicRagChat = new RAGChat({
 	ratelimit,
 	debug: false,
-	model: anthropic("claude-3-sonnet"),
+	model: anthropic("claude-3-sonnet", {
+		apiKey: process.env.ANTHROPIC_API_KEY
+	}),
 	vector: new Index(vectorConfig),
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>
@@ -92,7 +94,10 @@ export const anthropicRagChat = new RAGChat({
 export const groqRagChat = new RAGChat({
 	ratelimit,
 	debug: false,
-	model: groq("llama3-70b-8192"),
+	model: custom("grok-2-latest", {
+		apiKey: process.env.GROK_API_KEY,
+		baseUrl: "https://api.grok.com/v1"
+	}),
 	vector: new Index(vectorConfig),
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>

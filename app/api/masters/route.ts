@@ -6,7 +6,7 @@ import { aiUseChatAdapter } from "@upstash/rag-chat/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import { messageAllowed } from "@/constants";
 import redis from "@/lib/redis";
-import { getRagChatInstance } from "./ragChat";
+import { getRagChatInstance } from "@/ai/ragChat";
 
 export const POST = async (req: NextRequest) => {
 	try {
