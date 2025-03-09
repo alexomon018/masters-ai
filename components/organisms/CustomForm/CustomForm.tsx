@@ -3,14 +3,8 @@
 import { ComponentProps, forwardRef, ReactNode, useState } from "react";
 import { MousePointerClick } from "lucide-react";
 import { cn } from "@utils";
-import {
-	Button,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuTrigger
-} from "@atoms";
-import Image from "next/image";
-import models from "../ModelsPicker/models"; // Import models from your ModelsPicker
+import { ChatModelSelector } from "@molecules";
+import models from "../../../constants/models"; // Import models from your ModelsPicker
 
 export interface Props extends ComponentProps<"form"> {
 	inputProps: ComponentProps<"textarea">;
@@ -28,7 +22,7 @@ const Form = (
 		inputProps,
 		buttonProps,
 		onSubmit,
-		icon = <MousePointerClick className="rotate-90 size-7" />,
+		icon = <MousePointerClick className="size-7 rotate-90" />,
 		buttonPosition = "inside",
 		isLoading = false,
 		variant = "modern",
@@ -103,7 +97,7 @@ const Form = (
 	return (
 		<form
 			onSubmit={onSubmit}
-			className={cn("flex relative flex-col gap-4 m-auto")}
+			className={cn("relative m-auto flex flex-col gap-4")}
 			ref={ref}
 			{...formProps}
 		>
@@ -120,59 +114,10 @@ const Form = (
 					disabled={isLoading || inputProps.disabled}
 				/>
 
-				{/* Position the model selector absolutely inside the textarea */}
-				<div className="absolute bottom-3 left-3">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								className="gap-2 px-2 h-8 hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-							>
-								<div className="flex justify-center items-center rounded-lg bg-primary/10 size-6">
-									<Image
-										src={selectedModel.logo}
-										alt={selectedModel.name}
-										className="size-4"
-									/>
-								</div>
-								<span className="text-sm font-medium">
-									{selectedModel.name}
-								</span>
-								<svg
-									width="12"
-									height="12"
-									viewBox="0 0 12 12"
-									fill="none"
-									className="opacity-50"
-								>
-									<path d="M6 8.5L3 5.5H9L6 8.5Z" fill="currentColor" />
-								</svg>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start" className="w-[200px]">
-							{models.map((model) => (
-								<Button
-									key={model.id}
-									variant="ghost"
-									className="gap-2 justify-start px-2 w-full"
-									onClick={() => {
-										setSelectedModel(model);
-										onModelChange?.(model.id);
-									}}
-								>
-									<div className="flex justify-center items-center rounded-lg bg-primary/10 size-6">
-										<Image
-											src={model.logo}
-											alt={model.name}
-											className="size-4"
-										/>
-									</div>
-									<span className="text-sm font-medium">{model.name}</span>
-								</Button>
-							))}
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
+				<ChatModelSelector
+					selectedModel={selectedModel}
+					setSelectedModel={setSelectedModel}
+				/>
 
 				<button
 					{...buttonProps}
@@ -182,8 +127,8 @@ const Form = (
 					disabled={isLoading || buttonProps.disabled}
 				>
 					{isLoading ? (
-						<span className="flex justify-center items-center">
-							<svg className="animate-spin size-5" viewBox="0 0 24 24">
+						<span className="flex items-center justify-center">
+							<svg className="size-5 animate-spin" viewBox="0 0 24 24">
 								<circle
 									className="opacity-25"
 									cx="12"
