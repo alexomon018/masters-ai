@@ -1,4 +1,11 @@
-import { ThemeProvider } from './themeProvider';
-import withThemeProvider from './withThemeProvider';
+import { ThemeProvider } from "./themeProvider";
+import { withThemeProvider, withModelStoreProvider } from "./withThemeProvider";
+import { ModelStoreProvider, useModelStore } from "./modelStoreProvider";
 
-export { ThemeProvider, withThemeProvider };
+export {
+	ThemeProvider,
+	withThemeProvider,
+	withModelStoreProvider,
+	ModelStoreProvider,
+	useModelStore
+};

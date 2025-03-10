@@ -19,6 +19,7 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import { modelCards } from "@constants";
+import { useModelStore } from "@providers";
 
 type Feature = {
 	name: string;
@@ -45,29 +46,34 @@ const availableFeatures: Feature[] = [
 ];
 
 const ModelSelector = () => {
+	const {
+		selectedFeatures,
+		setSelectedFeatures,
+		clearFeatures,
+		enabledModels,
+		toggleModelEnabled
+	} = useModelStore((state) => state);
+
 	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
-	const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
-		new Set()
-	);
 
 	const toggleDescription = (modelId: string) => {
-		const newExpanded = new Set(expandedModels);
-		if (newExpanded.has(modelId)) {
-			newExpanded.delete(modelId);
-		} else {
-			newExpanded.add(modelId);
-		}
-		setExpandedModels(newExpanded);
+		setExpandedModels((expanded) => {
+			const newExpanded = new Set(expanded);
+			if (newExpanded.has(modelId)) {
+				newExpanded.delete(modelId);
+			} else {
+				newExpanded.add(modelId);
+			}
+			return newExpanded;
+		});
 	};
 
 	const onCheckedFeature = (checked: boolean, feature: Feature) => {
-		const newFeatures = new Set(selectedFeatures);
-		if (checked) {
-			newFeatures.add(feature.name);
-		} else {
-			newFeatures.delete(feature.name);
-		}
-		setSelectedFeatures(newFeatures);
+		setSelectedFeatures(
+			checked
+				? new Set([...selectedFeatures, feature.name])
+				: new Set([...selectedFeatures].filter((f) => f !== feature.name))
+		);
 	};
 
 	const onSelectAll = () =>
@@ -75,11 +81,7 @@ const ModelSelector = () => {
 			new Set(availableFeatures.map((feature) => feature.name))
 		);
 
-	const onUnselectAll = () => setSelectedFeatures(new Set());
-
-	const clearFeatures = () => {
-		setSelectedFeatures(new Set());
-	};
+	const onUnselectAll = () => clearFeatures();
 
 	return (
 		<div className="p-6 mx-auto w-full max-w-4xl">
@@ -193,7 +195,10 @@ const ModelSelector = () => {
 									</div>
 									<div className="flex gap-4 items-center">
 										<CopyIcon className="size-5 text-muted-foreground" />
-										<Switch />
+										<Switch
+											checked={enabledModels.has(model.id)}
+											onCheckedChange={() => toggleModelEnabled(model.id)}
+										/>
 									</div>
 								</div>
 							</Card>

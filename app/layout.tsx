@@ -3,7 +3,7 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
-
+import { ModelStoreProvider } from "@providers";
 import { cn } from "@utils";
 
 const fontSans = FontSans({
@@ -30,10 +30,12 @@ const RootLayout = ({
 					fontSans.variable
 				)}
 			>
-				<Toaster />
-				<div className="flex h-screen flex-col">
-					<main className="flex-1">{children}</main>
-				</div>
+				<ModelStoreProvider>
+					<Toaster />
+					<div className="flex h-screen flex-col">
+						<main className="flex-1">{children}</main>
+					</div>
+				</ModelStoreProvider>
 			</body>
 		</html>
 	</ClerkProvider>
