@@ -51,7 +51,9 @@ const ModelSelector = () => {
 		setSelectedFeatures,
 		clearFeatures,
 		enabledModels,
-		toggleModelEnabled
+		toggleModelEnabled,
+		enableAllModels,
+		disableAllModels
 	} = useModelStore((state) => state);
 
 	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
@@ -76,15 +78,8 @@ const ModelSelector = () => {
 		);
 	};
 
-	const onSelectAll = () =>
-		setSelectedFeatures(
-			new Set(availableFeatures.map((feature) => feature.name))
-		);
-
-	const onUnselectAll = () => clearFeatures();
-
 	return (
-		<div className="p-6 mx-auto w-full max-w-4xl">
+		<div className="mx-auto w-full max-w-4xl p-6">
 			<div className="space-y-4">
 				<h1 className="text-2xl font-bold">Available Models</h1>
 				<p className="text-muted-foreground">
@@ -92,8 +87,8 @@ const ModelSelector = () => {
 					existing conversations.`}
 				</p>
 
-				<div className="flex justify-between items-center mb-6">
-					<div className="flex gap-2 items-center">
+				<div className="mb-6 flex items-center justify-between">
+					<div className="flex items-center gap-2">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -117,7 +112,7 @@ const ModelSelector = () => {
 											onCheckedFeature(checked, feature);
 										}}
 									>
-										<div className="flex gap-2 items-center">
+										<div className="flex items-center gap-2">
 											{feature.icon}
 											<span>{feature.name}</span>
 										</div>
@@ -137,10 +132,10 @@ const ModelSelector = () => {
 						)}
 					</div>
 					<div className="space-x-2">
-						<Button variant="secondary" onClick={onSelectAll}>
+						<Button variant="secondary" onClick={enableAllModels}>
 							Select All
 						</Button>
-						<Button variant="secondary" onClick={onUnselectAll}>
+						<Button variant="secondary" onClick={disableAllModels}>
 							Unselect All
 						</Button>
 					</div>
@@ -157,13 +152,13 @@ const ModelSelector = () => {
 						)
 						.map((model) => (
 							<Card key={model.id} className="p-6">
-								<div className="flex justify-between items-start">
+								<div className="flex items-start justify-between">
 									<div className="flex gap-4">
-										<div className="flex justify-center items-center rounded-lg bg-primary/10 size-12 shrink-0">
+										<div className="bg-primary/10 flex size-12 shrink-0 items-center justify-center rounded-lg">
 											<Image src={model.logo} alt={model.name} />
 										</div>
 										<div>
-											<div className="flex gap-2 items-center">
+											<div className="flex items-center gap-2">
 												<h3 className="font-semibold">{model.name}</h3>
 											</div>
 											<p className="text-sm text-muted-foreground">
@@ -173,18 +168,18 @@ const ModelSelector = () => {
 											</p>
 											<Button
 												variant="link"
-												className="p-0 mt-1 h-auto text-sm"
+												className="mt-1 h-auto p-0 text-sm"
 												onClick={() => toggleDescription(model.id)}
 											>
 												{expandedModels.has(model.id)
 													? "Show less"
 													: "Show more"}
 											</Button>
-											<div className="flex gap-3 mt-2">
+											<div className="mt-2 flex gap-3">
 												{model.features.map((feature) => (
 													<div
 														key={feature.name}
-														className="flex gap-1 items-center text-sm text-muted-foreground"
+														className="flex items-center gap-1 text-sm text-muted-foreground"
 													>
 														{feature.icon}
 														<span>{feature.name}</span>
@@ -193,7 +188,7 @@ const ModelSelector = () => {
 											</div>
 										</div>
 									</div>
-									<div className="flex gap-4 items-center">
+									<div className="flex items-center gap-4">
 										<CopyIcon className="size-5 text-muted-foreground" />
 										<Switch
 											checked={enabledModels.has(model.id)}

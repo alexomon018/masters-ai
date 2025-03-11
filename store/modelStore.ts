@@ -3,7 +3,7 @@ import { Model, modelCards } from "@constants";
 import { persist } from "zustand/middleware";
 
 export type ModelState = {
-	selectedModel: Model | null;
+	selectedModel: Model;
 	enabledModels: Set<Model["id"]>;
 	selectedFeatures: Set<string>;
 };
@@ -32,7 +32,10 @@ export const createModelStore = (initState: ModelState = defaultInitState) =>
 				...initState,
 				selectModel: (model) =>
 					set((state) => {
-						if (state.enabledModels.has(model.id)) {
+						if (
+							state.enabledModels.has(model.id) ||
+							model.id === modelCards[0].id
+						) {
 							return { selectedModel: model };
 						}
 						return state;
@@ -42,11 +45,12 @@ export const createModelStore = (initState: ModelState = defaultInitState) =>
 						const newEnabled = new Set(state.enabledModels);
 						if (newEnabled.has(modelId)) {
 							newEnabled.delete(modelId);
-							if (state.selectedModel?.id === modelId) {
+
+							if (state.selectedModel.id === modelId) {
 								const firstEnabledModel =
 									modelCards.find(
 										(model) => model.id !== modelId && newEnabled.has(model.id)
-									) || null;
+									) || modelCards[0];
 								return {
 									enabledModels: newEnabled,
 									selectedModel: firstEnabledModel
@@ -64,7 +68,7 @@ export const createModelStore = (initState: ModelState = defaultInitState) =>
 				disableAllModels: () =>
 					set({
 						enabledModels: new Set(),
-						selectedModel: null
+						selectedModel: modelCards[0]
 					})
 			}),
 			{

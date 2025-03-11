@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
 	Button,
 	DropdownMenu,
@@ -15,31 +15,33 @@ const ChatModelSelector = () => {
 	const { selectedModel, selectModel, enabledModels } = useModelStore(
 		(state) => state
 	);
+	const [open, setOpen] = useState(false);
 
-	// Only show enabled models in the dropdown
-	const availableModels = modelCards.filter((model) =>
-		enabledModels.has(model.id)
+	const availableModels = modelCards.filter(
+		(model) => enabledModels.has(model.id) || model.id === modelCards[0].id
 	);
 
-	// Handle null state while loading
-	if (!selectedModel) return null;
+	const onModelSelect = (model: Model) => {
+		selectModel(model);
+		setOpen(false);
+	};
 
 	return (
 		<div className="absolute bottom-3 left-3">
-			<DropdownMenu>
+			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button
 						variant="ghost"
-						className="gap-2 px-2 h-8 hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+						className="h-8 gap-2 px-2 hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
 					>
-						<div className="flex justify-center items-center rounded-lg bg-primary/10 size-6">
+						<div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
 							<Image
-								src={selectedModel?.logo ?? ""}
-								alt={selectedModel?.name ?? ""}
+								src={selectedModel.logo}
+								alt={selectedModel.name}
 								className="size-4"
 							/>
 						</div>
-						<span className="text-sm font-medium">{selectedModel?.name}</span>
+						<span className="text-sm font-medium">{selectedModel.name}</span>
 						<svg
 							width="12"
 							height="12"
@@ -56,12 +58,10 @@ const ChatModelSelector = () => {
 						<Button
 							key={model.id}
 							variant="ghost"
-							className="gap-2 justify-start px-2 w-full"
-							onClick={() => {
-								selectModel(model);
-							}}
+							className="w-full justify-start gap-2 px-2"
+							onClick={() => onModelSelect(model)}
 						>
-							<div className="flex justify-center items-center rounded-lg bg-primary/10 size-6">
+							<div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
 								<Image src={model.logo} alt={model.name} className="size-4" />
 							</div>
 							<span className="text-sm font-medium">{model.name}</span>
