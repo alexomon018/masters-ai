@@ -1,10 +1,9 @@
 "use client";
 
-import { ComponentProps, forwardRef, ReactNode, useState } from "react";
+import { ComponentProps, forwardRef, ReactNode } from "react";
 import { MousePointerClick } from "lucide-react";
 import { cn } from "@utils";
 import { ChatModelSelector } from "@molecules";
-import models from "../../../constants/models"; // Import models from your ModelsPicker
 
 export interface Props extends ComponentProps<"form"> {
 	inputProps: ComponentProps<"textarea">;
@@ -32,8 +31,6 @@ const Form = (
 	}: Props,
 	ref: React.Ref<HTMLFormElement>
 ) => {
-	const [selectedModel, setSelectedModel] = useState(models[0]);
-
 	// Determine styles based on variant
 	const getInputStyles = () => {
 		const baseStyles =
@@ -114,10 +111,7 @@ const Form = (
 					disabled={isLoading || inputProps.disabled}
 				/>
 
-				<ChatModelSelector
-					selectedModel={selectedModel}
-					setSelectedModel={setSelectedModel}
-				/>
+				<ChatModelSelector />
 
 				<button
 					{...buttonProps}

@@ -62,9 +62,7 @@ const vectorConfig = {
 export const openAIRagChat = new RAGChat({
 	ratelimit,
 	debug: false,
-	model: openai("gpt-4o-mini", {
-		organization: process.env.OPENAI_ORGANIZATION
-	}),
+	model: openai("gpt-4o-mini"),
 	vector: new Index(vectorConfig),
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>
