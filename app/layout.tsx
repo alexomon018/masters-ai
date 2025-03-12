@@ -3,7 +3,7 @@ import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ModelStoreProvider } from "@providers";
+import { ModelStoreProvider, ThemeProvider } from "@providers";
 import { cn } from "@utils";
 
 const fontSans = FontSans({
@@ -23,19 +23,26 @@ const RootLayout = ({
 	children: React.ReactNode;
 }>) => (
 	<ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body
 				className={cn(
 					"min-h-screen bg-background font-sans antialiased",
 					fontSans.variable
 				)}
 			>
-				<ModelStoreProvider>
-					<Toaster />
-					<div className="flex h-screen flex-col">
-						<main className="flex-1">{children}</main>
-					</div>
-				</ModelStoreProvider>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<ModelStoreProvider>
+						<Toaster />
+						<div className="flex flex-col h-screen">
+							<main className="flex-1">{children}</main>
+						</div>
+					</ModelStoreProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	</ClerkProvider>

@@ -79,7 +79,7 @@ const ModelSelector = () => {
 	};
 
 	return (
-		<div className="mx-auto w-full max-w-4xl p-6">
+		<div className="p-6 mx-auto w-full max-w-4xl">
 			<div className="space-y-4">
 				<h1 className="text-2xl font-bold">Available Models</h1>
 				<p className="text-muted-foreground">
@@ -87,8 +87,8 @@ const ModelSelector = () => {
 					existing conversations.`}
 				</p>
 
-				<div className="mb-6 flex items-center justify-between">
-					<div className="flex items-center gap-2">
+				<div className="flex justify-between items-center mb-6">
+					<div className="flex gap-2 items-center">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -112,7 +112,7 @@ const ModelSelector = () => {
 											onCheckedFeature(checked, feature);
 										}}
 									>
-										<div className="flex items-center gap-2">
+										<div className="flex gap-2 items-center">
 											{feature.icon}
 											<span>{feature.name}</span>
 										</div>
@@ -152,13 +152,13 @@ const ModelSelector = () => {
 						)
 						.map((model) => (
 							<Card key={model.id} className="p-6">
-								<div className="flex items-start justify-between">
+								<div className="flex justify-between items-start">
 									<div className="flex gap-4">
-										<div className="bg-primary/10 flex size-12 shrink-0 items-center justify-center rounded-lg">
+										<div className="flex justify-center items-center rounded-lg bg-primary/10 size-12 shrink-0">
 											<Image src={model.logo} alt={model.name} />
 										</div>
 										<div>
-											<div className="flex items-center gap-2">
+											<div className="flex gap-2 items-center">
 												<h3 className="font-semibold">{model.name}</h3>
 											</div>
 											<p className="text-sm text-muted-foreground">
@@ -168,18 +168,18 @@ const ModelSelector = () => {
 											</p>
 											<Button
 												variant="link"
-												className="mt-1 h-auto p-0 text-sm"
+												className="p-0 mt-1 h-auto text-sm"
 												onClick={() => toggleDescription(model.id)}
 											>
 												{expandedModels.has(model.id)
 													? "Show less"
 													: "Show more"}
 											</Button>
-											<div className="mt-2 flex gap-3">
+											<div className="flex gap-3 mt-2">
 												{model.features.map((feature) => (
 													<div
 														key={feature.name}
-														className="flex items-center gap-1 text-sm text-muted-foreground"
+														className="flex gap-1 items-center text-sm text-muted-foreground"
 													>
 														{feature.icon}
 														<span>{feature.name}</span>
@@ -188,7 +188,7 @@ const ModelSelector = () => {
 											</div>
 										</div>
 									</div>
-									<div className="flex items-center gap-4">
+									<div className="flex gap-4 items-center">
 										<CopyIcon className="size-5 text-muted-foreground" />
 										<Switch
 											checked={enabledModels.has(model.id)}

@@ -21,7 +21,7 @@ const Form = (
 		inputProps,
 		buttonProps,
 		onSubmit,
-		icon = <MousePointerClick className="size-7 rotate-90" />,
+		icon = <MousePointerClick className="rotate-90 size-7" />,
 		buttonPosition = "inside",
 		isLoading = false,
 		variant = "modern",
@@ -34,13 +34,13 @@ const Form = (
 	// Determine styles based on variant
 	const getInputStyles = () => {
 		const baseStyles =
-			"flex-1 w-full transition focus-outline-none outline-none ring-0  !pt-[12px] resize-none";
+			"flex-1 w-full transition focus-outline-none outline-none ring-0 dark:bg-[#2D2D2D] !pt-[12px] resize-none";
 
 		switch (variant) {
 			case "modern":
 				return cn(
 					baseStyles,
-					"min-h-[100px] rounded-2xl bg-white p-5 md:min-h-[100px]",
+					"min-h-[100px] rounded-2xl  p-5 md:min-h-[100px]",
 					"border-2 border-gray-300 text-base focus:border-gray-300 focus-outline-none",
 					"disabled:bg-gray-100",
 					inputProps.className
@@ -56,7 +56,7 @@ const Form = (
 			default:
 				return cn(
 					baseStyles,
-					"min-h-[80px] rounded-xl bg-white p-4 pt-1 md:min-h-[100px]",
+					"min-h-[80px] rounded-xl  p-4 pt-1 md:min-h-[100px]",
 					"border border-gray-400 text-base",
 					"disabled:bg-gray-100",
 					inputProps.className
@@ -94,7 +94,7 @@ const Form = (
 	return (
 		<form
 			onSubmit={onSubmit}
-			className={cn("relative m-auto flex flex-col gap-4")}
+			className={cn("flex relative flex-col gap-4 m-auto")}
 			ref={ref}
 			{...formProps}
 		>
@@ -121,8 +121,8 @@ const Form = (
 					disabled={isLoading || buttonProps.disabled}
 				>
 					{isLoading ? (
-						<span className="flex items-center justify-center">
-							<svg className="size-5 animate-spin" viewBox="0 0 24 24">
+						<span className="flex justify-center items-center">
+							<svg className="animate-spin size-5" viewBox="0 0 24 24">
 								<circle
 									className="opacity-25"
 									cx="12"

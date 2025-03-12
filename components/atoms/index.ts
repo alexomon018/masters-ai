@@ -33,6 +33,7 @@ import {
 	DropdownMenuTrigger,
 	DropdownMenuCheckboxItem
 } from "./Dropdown/Dropdown";
+import { ThemeToggle } from "./ThemeToggle/ThemeToggle";
 
 export {
 	Button,
@@ -65,5 +66,6 @@ export {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-	DropdownMenuCheckboxItem
+	DropdownMenuCheckboxItem,
+	ThemeToggle
 };

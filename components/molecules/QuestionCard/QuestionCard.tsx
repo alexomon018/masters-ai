@@ -6,10 +6,10 @@ interface QuestionCardProps {
 }
 
 const QuestionCard = ({ question, askedBy }: QuestionCardProps) => (
-	<div className="group flex cursor-pointer items-center justify-between rounded-xl bg-white/50 p-4 transition-colors hover:bg-white/80">
-		<div className="mb-4 flex justify-between gap-4">
+	<div className="flex justify-between items-center p-4 rounded-xl transition-colors cursor-pointer group bg-white/50 hover:bg-white/80">
+		<div className="flex gap-4 justify-between mb-4">
 			<h3 className="font-medium">{question}</h3>
-			<ArrowRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+			<ArrowRight className="transition-colors size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
 		</div>
 		<p className="text-sm text-muted-foreground">
 			Asked by {askedBy} {askedBy === 1 ? "person" : "people"}
