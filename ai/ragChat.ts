@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Index } from "@upstash/vector";
 import { RAGChat, openai, anthropic, custom } from "@upstash/rag-chat";
 import redis from "@/lib/redis";
+import { LLMModel } from "@/types";
 
 const ratelimit = new Ratelimit({
 	redis,
@@ -14,15 +15,18 @@ const getCurrentTime = () => new Date().toLocaleString();
 export const createPrompt = ({
 	question,
 	chatHistory,
-	context
+	context,
+	model
 }: {
 	question: string;
 	chatHistory: string | undefined;
 	context: string;
+	model: LLMModel;
 }) => `
 You are a helpful AI assistant called Troll, designed to assist with programming and technical questions using a powerful vector database containing transcripts from all Frontend Masters courses in the past year. Follow these guidelines:
 
 - Current time: ${getCurrentTime()}
+- You are currently using the ${model} model.
 - Prioritize using the vector database to provide answers directly based on the content and teachings from Frontend Masters courses. Use your comprehensive understanding of these courses to deliver accurate and context-relevant answers.
 - If a question is beyond the scope of the Frontend Masters content, provide general programming insights while maintaining clarity.
 - When answering, clearly reference concepts or topics from the courses to enhance the credibility of your response.
@@ -56,6 +60,8 @@ const vectorConfig = {
 	token: process.env.UPSTASH_VECTOR_REST_TOKEN!
 };
 
+const vector = new Index(vectorConfig);
+
 // Create a function to generate the prompt for all instances
 
 // Pre-initialize instances for each model
@@ -63,52 +69,88 @@ export const openAIRagChat = new RAGChat({
 	ratelimit,
 	debug: false,
 	model: openai("gpt-4o-mini"),
-	vector: new Index(vectorConfig),
+	vector,
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>
 		createPrompt({
 			question,
 			chatHistory,
-			context
+			context,
+			model: "gpt-4o-mini"
+		})
+});
+
+export const openAI4oRagChat = new RAGChat({
+	ratelimit,
+	debug: false,
+	model: openai("gpt-4o"),
+	vector,
+	redis,
+	promptFn: ({ question, chatHistory, context }) =>
+		createPrompt({
+			question,
+			chatHistory,
+			context,
+			model: "gpt-4o"
 		})
 });
 
 export const anthropicRagChat = new RAGChat({
 	ratelimit,
 	debug: false,
-	model: anthropic("claude-3-sonnet", {
+	model: anthropic("claude-3-5-sonnet-latest", {
 		apiKey: process.env.ANTHROPIC_API_KEY
 	}),
-	vector: new Index(vectorConfig),
+	vector,
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>
 		createPrompt({
 			question,
 			chatHistory,
-			context
+			context,
+			model: "claude-3-5-sonnet-latest"
+		})
+});
+
+export const anthropic3SonnetRagChat = new RAGChat({
+	ratelimit,
+	debug: false,
+	model: anthropic("claude-3-sonnet-20240229", {
+		apiKey: process.env.ANTHROPIC_API_KEY
+	}),
+	vector,
+	redis,
+	promptFn: ({ question, chatHistory, context }) =>
+		createPrompt({
+			question,
+			chatHistory,
+			context,
+			model: "claude-3-sonnet-20240229"
 		})
 });
 
 export const groqRagChat = new RAGChat({
-	ratelimit,
 	debug: false,
 	model: custom("grok-2-latest", {
 		apiKey: process.env.GROK_API_KEY,
 		baseUrl: "https://api.grok.com/v1"
 	}),
-	vector: new Index(vectorConfig),
+	vector,
 	redis,
 	promptFn: ({ question, chatHistory, context }) =>
 		createPrompt({
 			question,
 			chatHistory,
-			context
+			context,
+			model: "gpt-3.5-turbo"
 		})
 });
 
 // Export a helper function to get the appropriate model based on user request
-export function getRagChatInstance(model: "anthropic" | "openai" | "groq") {
-	if (model === "anthropic") return anthropicRagChat;
-	if (model === "groq") return groqRagChat;
-	return openAIRagChat;
+export function getRagChatInstance(model: LLMModel) {
+	if (model === "claude-3-5-sonnet-latest") return anthropicRagChat;
+	if (model === "claude-3-sonnet-20240229") return anthropic3SonnetRagChat;
+	if (model === "gpt-4o-mini") return openAIRagChat;
+	if (model === "gpt-4o") return openAI4oRagChat;
+	return openAIRagChat; // Default fallback
 }
