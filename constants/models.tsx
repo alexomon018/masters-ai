@@ -1,10 +1,10 @@
 import anthropic from "@/public/anthropic.svg";
-import grok from "@/public/grok.svg";
 import openai from "@/public/openai.svg";
 import { EyeIcon, WholeWordIcon, BrainIcon, ZapIcon } from "lucide-react";
+import { LLMModel } from "@/types";
 
 export interface Model {
-	id: string;
+	id: LLMModel;
 	name: string;
 	shortDescription: string;
 	longDescription: string;
@@ -38,7 +38,7 @@ const modelCards: Model[] = [
 		]
 	},
 	{
-		id: "claude-3.5-sonnet",
+		id: "claude-3-5-sonnet-latest",
 		name: "Claude 3.5 Sonnet",
 		shortDescription: "Smart model for complex problems.",
 		longDescription:
@@ -57,20 +57,35 @@ const modelCards: Model[] = [
 		]
 	},
 	{
-		id: "grok-3",
-		name: "Grok 3",
-		shortDescription: "High-performance language model.",
+		id: "gpt-4o",
+		name: "GPT-4o",
+		shortDescription: "The latest and greatest GPT model.",
 		longDescription:
-			"High-performance language model. Grok's latest model features extended context window and improved reasoning capabilities for complex tasks.",
-		icon: "grok",
-		logo: grok,
+			"The latest and greatest GPT model. It accepts both text and image inputs. Although images are not yet supported on masters.chat",
+		icon: "openai",
+		logo: openai,
 		features: [
 			{
 				name: "Vision",
 				icon: <EyeIcon className="size-4" color="blue" />
 			},
 			{
-				name: "Thinking",
+				name: "Fast",
+				icon: <ZapIcon className="size-4" color="#FF9800" />
+			}
+		]
+	},
+	{
+		id: "claude-3-sonnet-20240229",
+		name: "Claude 3 Sonnet",
+		shortDescription: "One of the core models from Anthropic.",
+		longDescription:
+			"One of the core models from Anthropic. It's a good all-rounder, but not as good at code as GPT-4o.",
+		icon: "anthropic",
+		logo: anthropic,
+		features: [
+			{
+				name: "Reasoning",
 				icon: <BrainIcon className="size-4" color="purple" />
 			}
 		]

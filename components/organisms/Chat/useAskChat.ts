@@ -8,6 +8,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { getQueryClient } from "@/providers/getQueryClient";
 import useSync from "@/components/molecules/CloudSyncSection/useSync";
 import { queryKeys } from "@/constants";
+import { useModelStore } from "@/providers";
 
 const useAskChat = (threadId: string) => {
 	const [streaming, setStreaming] = useState<boolean>(false);
@@ -17,6 +18,8 @@ const useAskChat = (threadId: string) => {
 	useSync();
 
 	let currentThreadId = threadId;
+
+	const { selectedModel } = useModelStore((state) => state);
 
 	const activeThread = useLiveQuery(() =>
 		dxdb.threads.get(currentThreadId || "")
@@ -38,7 +41,8 @@ const useAskChat = (threadId: string) => {
 				const response = await fetch("/api/name-thread", {
 					method: "POST",
 					body: JSON.stringify({
-						messages: [message]
+						messages: [message],
+						model: selectedModel.id
 					})
 				});
 
@@ -74,7 +78,7 @@ const useAskChat = (threadId: string) => {
 		initialMessages: initialMessages as Message[],
 		body: {
 			chatId: currentThreadId,
-			model: "openai"
+			model: selectedModel.id
 		},
 
 		onResponse: async (response) => {

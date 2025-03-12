@@ -7,6 +7,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { messageAllowed } from "@/constants";
 import redis from "@/lib/redis";
 import { getRagChatInstance } from "@/ai/ragChat";
+import { LLMModel } from "@/types";
 
 export const POST = async (req: NextRequest) => {
 	try {
@@ -60,7 +61,7 @@ export const POST = async (req: NextRequest) => {
 
 		const body = (await req.json()) as {
 			messages: VercelChatMessage[];
-			model: "anthropic" | "openai" | "groq";
+			model: LLMModel;
 		};
 		const question = body.messages.at(-1);
 
