@@ -17,8 +17,8 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 	return (
 		<article
 			className={cn(
-				"mb-4 flex items-start gap-4 rounded-2xl p-4 md:p-5",
-				isUser ? "" : "bg-emerald-50"
+				"flex gap-4 items-start p-4 mb-4 rounded-2xl md:p-5",
+				isUser ? "":"bg-emerald-50 dark:bg-emerald-900"
 			)}
 		>
 			{isUser ? (

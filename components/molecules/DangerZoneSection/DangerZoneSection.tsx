@@ -37,7 +37,7 @@ const DangerZoneSection = ({
 
 	return (
 		<section className={cn(className)}>
-			<h2 className="mb-2 text-2xl font-semibold text-destructive">{title}</h2>
+			<h2 className="mb-2 text-2xl font-semibold">{title}</h2>
 			<p className="mb-4 text-muted-foreground">{description}</p>
 			<Button
 				onClick={() => setIsAlertOpen(true)}

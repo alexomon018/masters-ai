@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { MessageList, InitialQuestions } from "@molecules";
 import { cn } from "@/utils";
+import { ThemeToggle } from "@atoms";
 import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
@@ -50,7 +51,10 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	);
 
 	return (
-		<div className="flex min-h-svh bg-[#F8FAFF]">
+		<div className="flex min-h-svh">
+			<div className="absolute top-4 right-4">
+				<ThemeToggle />
+			</div>
 			<SideBar activeThread={activeThread || null} />
 			<main
 				className={cn(

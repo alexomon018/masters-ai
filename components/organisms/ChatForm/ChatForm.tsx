@@ -20,16 +20,16 @@ const ChatForm = ({
 	<div
 		className={cn(
 			"fixed inset-x-0 bottom-0 z-10",
-			"flex flex-col items-center justify-center",
-			"bg-white",
+			"flex flex-col justify-center items-center",
+
 			"md:ml-80"
 		)}
 	>
-		<MessageLimit />
-		<span className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b from-white/0 to-white" />
+		<MessageLimit className="z-10" />
+		<span className="pointer-events-none absolute inset-x-0 bottom-[89%] h-10 bg-gradient-to-b from-white/0 to-white dark:from-gray-900/0 dark:to-gray-900" />
 		<div
 			className={cn(
-				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5"
+				"px-4 py-6 w-full max-w-screen-md rounded-xl md:pl-inherit md:px-5"
 			)}
 		>
 			<CustomForm
