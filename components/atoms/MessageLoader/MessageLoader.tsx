@@ -6,7 +6,7 @@ const MessageLoading: React.FC = () => (
 	<article
 		className={cn(
 			"mb-2 flex items-center gap-4 rounded-2xl p-4 md:p-5",
-			"bg-emerald-50/80"
+			"bg-emerald-50/80 dark:bg-emerald-900/80"
 		)}
 	>
 		<Avatar />

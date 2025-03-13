@@ -1,5 +1,3 @@
-import anthropic from "@/public/anthropic.svg";
-import openai from "@/public/openai.svg";
 import { EyeIcon, WholeWordIcon, BrainIcon, ZapIcon } from "lucide-react";
 import { LLMModel } from "@/types";
 
@@ -8,8 +6,7 @@ export interface Model {
 	name: string;
 	shortDescription: string;
 	longDescription: string;
-	icon: string;
-	logo: string;
+	icon: React.ReactNode;
 	features: Array<{
 		name: string;
 		icon: React.ReactNode;
@@ -25,7 +22,7 @@ const modelCards: Model[] = [
 		longDescription:
 			"Like gpt-4o, but faster. This model sacrifices some of the original GPT-4o's precision for significantly reduced latency. It accepts both text and image inputs.",
 		icon: "openai",
-		logo: openai,
+
 		features: [
 			{
 				name: "Vision",
@@ -44,7 +41,7 @@ const modelCards: Model[] = [
 		longDescription:
 			"Smart model for complex problems. Known for being good at code and math. Also kind of slow and expensive.",
 		icon: "anthropic",
-		logo: anthropic,
+
 		features: [
 			{
 				name: "Reasoning",
@@ -63,7 +60,7 @@ const modelCards: Model[] = [
 		longDescription:
 			"The latest and greatest GPT model. It accepts both text and image inputs. Although images are not yet supported on masters.chat",
 		icon: "openai",
-		logo: openai,
+
 		features: [
 			{
 				name: "Vision",
@@ -82,7 +79,6 @@ const modelCards: Model[] = [
 		longDescription:
 			"One of the core models from Anthropic. It's a good all-rounder, but not as good at code as GPT-4o.",
 		icon: "anthropic",
-		logo: anthropic,
 		features: [
 			{
 				name: "Reasoning",
