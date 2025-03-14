@@ -6,8 +6,9 @@ import { DEX_Thread } from "@/localdb/dexie";
 import { Avatar, AvatarFallback, AvatarImage } from "@atoms";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
-import { Settings2Icon } from "lucide-react";
+import { Settings2Icon, Search } from "lucide-react";
 import useSideBar from "./useSideBar";
+import SearchOverlay from "../SearchOverlay/SearchOverlay";
 
 interface SideBarProps {
 	activeThread: DEX_Thread | null;
@@ -33,13 +34,13 @@ const ChatItem = React.memo(
 				isActive && "bg-gray-50 dark:bg-gray-800"
 			)}
 		>
-			<div className="flex justify-center items-center mb-1">
-				<h3 className="flex-1 font-medium text-left">{chat.title}</h3>
+			<div className="mb-1 flex items-center justify-center">
+				<h3 className="flex-1 text-left font-medium">{chat.title}</h3>
 				<span className="mr-2 text-xs text-gray-500">
 					{new Date(chat.created_at).toLocaleDateString()}
 				</span>
 				<TrashIcon
-					className="cursor-pointer size-4"
+					className="size-4 cursor-pointer"
 					onClick={(e) => {
 						e.stopPropagation();
 						onDelete(chat.id);
@@ -59,7 +60,9 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 		startNewChat,
 		handleChatSelect,
 		user,
-		isLoaded
+		isLoaded,
+		openSearch,
+		setOpenSearch
 	} = useSideBar();
 
 	const renderChatList = () => {
@@ -89,30 +92,43 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 	return (
 		<aside
 			className={cn(
-				"hidden sticky top-0 z-30 flex-col w-80 h-screen border-r border-gray-200 md:flex"
+				"sticky top-0 z-30 hidden h-screen w-80 flex-col border-r border-gray-200 md:flex"
 			)}
 		>
-			<div className="flex justify-between items-center p-4 border-b border-gray-200">
+			<div className="flex items-center justify-between border-b border-gray-200 p-4">
 				<h2 className="flex-1 text-xl font-semibold">Chat History</h2>
-				<button
-					type="button"
-					className="cursor-pointer size-6"
-					onClick={startNewChat}
-				>
-					<ChatBubbleIcon className="size-6" />
-				</button>
+				<div className="flex items-center gap-3">
+					<button
+						type="button"
+						className="size-6 cursor-pointer"
+						onClick={() => setOpenSearch(!openSearch)}
+					>
+						<Search className="size-6" />
+					</button>
+					<button
+						type="button"
+						className="size-6 cursor-pointer"
+						onClick={startNewChat}
+					>
+						<ChatBubbleIcon className="size-6" />
+					</button>
+				</div>
 			</div>
 
-			<div className="overflow-y-auto flex-1">
+			<div className="flex-1 overflow-y-auto">
 				<div className="w-full divide-y divide-gray-200">
 					{renderChatList()}
 				</div>
 			</div>
 
+			{openSearch && (
+				<SearchOverlay setOpenSearch={setOpenSearch} openSearch={openSearch} />
+			)}
+
 			{isLoaded &&
 				(user ? (
-					<div className="flex justify-between items-center p-4 border-t border-gray-200">
-						<div className="flex gap-3 items-center">
+					<div className="flex items-center justify-between border-t border-gray-200 p-4">
+						<div className="flex items-center gap-3">
 							<Avatar>
 								<AvatarImage src={user.imageUrl} alt="User avatar" />
 								<AvatarFallback>
@@ -125,7 +141,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 						</div>
 						<button
 							type="button"
-							className="p-1 rounded-full size-8 hover:bg-gray-100 dark:hover:bg-gray-800"
+							className="size-8 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
 							onClick={() => router.push("/settings/account")}
 						>
 							<Settings2Icon className="size-6" />
@@ -134,7 +150,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 				) : (
 					<button
 						type="button"
-						className="p-4 w-full font-medium text-left border-t border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+						className="w-full border-t border-gray-200 p-4 text-left font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
 						onClick={() => router.push("/auth")}
 					>
 						Login

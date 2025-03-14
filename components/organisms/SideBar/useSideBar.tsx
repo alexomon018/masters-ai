@@ -1,14 +1,18 @@
+"use client";
+
 import { dxdb } from "@/localdb/dexie";
 import { useUser } from "@clerk/nextjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 const useSideBar = () => {
 	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
+
+	const [openSearch, setOpenSearch] = useState(false);
 
 	const { mutate: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
@@ -74,7 +78,9 @@ const useSideBar = () => {
 		startNewChat,
 		handleChatSelect,
 		user,
-		isLoaded
+		isLoaded,
+		openSearch,
+		setOpenSearch
 	};
 };
 

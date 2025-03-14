@@ -19,6 +19,7 @@ import HistoryAndSync from "./HistoryAndSync/HistoryAndSync";
 import AccountUpgrade from "./AccountUpgrade/AccountUpgrade";
 import Customization from "./Customization/Customization";
 import ModelsPicker from "./ModelsPicker/ModelsPicker";
+import SearchOverlay from "./SearchOverlay/SearchOverlay";
 
 export {
 	Form,
@@ -39,5 +40,6 @@ export {
 	HistoryAndSync,
 	AccountUpgrade,
 	Customization,
-	ModelsPicker
+	ModelsPicker,
+	SearchOverlay
 };
