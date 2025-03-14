@@ -1,7 +1,5 @@
 import { SignInButton } from "@clerk/nextjs";
-import GoogleIcon from "@/public/google.svg";
-import { Button } from "@atoms";
-import Image from "next/image";
+import { Button, CustomIcon } from "@atoms";
 
 const Page = () => (
 	<div className="flex min-h-screen items-center justify-center bg-background">
@@ -14,7 +12,7 @@ const Page = () => (
 			</p>
 			<SignInButton>
 				<Button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">
-					<Image src={GoogleIcon} alt="Google logo" width={20} height={20} />
+					<CustomIcon icon="google" />
 					Continue with Google
 				</Button>
 			</SignInButton>
