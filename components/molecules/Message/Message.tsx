@@ -2,6 +2,7 @@ import React from "react";
 import Markdown from "markdown-to-jsx";
 import cn from "@/utils/cn";
 import { Message as MessageProps } from "ai/react";
+import { User as UserIcon } from "lucide-react";
 import {
 	Avatar,
 	AvatarFallback,
@@ -14,20 +15,28 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 	const isUser = role === "user";
 	const { user } = useUser();
 
+	const isAnonymous = !user;
+
 	return (
 		<article
 			className={cn(
-				"flex gap-4 items-start p-4 mb-4 rounded-2xl md:p-5",
-				isUser ? "":"bg-emerald-50 dark:bg-emerald-900"
+				"mb-4 flex w-full items-start gap-4 rounded-2xl p-4 md:p-5",
+				isUser ? "" : "bg-emerald-50 dark:bg-emerald-900"
 			)}
 		>
 			{isUser ? (
-				<Avatar>
-					<AvatarImage src={user?.imageUrl} alt="User avatar" />
-					<AvatarFallback>
-						{user?.fullName?.charAt(0) || user?.username?.charAt(0)}
-					</AvatarFallback>
-				</Avatar>
+				<div>
+					{isAnonymous ? (
+						<UserIcon className="size-10" />
+					) : (
+						<Avatar>
+							<AvatarImage src={user?.imageUrl} alt="User avatar" />
+							<AvatarFallback>
+								{user?.fullName?.charAt(0) || user?.username?.charAt(0)}
+							</AvatarFallback>
+						</Avatar>
+					)}
+				</div>
 			) : (
 				<Avatar className="rounded-none">
 					<AvatarImage
@@ -43,7 +52,7 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 			)}
 			<Markdown
 				className={cn(
-					"space-y-4 py-1.5 md:py-1",
+					"w-fit max-w-[600px] space-y-4 py-1.5 md:py-1",
 					isUser ? "font-semibold" : ""
 				)}
 				options={{

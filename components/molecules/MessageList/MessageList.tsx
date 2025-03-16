@@ -14,7 +14,10 @@ const MessageList = ({
 	streaming,
 	messagesEndRef
 }: MessageListProps) => (
-	<VList className="scrollbar-hide" style={{ height: "100%" }}>
+	<VList
+		className="scrollbar-hide overflow-x-hidden"
+		style={{ height: "100%", width: "100%" }}
+	>
 		{messages.map((message: MessageProps) => (
 			<Message key={message.id} {...message} />
 		))}

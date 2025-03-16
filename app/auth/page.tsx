@@ -12,7 +12,7 @@ const Page = () => (
 			</p>
 			<SignInButton>
 				<Button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">
-					<CustomIcon icon="google" />
+					<CustomIcon icon="google" className="size-5" />
 					Continue with Google
 				</Button>
 			</SignInButton>

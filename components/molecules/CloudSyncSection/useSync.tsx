@@ -21,7 +21,7 @@ interface SyncData {
 const useSync = () => {
 	const [isCloudSyncEnabled, setIsCloudSyncEnabled] = useLocalStorage(
 		"isCloudSyncEnabled",
-		false
+		true
 	);
 	const [isSyncing, setIsSyncing] = useState(false);
 
