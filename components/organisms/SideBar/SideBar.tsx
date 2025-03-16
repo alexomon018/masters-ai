@@ -114,17 +114,12 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 					</button>
 				</div>
 			</div>
-
 			<div className="flex-1 overflow-y-auto">
 				<div className="w-full divide-y divide-gray-200">
 					{renderChatList()}
 				</div>
 			</div>
-
-			{openSearch && (
-				<SearchOverlay setOpenSearch={setOpenSearch} openSearch={openSearch} />
-			)}
-
+			<SearchOverlay setOpenSearch={setOpenSearch} openSearch={openSearch} />
 			{isLoaded &&
 				(user ? (
 					<div className="flex items-center justify-between border-t border-gray-200 p-4">
