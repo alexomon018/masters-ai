@@ -17,6 +17,17 @@ import MessageUsage from "./MessageUsage/MessageUsage";
 import KeyboardShortcuts from "./KeyboardShortcuts/KeyboardShortcuts";
 import UpgradeSection from "./UpgradeSection/UpgradeSection";
 import ChatModelSelector from "./ChatModelSelector/ChatModelSelector";
+import {
+	Command,
+	CommandDialog,
+	CommandInput,
+	CommandList,
+	CommandEmpty,
+	CommandGroup,
+	CommandItem,
+	CommandShortcut,
+	CommandSeparator
+} from "./CommandSearch/CommandSearch";
 
 export {
 	ExpertCard,
@@ -37,5 +48,14 @@ export {
 	MessageUsage,
 	KeyboardShortcuts,
 	UpgradeSection,
-	ChatModelSelector
+	ChatModelSelector,
+	Command,
+	CommandDialog,
+	CommandInput,
+	CommandList,
+	CommandEmpty,
+	CommandGroup,
+	CommandItem,
+	CommandShortcut,
+	CommandSeparator
 };

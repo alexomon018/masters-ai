@@ -35,6 +35,14 @@ import {
 } from "./Dropdown/Dropdown";
 import { ThemeToggle } from "./ThemeToggle/ThemeToggle";
 import CustomIcon from "./CustomIcon/CustomIcon";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogFooter,
+	DialogTitle,
+	DialogDescription
+} from "./Dialog/Dialog";
 
 export {
 	Button,
@@ -69,5 +77,11 @@ export {
 	DropdownMenuTrigger,
 	DropdownMenuCheckboxItem,
 	ThemeToggle,
-	CustomIcon
+	CustomIcon,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogFooter,
+	DialogTitle,
+	DialogDescription
 };
