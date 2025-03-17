@@ -10,18 +10,17 @@ import {
 } from "@/components/atoms/Avatar/Avatar";
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { useUser } from "@clerk/nextjs";
+import CodeBlock from "../CodeBlock/CodeBlock";
 
 const Message: React.FC<MessageProps> = ({ content, role }) => {
 	const isUser = role === "user";
 	const { user } = useUser();
-
 	const isAnonymous = !user;
 
 	return (
 		<article
 			className={cn(
-				"mb-4 flex w-full items-start gap-4 rounded-2xl p-4 md:p-5",
-				isUser ? "" : "bg-emerald-50 dark:bg-emerald-900"
+				"mb-4 flex w-full items-start gap-4 rounded-2xl p-4 md:p-5"
 			)}
 		>
 			{isUser ? (
@@ -60,7 +59,25 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 						// eslint-disable-next-line react/no-unstable-nested-components
 						ol: ({ children }) => <ol className="list-decimal">{children}</ol>,
 						// eslint-disable-next-line react/no-unstable-nested-components
-						ul: ({ children }) => <ol className="list-disc">{children}</ol>
+						ul: ({ children }) => <ol className="list-disc">{children}</ol>,
+						// eslint-disable-next-line react/no-unstable-nested-components
+						code: ({ children, className }) => {
+							// For inline code (no language specified)
+							if (!className) {
+								return (
+									<code className="rounded bg-gray-200 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
+										{children}
+									</code>
+								);
+							}
+							return (
+								<CodeBlock className={className}>
+									{children as string}
+								</CodeBlock>
+							);
+						},
+						// eslint-disable-next-line react/no-unstable-nested-components
+						pre: ({ children }) => <div className="not-prose">{children}</div>
 					}
 				}}
 			>

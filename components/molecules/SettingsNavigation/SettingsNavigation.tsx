@@ -18,15 +18,15 @@ const SettingsNavigation = ({ className }: SettingsNavigationProps) => {
 	return (
 		<nav
 			className={cn(
-				"scrollbar-hide mb-6 flex justify-center gap-1 overflow-x-auto pb-2 sm:mb-8 sm:gap-4 sm:pb-0",
+				"scrollbar-hide mb-6 flex justify-center gap-1 overflow-x-auto bg-muted pb-2 sm:mb-8 sm:gap-4 sm:pb-0 md:rounded-md",
 				className
 			)}
 		>
 			{SETTINGS_TABS.map((tab) => (
-				<Link href={tab.href} key={tab.name}>
+				<Link href={tab.href} key={tab.name} className="p-1">
 					<Button
 						key={tab.name}
-						variant={activeTab === tab.name ? "secondary" : "ghost"}
+						variant={activeTab === tab.name ? "outline" : "ghost"}
 						className="shrink-0 text-sm sm:text-base"
 					>
 						{tab.name}
