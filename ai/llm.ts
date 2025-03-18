@@ -50,21 +50,9 @@ export const summarizeMessages = async (messages: Msg[]) => {
 };
 
 export const runLLM = async (messages: Msg[]) => {
-	const chatModel = new ChatModel({
-		params: {
-			model: "gpt-4o",
-			temperature: 0.1
-		}
-	});
-
-	const response = await chatModel.run({
-		messages: [
-			{
-				role: "system",
-				content: nameThreadPrompt
-			},
-			...messages
-		]
+	const response = await openai.chat.completions.create({
+		model: "gpt-4o",
+		messages: [{ role: "system", content: nameThreadPrompt }, ...messages]
 	});
 
 	return response.choices[0].message.content;
