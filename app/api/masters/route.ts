@@ -26,7 +26,7 @@ export const POST = async (req: NextRequest) => {
 			if (Number(messageCount) >= messageAllowed.free) {
 				return NextResponse.json(
 					{
-						error: "You've reached your daily message limit of 3 messages."
+						error: `You've reached your daily message limit of ${messageAllowed.free} messages.`
 					},
 					{ status: 403 }
 				);
@@ -41,7 +41,7 @@ export const POST = async (req: NextRequest) => {
 			if (Number(messageCount) >= messageAllowed.authenticated) {
 				return NextResponse.json(
 					{
-						error: "You've reached your daily message limit of 3 messages."
+						error: `You've reached your daily message limit of ${messageAllowed.authenticated} messages.`
 					},
 					{ status: 403 }
 				);

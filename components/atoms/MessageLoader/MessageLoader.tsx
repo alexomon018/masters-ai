@@ -1,16 +1,7 @@
 import React from "react";
-import { Avatar } from "@/components/atoms/Avatar/Avatar";
-import { cn } from "@utils";
 
 const MessageLoading: React.FC = () => (
-	<article
-		className={cn(
-			"mb-2 flex items-center gap-4 rounded-2xl p-4 md:p-5",
-			"bg-emerald-50/80 dark:bg-emerald-900/80"
-		)}
-	>
-		<Avatar />
-
+	<article className="mb-2 flex items-center gap-4 rounded-2xl p-4 md:p-5">
 		{/* https://github.com/n3r4zzurr0/svg-spinners/blob/main/svg-smil/3-dots-bounce.svg?short_path=50864c0 */}
 		<svg
 			width="24"

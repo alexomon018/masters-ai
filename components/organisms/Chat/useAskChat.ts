@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getQueryClient } from "@/providers/getQueryClient";
 import useSync from "@/components/molecules/CloudSyncSection/useSync";
-import { queryKeys } from "@/constants";
+import { messageAllowed, queryKeys } from "@/constants";
 import { useModelStore } from "@/providers";
 
 const useAskChat = (threadId: string) => {
@@ -84,7 +84,7 @@ const useAskChat = (threadId: string) => {
 		onResponse: async (response) => {
 			if (response.status === 403) {
 				await dxdb.addMessage({
-					content: "You've reached your daily message limit of 3 messages.",
+					content: `You've reached your daily message limit of ${messageAllowed.free} messages.`,
 					role: "assistant",
 					threadId: currentThreadId
 				});
@@ -94,7 +94,7 @@ const useAskChat = (threadId: string) => {
 					{
 						id: "403",
 						role: "assistant",
-						content: "You've reached your daily message limit of 3 messages."
+						content: `You've reached your daily message limit of ${messageAllowed.free} messages.`
 					}
 				]);
 				setStreaming(false);
