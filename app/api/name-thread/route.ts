@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { runLLM } from "@/ai/llm";
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
 	try {
 		const body = await request.json();
 		const { messages } = body;
@@ -16,4 +16,4 @@ export async function POST(request: Request) {
 			{ status: 500 }
 		);
 	}
-}
+};
