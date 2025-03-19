@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { runLLM } from "@/ai/llm";
 
+// Add an OPTIONS handler to properly handle preflight requests for CORS
+export async function OPTIONS() {
+	return NextResponse.json({}, { status: 200 });
+}
+
+// Make sure POST is using the recommended function syntax
 export async function POST(request: Request) {
 	try {
 		const body = await request.json();

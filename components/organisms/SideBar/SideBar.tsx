@@ -122,7 +122,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 			<SearchOverlay setOpenSearch={setOpenSearch} openSearch={openSearch} />
 			{isLoaded &&
 				(user ? (
-					<div className="flex items-center justify-between border-t border-gray-200 p-4">
+					<div className="flex items-center justify-between border-t border-gray-200 p-5">
 						<div className="flex items-center gap-3">
 							<Avatar>
 								<AvatarImage src={user.imageUrl} alt="User avatar" />
