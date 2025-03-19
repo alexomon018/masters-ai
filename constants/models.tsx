@@ -1,4 +1,4 @@
-import { EyeIcon, WholeWordIcon, BrainIcon, ZapIcon } from "lucide-react";
+import { EyeIcon, BrainIcon, ZapIcon } from "lucide-react";
 import { LLMModel } from "@/types";
 
 export interface Model {
@@ -34,47 +34,47 @@ const modelCards: Model[] = [
 			}
 		]
 	},
-	{
-		id: "claude-3-5-sonnet-latest",
-		name: "Claude 3.5 Sonnet",
-		shortDescription: "Smart model for complex problems.",
-		longDescription:
-			"Smart model for complex problems. Known for being good at code and math. Also kind of slow and expensive.",
-		icon: "anthropic",
+	// {
+	// 	id: "claude-3-5-sonnet-latest",
+	// 	name: "Claude 3.5 Sonnet",
+	// 	shortDescription: "Smart model for complex problems.",
+	// 	longDescription:
+	// 		"Smart model for complex problems. Known for being good at code and math. Also kind of slow and expensive.",
+	// 	icon: "anthropic",
 
-		features: [
-			{
-				name: "Reasoning",
-				icon: <BrainIcon className="size-4" color="purple" />
-			},
-			{
-				name: "Web Search",
-				icon: <WholeWordIcon className="size-4" color="green" />
-			}
-		]
-	},
-	{
-		id: "gpt-4o",
-		name: "GPT-4o",
-		shortDescription: "The latest and greatest GPT model.",
-		longDescription:
-			"The latest and greatest GPT model. It accepts both text and image inputs. Although images are not yet supported on masters.chat",
-		icon: "openai",
+	// 	features: [
+	// 		{
+	// 			name: "Reasoning",
+	// 			icon: <BrainIcon className="size-4" color="purple" />
+	// 		},
+	// 		{
+	// 			name: "Web Search",
+	// 			icon: <WholeWordIcon className="size-4" color="green" />
+	// 		}
+	// 	]
+	// },
+	// {
+	// 	id: "gpt-4o",
+	// 	name: "GPT-4o",
+	// 	shortDescription: "The latest and greatest GPT model.",
+	// 	longDescription:
+	// 		"The latest and greatest GPT model. It accepts both text and image inputs. Although images are not yet supported on masters.chat",
+	// 	icon: "openai",
 
-		features: [
-			{
-				name: "Vision",
-				icon: <EyeIcon className="size-4" color="blue" />
-			},
-			{
-				name: "Fast",
-				icon: <ZapIcon className="size-4" color="#FF9800" />
-			}
-		]
-	},
+	// 	features: [
+	// 		{
+	// 			name: "Vision",
+	// 			icon: <EyeIcon className="size-4" color="blue" />
+	// 		},
+	// 		{
+	// 			name: "Fast",
+	// 			icon: <ZapIcon className="size-4" color="#FF9800" />
+	// 		}
+	// 	]
+	// },
 	{
-		id: "claude-3-sonnet-20240229",
-		name: "Claude 3 Sonnet",
+		id: "claude-3-haiku-20240307",
+		name: "Claude 3 Haiku",
 		shortDescription: "One of the core models from Anthropic.",
 		longDescription:
 			"One of the core models from Anthropic. It's a good all-rounder, but not as good at code as GPT-4o.",
