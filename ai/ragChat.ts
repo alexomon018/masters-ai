@@ -65,92 +65,51 @@ const vector = new Index(vectorConfig);
 // Create a function to generate the prompt for all instances
 
 // Pre-initialize instances for each model
-export const openAIRagChat = new RAGChat({
-	ratelimit,
-	debug: false,
-	model: openai("gpt-4o-mini"),
-	vector,
-	redis,
-	promptFn: ({ question, chatHistory, context }) =>
-		createPrompt({
-			question,
-			chatHistory,
-			context,
-			model: "gpt-4o-mini"
-		})
-});
-
-export const openAI4oRagChat = new RAGChat({
-	ratelimit,
-	debug: false,
-	model: openai("gpt-4o"),
-	vector,
-	redis,
-	promptFn: ({ question, chatHistory, context }) =>
-		createPrompt({
-			question,
-			chatHistory,
-			context,
-			model: "gpt-4o"
-		})
-});
-
-export const anthropicRagChat = new RAGChat({
-	ratelimit,
-	debug: false,
-	model: anthropic("claude-3-5-sonnet-latest", {
-		apiKey: process.env.ANTHROPIC_API_KEY
-	}),
-	vector,
-	redis,
-	promptFn: ({ question, chatHistory, context }) =>
-		createPrompt({
-			question,
-			chatHistory,
-			context,
-			model: "claude-3-5-sonnet-latest"
-		})
-});
-
-export const anthropic3SonnetRagChat = new RAGChat({
-	ratelimit,
-	debug: false,
-	model: anthropic("claude-3-sonnet-20240229", {
-		apiKey: process.env.ANTHROPIC_API_KEY
-	}),
-	vector,
-	redis,
-	promptFn: ({ question, chatHistory, context }) =>
-		createPrompt({
-			question,
-			chatHistory,
-			context,
-			model: "claude-3-sonnet-20240229"
-		})
-});
-
-export const groqRagChat = new RAGChat({
-	debug: false,
-	model: custom("grok-2-latest", {
-		apiKey: process.env.GROK_API_KEY,
-		baseUrl: "https://api.grok.com/v1"
-	}),
-	vector,
-	redis,
-	promptFn: ({ question, chatHistory, context }) =>
-		createPrompt({
-			question,
-			chatHistory,
-			context,
-			model: "gpt-3.5-turbo"
-		})
-});
+export const createRagChat = (
+	modelName: LLMModel,
+	llmModel:
+		| ReturnType<typeof openai>
+		| ReturnType<typeof anthropic>
+		| ReturnType<typeof custom>,
+	sessionId?: string
+) =>
+	new RAGChat({
+		ratelimit,
+		debug: false,
+		model: llmModel,
+		vector,
+		redis,
+		sessionId, // Use the sessionId if provided
+		promptFn: ({ question, chatHistory, context }) =>
+			createPrompt({
+				question,
+				chatHistory,
+				context,
+				model: modelName
+			})
+	});
 
 // Export a helper function to get the appropriate model based on user request
-export function getRagChatInstance(model: LLMModel) {
-	if (model === "claude-3-5-sonnet-latest") return anthropicRagChat;
-	if (model === "claude-3-sonnet-20240229") return anthropic3SonnetRagChat;
-	if (model === "gpt-4o-mini") return openAIRagChat;
-	if (model === "gpt-4o") return openAI4oRagChat;
-	return openAIRagChat; // Default fallback
+export function getRagChatInstance(model: LLMModel, sessionId: string) {
+	// Create instance with the provided sessionId
+	if (model === "claude-3-haiku-20240307") {
+		return createRagChat(
+			model,
+			anthropic("claude-3-haiku-20240307", {
+				apiKey: process.env.ANTHROPIC_API_KEY
+			}),
+			sessionId
+		);
+	}
+
+	if (model === "gpt-4o-mini") {
+		return createRagChat(model, openai("gpt-4o-mini"), sessionId);
+	}
+
+	// Default fallback
+	return createRagChat(
+		"gpt-4o-mini" as LLMModel,
+		openai("gpt-4o-mini"),
+		sessionId
+	);
 }

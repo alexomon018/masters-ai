@@ -69,8 +69,10 @@ export const POST = async (req: NextRequest) => {
 			return new NextResponse("question not found", { status: 400 });
 		}
 
+		const sessionId = trackingId;
+
 		// Get the appropriate RAGChat instance
-		const ragChat = getRagChatInstance(body.model);
+		const ragChat = getRagChatInstance(body.model, sessionId);
 
 		const response = await ragChat.chat(question.content, {
 			streaming: true,
