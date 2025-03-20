@@ -10,6 +10,7 @@ import {
 } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Message, Thread } from "@/lib/schema";
+import { tryCatch } from "@/utils";
 
 export async function GET() {
 	const user = await currentUser();
@@ -18,31 +19,35 @@ export async function GET() {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	try {
-		const { threads, messages } = await getAllThreadsAndMessagesFromDb(user.id);
+	const { data: dbData, error: fetchError } = await tryCatch(
+		getAllThreadsAndMessagesFromDb(user.id)
+	);
 
-		const parsedThreads = threads.map(
-			(t) => SuperJSON.deserialize(t.data!) as DEX_Thread
-		);
-		const parsedMessages = messages.map(
-			(m) => SuperJSON.deserialize(m.data!) as DEX_Message
-		);
-
-		const response = SuperJSON.stringify({
-			threads: parsedThreads,
-			messages: parsedMessages
-		});
-
-		return new Response(response, {
-			headers: { "Content-Type": "application/json" }
-		});
-	} catch (error) {
-		console.error("Error fetching data:", error);
+	if (fetchError || !dbData) {
+		console.error("Error fetching data:", fetchError);
 		return NextResponse.json(
 			{ error: "Failed to fetch data" },
 			{ status: 500 }
 		);
 	}
+
+	const { threads, messages } = dbData;
+
+	const parsedThreads = threads.map(
+		(t) => SuperJSON.deserialize(t.data!) as DEX_Thread
+	);
+	const parsedMessages = messages.map(
+		(m) => SuperJSON.deserialize(m.data!) as DEX_Message
+	);
+
+	const response = SuperJSON.stringify({
+		threads: parsedThreads,
+		messages: parsedMessages
+	});
+
+	return new Response(response, {
+		headers: { "Content-Type": "application/json" }
+	});
 }
 
 export async function POST(request: Request) {
@@ -52,34 +57,71 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	try {
-		const { json } = await request.json();
+	const { data: requestData, error: parseError } = await tryCatch(
+		request.json()
+	);
 
-		const { threads, messages } = SuperJSON.parse(json) as {
-			threads: DEX_Thread[];
-			messages: DEX_Message[];
-		};
+	if (parseError || !requestData) {
+		return NextResponse.json(
+			{ error: "Invalid request data" },
+			{ status: 400 }
+		);
+	}
 
-		// Sync threads and messages to the database
-		if (threads && threads.length > 0) {
-			await syncThreadsToDb({
+	const { data: parsedData, error: superJsonError } = await tryCatch(
+		Promise.resolve().then(() => {
+			const { json } = requestData as { json: string };
+			return SuperJSON.parse(json) as {
+				threads: DEX_Thread[];
+				messages: DEX_Message[];
+			};
+		})
+	);
+
+	if (superJsonError || !parsedData) {
+		return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
+	}
+
+	const { threads, messages } = parsedData as {
+		threads: DEX_Thread[];
+		messages: DEX_Message[];
+	};
+
+	if (threads && threads.length > 0) {
+		const { error: threadSyncError } = await tryCatch(
+			syncThreadsToDb({
 				userId: user.id,
-				threads: threads as unknown as Thread[]
-			});
-		}
+				threads: threads as Thread[]
+			})
+		);
 
-		if (messages && messages.length > 0) {
-			await syncMessagesToDb({
+		if (threadSyncError) {
+			console.error("Error syncing threads:", threadSyncError);
+			return NextResponse.json(
+				{ error: "Failed to sync threads" },
+				{ status: 500 }
+			);
+		}
+	}
+
+	if (messages && messages.length > 0) {
+		const { error: messageSyncError } = await tryCatch(
+			syncMessagesToDb({
 				userId: user.id,
 				messages: messages as unknown as Message[]
-			});
-		}
+			})
+		);
 
-		return NextResponse.json({ success: true });
-	} catch (error) {
-		console.error("Error syncing data:", error);
-		return NextResponse.json({ error: "Failed to sync data" }, { status: 500 });
+		if (messageSyncError) {
+			console.error("Error syncing messages:", messageSyncError);
+			return NextResponse.json(
+				{ error: "Failed to sync messages" },
+				{ status: 500 }
+			);
+		}
 	}
+
+	return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: Request) {
@@ -89,29 +131,40 @@ export async function DELETE(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const data = await request.json();
+	const { data: requestData, error: parseError } = await tryCatch(
+		request.json()
+	);
+
+	if (parseError || !requestData) {
+		return NextResponse.json(
+			{ error: "Invalid request data" },
+			{ status: 400 }
+		);
+	}
 
 	// If deleteAll flag is true, delete all user data
-	if (data.deleteAll) {
-		try {
-			const result = await deleteAllUserDataFromDb(user.id);
+	if (requestData.deleteAll) {
+		const { data: result, error: deleteError } = await tryCatch(
+			deleteAllUserDataFromDb(user.id)
+		);
 
-			return NextResponse.json({
-				success: true,
-				deletedMessagesCount: result.deletedMessagesCount,
-				deletedThreadsCount: result.deletedThreadsCount
-			});
-		} catch (error) {
-			console.error("Error deleting all user data:", error);
+		if (deleteError || !result) {
+			console.error("Error deleting all user data:", deleteError);
 			return NextResponse.json(
 				{ error: "Failed to delete all user data" },
 				{ status: 500 }
 			);
 		}
+
+		return NextResponse.json({
+			success: true,
+			deletedMessagesCount: result.deletedMessagesCount,
+			deletedThreadsCount: result.deletedThreadsCount
+		});
 	}
 
-	// Handle single thread deletion (existing functionality)
-	const { threadId } = data;
+	// Handle single thread deletion
+	const { threadId } = requestData;
 
 	if (!threadId) {
 		return NextResponse.json(
@@ -120,19 +173,21 @@ export async function DELETE(request: Request) {
 		);
 	}
 
-	try {
-		const result = await deleteThreadFromDb(threadId);
+	const { data: result, error: deleteError } = await tryCatch(
+		deleteThreadFromDb(threadId)
+	);
 
-		return NextResponse.json({
-			success: true,
-			deletedMessagesCount: result.deletedMessagesCount,
-			deletedThreadsCount: result.deletedThreadsCount
-		});
-	} catch (error) {
-		console.error("Error deleting thread:", error);
+	if (deleteError || !result) {
+		console.error("Error deleting thread:", deleteError);
 		return NextResponse.json(
 			{ error: "Failed to delete thread" },
 			{ status: 500 }
 		);
 	}
+
+	return NextResponse.json({
+		success: true,
+		deletedMessagesCount: result.deletedMessagesCount,
+		deletedThreadsCount: result.deletedThreadsCount
+	});
 }
