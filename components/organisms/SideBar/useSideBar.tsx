@@ -14,7 +14,7 @@ const useSideBar = () => {
 
 	const [openSearch, setOpenSearch] = useState(false);
 
-	const { mutate: deleteThread } = useMutation({
+	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
 			await dxdb.deleteThread(threadId);
 			await fetch("/api/sync", {

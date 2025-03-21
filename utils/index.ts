@@ -1,3 +1,4 @@
-import cn from './cn';
+import cn from "./cn";
+import { tryCatch } from "./tryCatch";
 
-export { cn };
+export { cn, tryCatch };

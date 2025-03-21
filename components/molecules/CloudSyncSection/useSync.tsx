@@ -67,7 +67,11 @@ const useSync = () => {
 	};
 
 	// Mutation to sync data to server
-	const { mutate: syncJsonToDb } = useMutation<SyncResponse, Error, string>({
+	const { mutateAsync: syncJsonToDb } = useMutation<
+		SyncResponse,
+		Error,
+		string
+	>({
 		mutationFn: async (json: string) => {
 			try {
 				const response = await fetch("/api/sync", {
