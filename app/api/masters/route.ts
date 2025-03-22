@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Message as VercelChatMessage } from "ai";
 import { aiUseChatAdapter } from "@upstash/rag-chat/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import { messageAllowed } from "@/constants";
+import { mastersRequestSchema } from "@/constants/llmValidationSchema";
 import redis from "@/lib/redis";
 import { tryCatch } from "@utils";
 import { getRagChatInstance } from "@/ai/ragChat";
-import { LLMModel } from "@/types";
 
 async function checkMessageLimit(trackingId: string, isAuthenticated: boolean) {
 	const messageKey = `message_count:${trackingId}`;
@@ -39,10 +38,7 @@ export const POST = async (req: NextRequest) => {
 		? `user:${user!.id}`
 		: `anonymous:${req.headers.get("x-forwarded-for") || "unknown"}`;
 
-	const { data: body, error: parseError } = await tryCatch<{
-		messages: VercelChatMessage[];
-		model: LLMModel;
-	}>(req.json());
+	const { data: body, error: parseError } = await tryCatch(req.json());
 
 	if (parseError || !body) {
 		return NextResponse.json(
@@ -51,7 +47,18 @@ export const POST = async (req: NextRequest) => {
 		);
 	}
 
-	const question = body.messages.at(-1);
+	// Validate request data using Zod schema
+	const validationResult = mastersRequestSchema.safeParse(body);
+	if (!validationResult.success) {
+		return NextResponse.json(
+			{ error: validationResult.error.message },
+			{ status: 400 }
+		);
+	}
+
+	const { messages, model } = validationResult.data;
+	const question = messages.at(-1);
+
 	if (!question) {
 		return NextResponse.json({ error: "Question not found" }, { status: 400 });
 	}
@@ -64,7 +71,7 @@ export const POST = async (req: NextRequest) => {
 		return NextResponse.json({ error: limitError.message }, { status: 403 });
 	}
 
-	const ragChat = getRagChatInstance(body.model, trackingId);
+	const ragChat = getRagChatInstance(model, trackingId);
 	const response = await ragChat.chat(question.content, {
 		streaming: true,
 		historyLength: 10,
