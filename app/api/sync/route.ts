@@ -11,6 +11,10 @@ import {
 import { currentUser } from "@clerk/nextjs/server";
 import type { Message, Thread } from "@/lib/schema";
 import { tryCatch } from "@/utils";
+import {
+	syncRequestSchema,
+	deleteRequestSchema
+} from "@/constants/syncValidationSchema";
 
 export async function GET() {
 	const user = await currentUser();
@@ -68,9 +72,18 @@ export async function POST(request: Request) {
 		);
 	}
 
+	// Validate request data
+	const validationResult = syncRequestSchema.safeParse(requestData);
+	if (!validationResult.success) {
+		return NextResponse.json(
+			{ error: validationResult.error.message },
+			{ status: 400 }
+		);
+	}
+
 	const { data: parsedData, error: superJsonError } = await tryCatch(
 		Promise.resolve().then(() => {
-			const { json } = requestData as { json: string };
+			const { json } = validationResult.data;
 			return SuperJSON.parse(json) as {
 				threads: DEX_Thread[];
 				messages: DEX_Message[];
@@ -142,8 +155,19 @@ export async function DELETE(request: Request) {
 		);
 	}
 
+	// Validate request data
+	const validationResult = deleteRequestSchema.safeParse(requestData);
+	if (!validationResult.success) {
+		return NextResponse.json(
+			{ error: validationResult.error.message },
+			{ status: 400 }
+		);
+	}
+
+	const { deleteAll, threadId } = validationResult.data;
+
 	// If deleteAll flag is true, delete all user data
-	if (requestData.deleteAll) {
+	if (deleteAll) {
 		const { data: result, error: deleteError } = await tryCatch(
 			deleteAllUserDataFromDb(user.id)
 		);
@@ -164,8 +188,6 @@ export async function DELETE(request: Request) {
 	}
 
 	// Handle single thread deletion
-	const { threadId } = requestData;
-
 	if (!threadId) {
 		return NextResponse.json(
 			{ error: "Thread ID is required" },
