@@ -67,9 +67,9 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 						streaming={streaming}
 						messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
 					/>
-					{messages.length === 0 && (
+					{/* {messages.length === 0 && (
 						<InitialQuestions onClickQuestion={onClickQuestion} />
-					)}
+					)} */}
 				</div>
 				<ChatForm
 					formRef={formRef as React.RefObject<HTMLFormElement>}

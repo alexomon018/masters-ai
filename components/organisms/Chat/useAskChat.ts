@@ -1,6 +1,6 @@
 "use client";
 
-import { Message, useChat } from "ai/react";
+import { Message, useChat } from "@ai-sdk/react";
 import { useState, useEffect } from "react";
 import { dxdb } from "@/localdb/dexie";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ const useAskChat = (threadId: string) => {
 	const router = useRouter();
 	const queryClient = getQueryClient();
 
-	useSync();
+	const { importDBFromServer } = useSync();
 
 	let currentThreadId = threadId;
 
@@ -49,6 +49,9 @@ const useAskChat = (threadId: string) => {
 				const title = await response.json();
 				await dxdb.updateThread(currentThreadId, { title });
 			}
+
+			// Trigger an immediate sync after message is saved
+			await importDBFromServer();
 			queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
 
 			router.push(`/chat/${currentThreadId}`);
@@ -80,7 +83,7 @@ const useAskChat = (threadId: string) => {
 			chatId: currentThreadId,
 			model: selectedModel.id
 		},
-
+		experimental_throttle: 100,
 		onResponse: async (response) => {
 			if (response.status === 403) {
 				await dxdb.addMessage({
