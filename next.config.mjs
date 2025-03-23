@@ -57,6 +57,9 @@ const nextConfig = {
 		});
 
 		return config;
+	},
+	experimental: {
+		nodeMiddleware: true
 	}
 };
 
