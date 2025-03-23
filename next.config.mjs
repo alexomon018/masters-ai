@@ -31,13 +31,12 @@ const nextConfig = {
 					{
 						key: "Content-Security-Policy",
 						value:
-							"default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'"
+							"default-src 'self'; img-src 'self' static.frontendmasters.com; script-src 'self'; style-src 'self'; object-src 'none'"
 					},
 					{ key: "X-Content-Type-Options", value: "nosniff" },
 					{ key: "X-Frame-Options", value: "DENY" },
 					{ key: "X-XSS-Protection", value: "1; mode=block" },
-					{ key: "Referrer-Policy", value: "same-origin" },
-					{ key: "Server", value: "Erlang on Eels" }
+					{ key: "Referrer-Policy", value: "same-origin" }
 				]
 			}
 		];
