@@ -1,25 +1,33 @@
 import { NextResponse } from "next/server";
 import { runLLM } from "@/ai/llm";
-
-// Add an OPTIONS handler to properly handle preflight requests for CORS
-export async function OPTIONS() {
-	return NextResponse.json({}, { status: 200 });
-}
+import { tryCatch } from "@/utils";
+import { nameThreadSchema } from "@/constants/llmValidationSchema";
+import { AIMessage } from "@/ai/ai";
 
 // Make sure POST is using the recommended function syntax
 export async function POST(request: Request) {
-	try {
-		const body = await request.json();
-		const { messages } = body;
+	const body = await request.json();
 
-		const response = await runLLM(messages);
+	// Validate request body
+	const validationResult = nameThreadSchema.safeParse(body);
+	if (!validationResult.success) {
+		return NextResponse.json(
+			{ error: "Invalid request body", details: validationResult.error.errors },
+			{ status: 400 }
+		);
+	}
 
-		return NextResponse.json(response);
-	} catch (error) {
+	const { messages } = validationResult.data;
+
+	const { data, error } = await tryCatch(runLLM(messages as AIMessage[]));
+
+	if (error) {
 		console.error("Error naming thread:", error);
 		return NextResponse.json(
 			{ error: "Failed to name thread" },
 			{ status: 500 }
 		);
 	}
+
+	return NextResponse.json(data);
 }
