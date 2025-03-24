@@ -16,7 +16,7 @@ const MessageList = ({
 }: MessageListProps) => (
 	<VList
 		className="scrollbar-hide overflow-x-hidden"
-		style={{ height: "100%", width: "100%" }}
+		style={{ minHeight: "200px", width: "100%" }}
 	>
 		{messages.map((message: MessageProps) => (
 			<Message key={message.id} {...message} />
