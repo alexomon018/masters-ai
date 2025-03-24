@@ -114,11 +114,18 @@ const useAskChat = (threadId: string) => {
 				if (!messages) {
 					return;
 				}
-				const formattedMessages = messages.map((msg) => ({
-					id: msg.id,
-					role: msg.role,
-					content: msg.content
-				}));
+				const formattedMessages = [
+					{
+						id: "0",
+						role: "system" as const,
+						content: `**Welcome to Masters Chat** Your ultimate companion in navigating Frontend Masters courses.`
+					},
+					...messages.map((msg) => ({
+						id: msg.id,
+						role: msg.role,
+						content: msg.content
+					}))
+				];
 				chatConfig.setMessages([...formattedMessages]);
 			} catch (error) {
 				console.error("Failed to fetch messages:", error);
