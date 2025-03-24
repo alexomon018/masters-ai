@@ -42,6 +42,11 @@ const nextConfig = {
 		];
 	},
 	webpack: (config, { webpack, isServer, nextRuntime }) => {
+		// Grab the existing rule that handles SVG imports
+		const fileLoaderRule = config.module.rules
+			.find((rule) => rule.oneOf)
+			.oneOf.find((rule) => rule.test?.test?.(".svg"));
+
 		config.module.rules.push({
 			test: /\.svg$/,
 			use: [
@@ -49,11 +54,28 @@ const nextConfig = {
 					loader: "@svgr/webpack",
 					options: {
 						icon: true,
-						replaceAttrValues: { "#333": "{props.fill}" }
+						replaceAttrValues: { "#333": "{props.fill}" },
+						svgoConfig: {
+							plugins: [
+								{
+									name: "preset-default",
+									params: {
+										overrides: {
+											removeViewBox: false
+										}
+									}
+								}
+							]
+						}
 					}
 				}
 			]
 		});
+
+		// Modify the file loader to ignore svg files
+		if (fileLoaderRule) {
+			fileLoaderRule.exclude = /\.svg$/i;
+		}
 
 		return config;
 	}

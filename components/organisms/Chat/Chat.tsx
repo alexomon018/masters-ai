@@ -61,14 +61,18 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 					"relative mx-auto max-w-screen-md flex-1 overflow-y-auto p-4 !pb-32 md:p-6 md:!pb-40"
 				)}
 			>
-				<div className="size-full">
-					<MessageList
-						messages={messages}
-						streaming={streaming}
-						messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
-					/>
-					{messages.length === 0 && (
-						<InitialQuestions onClickQuestion={onClickQuestion} />
+				<div className="flex h-full flex-col">
+					<div className="flex-1">
+						<MessageList
+							messages={messages}
+							streaming={streaming}
+							messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+						/>
+					</div>
+					{messages.length === 1 && (
+						<div className="my-5">
+							<InitialQuestions onClickQuestion={onClickQuestion} />
+						</div>
 					)}
 				</div>
 				<ChatForm

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Markdown from "markdown-to-jsx";
 import cn from "@/utils/cn";
 import { Message as MessageProps } from "ai/react";
@@ -87,4 +87,4 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 	);
 };
 
-export default Message;
+export default memo(Message);

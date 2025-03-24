@@ -5,23 +5,46 @@ import { useUser } from "@clerk/nextjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocalStorage } from "@/hooks";
 
 const useSideBar = () => {
 	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
-
 	const [openSearch, setOpenSearch] = useState(false);
+	const [, setIsCloudSyncEnabled] = useLocalStorage("isCloudSyncEnabled", true);
+	const queryClient = useQueryClient();
 
 	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
-			await dxdb.deleteThread(threadId);
-			await fetch("/api/sync", {
-				method: "DELETE",
-				body: JSON.stringify({ threadId })
-			});
-			router.push("/chat");
+			// Temporarily disable cloud sync
+			setIsCloudSyncEnabled(false);
+
+			try {
+				// Delete locally first
+				await dxdb.deleteThread(threadId);
+
+				// Wait for server deletion to complete
+				const response = await fetch("/api/sync", {
+					method: "DELETE",
+					body: JSON.stringify({ threadId })
+				});
+
+				if (!response.ok) {
+					throw new Error("Failed to delete thread on server");
+				}
+
+				// Invalidate any cached data
+				await queryClient.invalidateQueries({ queryKey: ["sync"] });
+
+				// Force a fresh reload of the page instead of client-side navigation
+				// window.location.href = "/chat";
+				router.push("/chat");
+			} finally {
+				// Re-enable cloud sync
+				setIsCloudSyncEnabled(true);
+			}
 		}
 	});
 
