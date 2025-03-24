@@ -78,6 +78,13 @@ const nextConfig = {
 		}
 
 		return config;
+	},
+	// Increase the default timeout for API routes
+	serverRuntimeConfig: {
+		apiTimeout: 60000 // 60 seconds
+	},
+	experimental: {
+		proxyTimeout: 150000
 	}
 };
 

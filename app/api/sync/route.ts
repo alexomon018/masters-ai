@@ -15,20 +15,26 @@ import {
 	syncRequestSchema,
 	deleteRequestSchema
 } from "@/constants/syncValidationSchema";
+import { Logger } from "@/utils/logger";
 
 export async function GET() {
+	Logger.logGetStarted();
+
 	const user = await currentUser();
 
 	if (!user) {
+		Logger.logGetUnauthorized();
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
+
+	Logger.logGetFetching(user.id);
 
 	const { data: dbData, error: fetchError } = await tryCatch(
 		getAllThreadsAndMessagesFromDb(user.id)
 	);
 
 	if (fetchError || !dbData) {
-		console.error("Error fetching data:", fetchError);
+		Logger.logGetFetchError(user.id, fetchError?.message || "Unknown error");
 		return NextResponse.json(
 			{ error: "Failed to fetch data" },
 			{ status: 500 }
@@ -36,6 +42,7 @@ export async function GET() {
 	}
 
 	const { threads, messages } = dbData;
+	Logger.logGetSuccess(user.id, threads.length, messages.length);
 
 	const parsedThreads = threads.map(
 		(t) => SuperJSON.deserialize(t.data!) as DEX_Thread
@@ -49,15 +56,20 @@ export async function GET() {
 		messages: parsedMessages
 	});
 
+	Logger.logGetCompleted(user.id);
+
 	return new Response(response, {
 		headers: { "Content-Type": "application/json" }
 	});
 }
 
 export async function POST(request: Request) {
+	Logger.logPostStarted();
+
 	const user = await currentUser();
 
 	if (!user) {
+		Logger.logPostUnauthorized();
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
@@ -66,6 +78,10 @@ export async function POST(request: Request) {
 	);
 
 	if (parseError || !requestData) {
+		Logger.logPostParseError(
+			user.id,
+			parseError?.message || "No body provided"
+		);
 		return NextResponse.json(
 			{ error: "Invalid request data" },
 			{ status: 400 }
@@ -75,6 +91,7 @@ export async function POST(request: Request) {
 	// Validate request data
 	const validationResult = syncRequestSchema.safeParse(requestData);
 	if (!validationResult.success) {
+		Logger.logPostValidationError(user.id, validationResult.error.message);
 		return NextResponse.json(
 			{ error: validationResult.error.message },
 			{ status: 400 }
@@ -92,6 +109,10 @@ export async function POST(request: Request) {
 	);
 
 	if (superJsonError || !parsedData) {
+		Logger.logPostSuperJsonError(
+			user.id,
+			superJsonError?.message || "Unknown error"
+		);
 		return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
 	}
 
@@ -100,7 +121,15 @@ export async function POST(request: Request) {
 		messages: DEX_Message[];
 	};
 
+	Logger.logPostProcessing(
+		user.id,
+		threads?.length || 0,
+		messages?.length || 0
+	);
+
 	if (threads && threads.length > 0) {
+		Logger.logPostThreadSyncStarted(user.id, threads.length);
+
 		const { error: threadSyncError } = await tryCatch(
 			syncThreadsToDb({
 				userId: user.id,
@@ -109,15 +138,22 @@ export async function POST(request: Request) {
 		);
 
 		if (threadSyncError) {
-			console.error("Error syncing threads:", threadSyncError);
+			Logger.logPostThreadSyncError(
+				user.id,
+				threadSyncError?.message || "Unknown error"
+			);
 			return NextResponse.json(
 				{ error: "Failed to sync threads" },
 				{ status: 500 }
 			);
 		}
+
+		Logger.logPostThreadSyncCompleted(user.id, threads.length);
 	}
 
 	if (messages && messages.length > 0) {
+		Logger.logPostMessageSyncStarted(user.id, messages.length);
+
 		const { error: messageSyncError } = await tryCatch(
 			syncMessagesToDb({
 				userId: user.id,
@@ -126,21 +162,31 @@ export async function POST(request: Request) {
 		);
 
 		if (messageSyncError) {
-			console.error("Error syncing messages:", messageSyncError);
+			Logger.logPostMessageSyncError(
+				user.id,
+				messageSyncError?.message || "Unknown error"
+			);
 			return NextResponse.json(
 				{ error: "Failed to sync messages" },
 				{ status: 500 }
 			);
 		}
+
+		Logger.logPostMessageSyncCompleted(user.id, messages.length);
 	}
+
+	Logger.logPostCompleted(user.id);
 
 	return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: Request) {
+	Logger.logDeleteStarted();
+
 	const user = await currentUser();
 
 	if (!user) {
+		Logger.logDeleteUnauthorized();
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
@@ -149,6 +195,10 @@ export async function DELETE(request: Request) {
 	);
 
 	if (parseError || !requestData) {
+		Logger.logDeleteParseError(
+			user.id,
+			parseError?.message || "No body provided"
+		);
 		return NextResponse.json(
 			{ error: "Invalid request data" },
 			{ status: 400 }
@@ -158,6 +208,7 @@ export async function DELETE(request: Request) {
 	// Validate request data
 	const validationResult = deleteRequestSchema.safeParse(requestData);
 	if (!validationResult.success) {
+		Logger.logDeleteValidationError(user.id, validationResult.error.message);
 		return NextResponse.json(
 			{ error: validationResult.error.message },
 			{ status: 400 }
@@ -168,17 +219,28 @@ export async function DELETE(request: Request) {
 
 	// If deleteAll flag is true, delete all user data
 	if (deleteAll) {
+		Logger.logDeleteAllStarted(user.id);
+
 		const { data: result, error: deleteError } = await tryCatch(
 			deleteAllUserDataFromDb(user.id)
 		);
 
 		if (deleteError || !result) {
-			console.error("Error deleting all user data:", deleteError);
+			Logger.logDeleteAllError(
+				user.id,
+				deleteError?.message || "Unknown error"
+			);
 			return NextResponse.json(
 				{ error: "Failed to delete all user data" },
 				{ status: 500 }
 			);
 		}
+
+		Logger.logDeleteAllCompleted(
+			user.id,
+			result.deletedMessagesCount,
+			result.deletedThreadsCount
+		);
 
 		return NextResponse.json({
 			success: true,
@@ -189,23 +251,37 @@ export async function DELETE(request: Request) {
 
 	// Handle single thread deletion
 	if (!threadId) {
+		Logger.logDeleteThreadMissingId(user.id);
 		return NextResponse.json(
 			{ error: "Thread ID is required" },
 			{ status: 400 }
 		);
 	}
 
+	Logger.logDeleteThreadStarted(user.id, threadId);
+
 	const { data: result, error: deleteError } = await tryCatch(
 		deleteThreadFromDb(threadId)
 	);
 
 	if (deleteError || !result) {
-		console.error("Error deleting thread:", deleteError);
+		Logger.logDeleteThreadError(
+			user.id,
+			threadId,
+			deleteError?.message || "Unknown error"
+		);
 		return NextResponse.json(
 			{ error: "Failed to delete thread" },
 			{ status: 500 }
 		);
 	}
+
+	Logger.logDeleteThreadCompleted(
+		user.id,
+		threadId,
+		result.deletedMessagesCount,
+		result.deletedThreadsCount
+	);
 
 	return NextResponse.json({
 		success: true,
