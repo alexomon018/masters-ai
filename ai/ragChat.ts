@@ -77,6 +77,7 @@ export const createRagChat = (
 		ratelimit,
 		debug: false,
 		model: llmModel,
+		streaming: true,
 		vector,
 		redis,
 		sessionId, // Use the sessionId if provided
