@@ -185,18 +185,13 @@ export async function DELETE(request: Request) {
 
 	const user = await currentUser();
 
-	if (!user) {
-		Logger.logDeleteUnauthorized();
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
 	const { data: requestData, error: parseError } = await tryCatch(
 		request.json()
 	);
 
 	if (parseError || !requestData) {
 		Logger.logDeleteParseError(
-			user.id,
+			user?.id || "guest",
 			parseError?.message || "No body provided"
 		);
 		return NextResponse.json(
@@ -208,7 +203,10 @@ export async function DELETE(request: Request) {
 	// Validate request data
 	const validationResult = deleteRequestSchema.safeParse(requestData);
 	if (!validationResult.success) {
-		Logger.logDeleteValidationError(user.id, validationResult.error.message);
+		Logger.logDeleteValidationError(
+			user?.id || "guest",
+			validationResult.error.message
+		);
 		return NextResponse.json(
 			{ error: validationResult.error.message },
 			{ status: 400 }
@@ -217,8 +215,12 @@ export async function DELETE(request: Request) {
 
 	const { deleteAll, threadId } = validationResult.data;
 
-	// If deleteAll flag is true, delete all user data
 	if (deleteAll) {
+		if (!user) {
+			Logger.logDeleteUnauthorized();
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
 		Logger.logDeleteAllStarted(user.id);
 
 		const { data: result, error: deleteError } = await tryCatch(
@@ -249,16 +251,15 @@ export async function DELETE(request: Request) {
 		});
 	}
 
-	// Handle single thread deletion
 	if (!threadId) {
-		Logger.logDeleteThreadMissingId(user.id);
+		Logger.logDeleteThreadMissingId(user?.id || "guest");
 		return NextResponse.json(
 			{ error: "Thread ID is required" },
 			{ status: 400 }
 		);
 	}
 
-	Logger.logDeleteThreadStarted(user.id, threadId);
+	Logger.logDeleteThreadStarted(user?.id || "guest", threadId);
 
 	const { data: result, error: deleteError } = await tryCatch(
 		deleteThreadFromDb(threadId)
@@ -266,7 +267,7 @@ export async function DELETE(request: Request) {
 
 	if (deleteError || !result) {
 		Logger.logDeleteThreadError(
-			user.id,
+			user?.id || "guest",
 			threadId,
 			deleteError?.message || "Unknown error"
 		);
@@ -277,7 +278,7 @@ export async function DELETE(request: Request) {
 	}
 
 	Logger.logDeleteThreadCompleted(
-		user.id,
+		user?.id || "guest",
 		threadId,
 		result.deletedMessagesCount,
 		result.deletedThreadsCount

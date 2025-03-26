@@ -81,7 +81,7 @@ export const POST = async (req: NextRequest) => {
 		);
 	}
 
-	const { messages, model } = validationResult.data;
+	const { messages, model, id } = validationResult.data;
 	const question = messages.at(-1);
 
 	if (!question) {
@@ -100,7 +100,9 @@ export const POST = async (req: NextRequest) => {
 
 	Logger.logMastersRagChatStarted(trackingId, model);
 
-	const ragChat = getRagChatInstance(model, trackingId);
+	const ragChatId = `${trackingId}-${id}`;
+
+	const ragChat = getRagChatInstance(model, ragChatId);
 	const response = await ragChat.chat(question.content, {
 		streaming: true,
 		timeout: 60000,

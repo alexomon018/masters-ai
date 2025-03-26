@@ -26,7 +26,8 @@ const chatMessageSchema = z.object({
 // Masters API request validation
 export const mastersRequestSchema = z.object({
 	messages: z.array(chatMessageSchema),
-	model: llmModelSchema
+	model: llmModelSchema,
+	id: z.string()
 });
 
 // Masters API response validation for error cases
