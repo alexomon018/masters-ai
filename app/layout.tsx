@@ -11,11 +11,33 @@ const fontSans = FontSans({
 	variable: "--font-sans"
 });
 
+const LIGHT_THEME_COLOR = "#ffffff";
+const DARK_THEME_COLOR = "#1a1a1a";
+
 export const metadata: Metadata = {
+	metadataBase: new URL("https://femasters.chat"),
 	title: "FE Masters Chat",
 	description:
 		"FE Masters Chat is an AI-powered chatbot that helps you learn and grow. Gives you access to a wide range of resources and tools to help you achieve your goals."
 };
+
+const THEME_COLOR_SCRIPT = `\
+(function() {
+  var html = document.documentElement;
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+  function updateThemeColor() {
+    var isDark = html.classList.contains('dark');
+    meta.setAttribute('content', isDark ? '${DARK_THEME_COLOR}' : '${LIGHT_THEME_COLOR}');
+  }
+  var observer = new MutationObserver(updateThemeColor);
+  observer.observe(html, { attributes: true, attributeFilter: ['class'] });
+  updateThemeColor();
+})();`;
 
 const RootLayout = ({
 	children
@@ -24,6 +46,13 @@ const RootLayout = ({
 }>) => (
 	<ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				<script
+					dangerouslySetInnerHTML={{
+						__html: THEME_COLOR_SCRIPT
+					}}
+				/>
+			</head>
 			<body
 				className={cn(
 					"min-h-screen bg-background font-sans antialiased",
@@ -38,7 +67,7 @@ const RootLayout = ({
 				>
 					<ModelStoreProvider>
 						<Toaster />
-						<div className="flex flex-col h-screen">
+						<div className="flex h-screen flex-col">
 							<main className="flex-1">{children}</main>
 						</div>
 					</ModelStoreProvider>

@@ -35,12 +35,9 @@ async function checkMessageLimit(trackingId: string, isAuthenticated: boolean) {
 
 	await redis.incr(messageKey);
 
-	// Set expiry for authenticated users if not already set
-	if (isAuthenticated) {
-		const ttl = await redis.ttl(messageKey);
-		if (ttl === -1) {
-			await redis.expire(messageKey, 24 * 60 * 60);
-		}
+	const ttl = await redis.ttl(messageKey);
+	if (ttl === -1) {
+		await redis.expire(messageKey, 24 * 60 * 60);
 	}
 }
 
