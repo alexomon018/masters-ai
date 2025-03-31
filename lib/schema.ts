@@ -89,6 +89,7 @@ export type Thread = {
 	userId: string;
 	created_at: Date;
 	updated_at: Date;
+	isPinned: boolean;
 	last_message_at: Date;
 	data: SuperJSONResult | null;
 };
