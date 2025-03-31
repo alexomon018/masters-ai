@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import Markdown from "markdown-to-jsx";
 import cn from "@/utils/cn";
 import { Message as MessageProps } from "ai/react";
@@ -12,10 +12,58 @@ import { AvatarIcon } from "@radix-ui/react-icons";
 import { useUser } from "@clerk/nextjs";
 import CodeBlock from "../CodeBlock/CodeBlock";
 
+interface BaseProps {
+	children: React.ReactNode;
+}
+
+interface CodeComponentProps extends BaseProps {
+	className?: string;
+}
+
+const InlineCode: React.FC<BaseProps> = ({ children }) => (
+	<code className="rounded bg-gray-200 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
+		{children}
+	</code>
+);
+
+const OrderedList: React.FC<BaseProps> = ({ children }) => (
+	<ol className="list-decimal">{children}</ol>
+);
+
+const UnorderedList: React.FC<BaseProps> = ({ children }) => (
+	<ol className="list-disc">{children}</ol>
+);
+
+const PreBlock: React.FC<BaseProps> = ({ children }) => (
+	<div className="not-prose">{children}</div>
+);
+
+const CodeComponent: React.FC<CodeComponentProps> = ({
+	children,
+	className
+}) => {
+	if (!className) {
+		return <InlineCode>{children}</InlineCode>;
+	}
+	return <CodeBlock className={className}>{children as string}</CodeBlock>;
+};
+
 const Message: React.FC<MessageProps> = ({ content, role }) => {
 	const isUser = role === "user";
 	const { user } = useUser();
 	const isAnonymous = !user;
+
+	const markdownOptions = useMemo(
+		() => ({
+			overrides: {
+				ol: OrderedList,
+				ul: UnorderedList,
+				code: CodeComponent,
+				pre: PreBlock
+			}
+		}),
+		[]
+	);
 
 	return (
 		<article
@@ -54,32 +102,7 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 					"w-fit max-w-[600px] space-y-4 py-1.5 md:py-1",
 					isUser ? "font-semibold" : ""
 				)}
-				options={{
-					overrides: {
-						// eslint-disable-next-line react/no-unstable-nested-components
-						ol: ({ children }) => <ol className="list-decimal">{children}</ol>,
-						// eslint-disable-next-line react/no-unstable-nested-components
-						ul: ({ children }) => <ol className="list-disc">{children}</ol>,
-						// eslint-disable-next-line react/no-unstable-nested-components
-						code: ({ children, className }) => {
-							// For inline code (no language specified)
-							if (!className) {
-								return (
-									<code className="rounded bg-gray-200 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
-										{children}
-									</code>
-								);
-							}
-							return (
-								<CodeBlock className={className}>
-									{children as string}
-								</CodeBlock>
-							);
-						},
-						// eslint-disable-next-line react/no-unstable-nested-components
-						pre: ({ children }) => <div className="not-prose">{children}</div>
-					}
-				}}
+				options={markdownOptions}
 			>
 				{content}
 			</Markdown>

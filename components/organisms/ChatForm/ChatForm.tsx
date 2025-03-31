@@ -25,13 +25,13 @@ const ChatForm = ({
 			"md:ml-80"
 		)}
 	>
-		<MessageLimit className="z-10" />
 		<span className="pointer-events-none absolute inset-x-0 bottom-[89%] h-10 bg-gradient-to-b from-white/0 to-white dark:hidden" />
 		<div
 			className={cn(
 				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5"
 			)}
 		>
+			<MessageLimit className="z-10 flex justify-center" />
 			<CustomForm
 				ref={formRef}
 				onSubmit={onSubmit}

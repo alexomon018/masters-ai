@@ -9,12 +9,23 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@/hooks";
 
 const useSideBar = () => {
-	const threads = useLiveQuery(() => dxdb.threads.toArray())!;
+	const allThreads = useLiveQuery(() => dxdb.threads.toArray())!;
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
 	const [openSearch, setOpenSearch] = useState(false);
 	const [, setIsCloudSyncEnabled] = useLocalStorage("isCloudSyncEnabled", true);
 	const queryClient = useQueryClient();
+
+	const pinnedThreads = useLiveQuery(() =>
+		dxdb.threads
+			.toArray()
+			.then((threadList) => threadList.filter((thread) => thread.isPinned))
+	)!;
+	const unpinnedThreads = useLiveQuery(() =>
+		dxdb.threads
+			.toArray()
+			.then((threadList) => threadList.filter((thread) => !thread.isPinned))
+	)!;
 
 	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
@@ -50,13 +61,16 @@ const useSideBar = () => {
 
 	const startNewChat = useCallback(async () => {
 		try {
-			if (threads.length === 0) {
-				const threadId = await dxdb.createThread({ title: "New Chat" });
+			if (allThreads.length === 0) {
+				const threadId = await dxdb.createThread({
+					title: "New Chat",
+					isPinned: false
+				});
 				router.push(`/chat/${threadId}`);
 				return;
 			}
 
-			const existingThread = threads.find(
+			const existingThread = allThreads.find(
 				(thread) => thread.title === "New Chat"
 			);
 
@@ -64,19 +78,34 @@ const useSideBar = () => {
 				return;
 			}
 
-			const threadId = await dxdb.createThread({ title: "New Chat" });
+			const threadId = await dxdb.createThread({
+				title: "New Chat",
+				isPinned: false
+			});
 
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
 			console.error("Failed to create chat:", error);
 		}
-	}, [router, threads]);
+	}, [router, allThreads]);
 
 	const handleChatSelect = useCallback(
 		(chatId: string) => {
 			router.push(`/chat/${chatId}`);
 		},
 		[router]
+	);
+
+	const handlePinThread = useCallback(
+		async (threadId: string) => {
+			const thread = allThreads.find((t) => t.id === threadId);
+			if (thread) {
+				await dxdb.updateThread(threadId, {
+					isPinned: !thread.isPinned
+				});
+			}
+		},
+		[allThreads]
 	);
 
 	useEffect(() => {
@@ -96,14 +125,17 @@ const useSideBar = () => {
 	}, [startNewChat]);
 
 	return {
-		threads,
+		threads: allThreads,
 		deleteThread,
 		startNewChat,
 		handleChatSelect,
 		user,
 		isLoaded,
 		openSearch,
-		setOpenSearch
+		setOpenSearch,
+		pinnedThreads: pinnedThreads || [],
+		unpinnedThreads: unpinnedThreads || [],
+		handlePinThread
 	};
 };
 
