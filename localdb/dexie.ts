@@ -16,6 +16,7 @@ export interface DEX_Thread {
 	created_at: Date;
 	updated_at: Date;
 	last_message_at: Date;
+	isPinned: boolean;
 }
 
 export interface DEX_Message {
@@ -34,9 +35,10 @@ class ChatDB extends Dexie {
 	constructor() {
 		super("chatdb");
 
-		this.version(1).stores({
+		this.version(2).stores({
 			projects: "id, name, created_at, updated_at",
-			threads: "id, projectId, created_at, updated_at, last_message_at",
+			threads:
+				"id, projectId, created_at, updated_at, last_message_at, isPinned",
 			messages: "id, threadId, created_at, [threadId+created_at]"
 		});
 	}
@@ -104,7 +106,8 @@ class ChatDB extends Dexie {
 			id: crypto.randomUUID(),
 			created_at: new Date(),
 			updated_at: new Date(),
-			last_message_at: new Date()
+			last_message_at: new Date(),
+			isPinned: false
 		});
 
 		return newThread;

@@ -141,7 +141,10 @@ const useAskChat = (threadId: string) => {
 		e.preventDefault();
 
 		if (!currentThreadId) {
-			currentThreadId = await dxdb.createThread({ title: "New Chat" });
+			currentThreadId = await dxdb.createThread({
+				title: "New Chat",
+				isPinned: false
+			});
 		}
 		if (chatConfig.input.trim()) {
 			await dxdb.addMessage({
