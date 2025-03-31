@@ -1,75 +1,16 @@
 "use client";
 
 import React from "react";
-import { cn } from "@utils";
 import { DEX_Thread } from "@/localdb/dexie";
 import { Avatar, AvatarFallback, AvatarImage, Button, Input } from "@atoms";
-import { Settings2Icon, Search, XIcon, PinIcon } from "lucide-react";
+import { Settings2Icon, Search } from "lucide-react";
+import { ChatItemSection } from "@molecules";
 import { useRouter } from "next/navigation";
 import useSideBar from "./useSideBar";
 
 interface SideBarProps {
 	activeThread: DEX_Thread | null;
 }
-
-const ChatItem = React.memo(
-	({
-		chat,
-		isActive,
-		onSelect,
-		isPinned,
-		handlePinThread,
-		onDelete
-	}: {
-		chat: DEX_Thread;
-		isActive: boolean;
-		onSelect: (id: string) => void;
-		isPinned: boolean;
-		onDelete: (id: string) => void;
-		handlePinThread: (id: string) => void;
-	}) => (
-		<div className="group relative px-2">
-			<button
-				type="button"
-				onClick={() => onSelect(chat.id)}
-				className={cn(
-					"w-full cursor-pointer rounded-md px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-[#e2e8f0] dark:hover:bg-[#2a2a2a]",
-					isActive && "bg-gray-100 dark:bg-[#2a2a2a]"
-				)}
-			>
-				<h3 className="font-normal">{chat.title}</h3>
-			</button>
-			<div className="absolute right-4 top-1/2 -translate-y-1/2 space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
-				<button
-					type="button"
-					className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#3a3a3a]"
-					onClick={(e) => {
-						e.stopPropagation();
-						handlePinThread(chat.id);
-					}}
-				>
-					<PinIcon
-						className={cn(
-							"size-4 text-gray-500 dark:text-[#e2e8f0]",
-							isPinned && "fill-current"
-						)}
-					/>
-				</button>
-				<button
-					type="button"
-					className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#3a3a3a]"
-					onClick={(e) => {
-						e.stopPropagation();
-						onDelete(chat.id);
-						// Handle delete
-					}}
-				>
-					<XIcon className="size-4 text-gray-500 dark:text-[#e2e8f0]" />
-				</button>
-			</div>
-		</div>
-	)
-);
 
 const SideBar = ({ activeThread }: SideBarProps) => {
 	const router = useRouter();
@@ -81,7 +22,9 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 		pinnedThreads,
 		unpinnedThreads,
 		handlePinThread,
-		deleteThread
+		deleteThread,
+		onSearch,
+		searchQuery
 	} = useSideBar();
 
 	const groupThreadsByDate = (threads: DEX_Thread[]) => {
@@ -125,6 +68,8 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 				<div className="relative">
 					<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-500" />
 					<Input
+						onChange={(e) => onSearch(e.target.value)}
+						value={searchQuery}
 						type="text"
 						placeholder="Search your threads..."
 						className="w-full rounded-md border border-gray-200 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:border-[#2a2a2a] dark:bg-[#2a2a2a] dark:text-[#e2e8f0] dark:placeholder:text-gray-500 dark:focus:border-[#3a3a3a] dark:focus:ring-[#3a3a3a]"
@@ -134,66 +79,36 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 
 			<div className="flex-1 overflow-y-auto">
 				{pinnedThreads.length > 0 && (
-					<>
-						<h2 className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-[#e2e8f0]">
-							Pinned
-						</h2>
-						<div className="mb-4">
-							{pinnedThreads.map((chat) => (
-								<ChatItem
-									key={chat.id}
-									chat={chat}
-									isActive={activeThread?.id === chat.id}
-									onSelect={handleChatSelect}
-									isPinned
-									handlePinThread={handlePinThread}
-									onDelete={deleteThread}
-								/>
-							))}
-						</div>
-					</>
+					<ChatItemSection
+						title="Pinned"
+						threads={pinnedThreads}
+						handleChatSelect={handleChatSelect}
+						handlePinThread={handlePinThread}
+						deleteThread={deleteThread}
+						activeThread={activeThread}
+					/>
 				)}
 
 				{recentUnpinned.length > 0 && (
-					<>
-						<h2 className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-[#e2e8f0]">
-							Last 30 Days
-						</h2>
-						<div className="mb-4">
-							{recentUnpinned.map((chat) => (
-								<ChatItem
-									key={chat.id}
-									chat={chat}
-									isActive={activeThread?.id === chat.id}
-									onSelect={handleChatSelect}
-									isPinned={false}
-									handlePinThread={handlePinThread}
-									onDelete={deleteThread}
-								/>
-							))}
-						</div>
-					</>
+					<ChatItemSection
+						title="Last 30 Days"
+						threads={recentUnpinned}
+						handleChatSelect={handleChatSelect}
+						handlePinThread={handlePinThread}
+						deleteThread={deleteThread}
+						activeThread={activeThread}
+					/>
 				)}
 
 				{olderUnpinned.length > 0 && (
-					<>
-						<h2 className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-[#e2e8f0]">
-							Older
-						</h2>
-						<div>
-							{olderUnpinned.map((chat) => (
-								<ChatItem
-									key={chat.id}
-									chat={chat}
-									isActive={activeThread?.id === chat.id}
-									onSelect={handleChatSelect}
-									isPinned={false}
-									handlePinThread={handlePinThread}
-									onDelete={deleteThread}
-								/>
-							))}
-						</div>
-					</>
+					<ChatItemSection
+						title="Older"
+						threads={olderUnpinned}
+						handleChatSelect={handleChatSelect}
+						handlePinThread={handlePinThread}
+						deleteThread={deleteThread}
+						activeThread={activeThread}
+					/>
 				)}
 			</div>
 

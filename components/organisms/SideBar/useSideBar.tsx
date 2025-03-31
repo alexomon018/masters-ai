@@ -1,9 +1,11 @@
 "use client";
 
+/* eslint-disable import/no-extraneous-dependencies */
 import { dxdb } from "@/localdb/dexie";
 import { useUser } from "@clerk/nextjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
+import debounce from "lodash/debounce";
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@/hooks";
@@ -14,17 +16,50 @@ const useSideBar = () => {
 	const { user, isLoaded } = useUser();
 	const [openSearch, setOpenSearch] = useState(false);
 	const [, setIsCloudSyncEnabled] = useLocalStorage("isCloudSyncEnabled", true);
+	const [searchQuery, setSearchQuery] = useState("");
 	const queryClient = useQueryClient();
 
-	const pinnedThreads = useLiveQuery(() =>
-		dxdb.threads
-			.toArray()
-			.then((threadList) => threadList.filter((thread) => thread.isPinned))
+	// Create a debounced search function
+	const debouncedSetSearchQuery = debounce((query: string) => {
+		setSearchQuery(query);
+	}, 50);
+
+	const onSearch = useCallback(
+		(query: string) => {
+			debouncedSetSearchQuery(query);
+		},
+		[debouncedSetSearchQuery]
+	);
+
+	const pinnedThreads = useLiveQuery(
+		() =>
+			dxdb.threads
+				.toArray()
+				.then((threadList) =>
+					threadList
+						.filter((thread) => thread.isPinned)
+						.filter(
+							(thread) =>
+								searchQuery === "" ||
+								thread.title.toLowerCase().includes(searchQuery.toLowerCase())
+						)
+				),
+		[searchQuery] // Add searchQuery as a dependency
 	)!;
-	const unpinnedThreads = useLiveQuery(() =>
-		dxdb.threads
-			.toArray()
-			.then((threadList) => threadList.filter((thread) => !thread.isPinned))
+	const unpinnedThreads = useLiveQuery(
+		() =>
+			dxdb.threads
+				.toArray()
+				.then((threadList) =>
+					threadList
+						.filter((thread) => !thread.isPinned)
+						.filter(
+							(thread) =>
+								searchQuery === "" ||
+								thread.title.toLowerCase().includes(searchQuery.toLowerCase())
+						)
+				),
+		[searchQuery] // Add searchQuery as a dependency
 	)!;
 
 	const { mutateAsync: deleteThread } = useMutation({
@@ -135,7 +170,9 @@ const useSideBar = () => {
 		setOpenSearch,
 		pinnedThreads: pinnedThreads || [],
 		unpinnedThreads: unpinnedThreads || [],
-		handlePinThread
+		handlePinThread,
+		onSearch,
+		searchQuery
 	};
 };
 
