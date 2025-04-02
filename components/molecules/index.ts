@@ -28,6 +28,8 @@ import {
 	CommandShortcut,
 	CommandSeparator
 } from "./CommandSearch/CommandSearch";
+import ChatItem from "./ChatItem/ChatItem";
+import ChatItemSection from "./ChatItemSection/ChatItemSection";
 
 export {
 	ExpertCard,
@@ -57,5 +59,7 @@ export {
 	CommandGroup,
 	CommandItem,
 	CommandShortcut,
-	CommandSeparator
+	CommandSeparator,
+	ChatItem,
+	ChatItemSection
 };
