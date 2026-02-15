@@ -23,6 +23,7 @@ export async function DELETE() {
 	);
 
 	if (deleteError) {
+		// eslint-disable-next-line no-console
 		console.error("Error deleting user:", deleteError);
 		return NextResponse.json({ error: "Error deleting user" }, { status: 500 });
 	}

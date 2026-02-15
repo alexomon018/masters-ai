@@ -29,7 +29,7 @@ const CloudSyncSection = () => {
 						checked={isCloudSyncEnabled}
 						onCheckedChange={setIsCloudSyncEnabled}
 					/>
-					<p className="text- sm sm:text-base">Enable Cloud Sync</p>
+					<p className="text-sm sm:text-base">Enable Cloud Sync</p>
 				</div>
 				{isCloudSyncEnabled && (
 					<Button

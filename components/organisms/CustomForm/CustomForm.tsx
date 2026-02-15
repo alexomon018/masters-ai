@@ -40,7 +40,7 @@ const Form = (
 			case "modern":
 				return cn(
 					baseStyles,
-					"min-h-[100px] rounded-2xl  p-5 md:min-h-[100px]",
+					"min-h-[80px] rounded-2xl p-4 md:min-h-[100px] md:p-5",
 					"border-2 border-gray-300 text-base focus:border-gray-300 focus-outline-none",
 					"disabled:bg-gray-100",
 					inputProps.className

@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { aiUseChatAdapter } from "@upstash/rag-chat/nextjs";
+import { Ratelimit } from "@upstash/ratelimit";
 import { currentUser } from "@clerk/nextjs/server";
 import { messageAllowed } from "@/constants";
 import { mastersRequestSchema } from "@/constants/llmValidationSchema";
 import redis from "@/lib/redis";
 import { tryCatch } from "@utils";
-import { getRagChatInstance } from "@/ai/ragChat";
+import { runAgent } from "@/ai/agent";
 import { Logger } from "@/utils/logger";
 
-async function checkMessageLimit(trackingId: string, isAuthenticated: boolean) {
+const ratelimit = new Ratelimit({
+	redis,
+	limiter: Ratelimit.slidingWindow(3, "10 s"),
+});
+
+async function checkMessageLimit(
+	trackingId: string,
+	isAuthenticated: boolean
+) {
 	const messageKey = `message_count:${trackingId}`;
 	const messageCount = (await redis.get(messageKey)) || 0;
 	const limit = isAuthenticated
@@ -44,15 +52,18 @@ async function checkMessageLimit(trackingId: string, isAuthenticated: boolean) {
 export const POST = async (req: NextRequest) => {
 	Logger.logMastersRequestStarted();
 
-	const user = await currentUser();
+	// Run auth and body parsing in parallel — they're independent
+	const [user, { data: body, error: parseError }] = await Promise.all([
+		currentUser(),
+		tryCatch(req.json()),
+	]);
+
 	const isAuthenticated = !!user;
 	const trackingId = isAuthenticated
 		? `user:${user!.id}`
 		: `anonymous:${req.headers.get("x-forwarded-for") || "unknown"}`;
 
 	Logger.logMastersUserIdentified(trackingId, isAuthenticated);
-
-	const { data: body, error: parseError } = await tryCatch(req.json());
 
 	if (parseError || !body) {
 		Logger.logMastersRequestParseError(
@@ -65,7 +76,6 @@ export const POST = async (req: NextRequest) => {
 		);
 	}
 
-	// Validate request data using Zod schema
 	const validationResult = mastersRequestSchema.safeParse(body);
 	if (!validationResult.success) {
 		Logger.logMastersValidationError(
@@ -78,55 +88,59 @@ export const POST = async (req: NextRequest) => {
 		);
 	}
 
-	const { messages, model, id } = validationResult.data;
+	const { messages, model } = validationResult.data;
 	const question = messages.at(-1);
 
 	if (!question) {
 		Logger.logMastersQuestionNotFound(trackingId);
-		return NextResponse.json({ error: "Question not found" }, { status: 400 });
+		return NextResponse.json(
+			{ error: "Question not found" },
+			{ status: 400 }
+		);
 	}
 
-	const { error: limitError } = await tryCatch(
-		checkMessageLimit(trackingId, isAuthenticated)
-	);
+	// Run message limit check and rate limit in parallel
+	const [{ error: limitError }, { success: rateLimitOk }] =
+		await Promise.all([
+			tryCatch(checkMessageLimit(trackingId, isAuthenticated)),
+			ratelimit.limit(trackingId),
+		]);
 
 	if (limitError) {
 		Logger.logMastersMessageLimitError(trackingId, limitError.message);
-		return NextResponse.json({ error: limitError.message }, { status: 403 });
+		return NextResponse.json(
+			{ error: limitError.message },
+			{ status: 403 }
+		);
+	}
+
+	if (!rateLimitOk) {
+		return NextResponse.json(
+			{ error: "Too many requests. Please wait a moment." },
+			{ status: 429 }
+		);
 	}
 
 	Logger.logMastersRagChatStarted(trackingId, model);
 
-	const ragChatId = `${trackingId}-${id}`;
-
-	const ragChat = getRagChatInstance(model, ragChatId);
-	const response = await ragChat.chat(question.content, {
-		streaming: true,
-		timeout: 60000,
-		historyLength: 10,
-		onContextFetched: (context) => {
-			Logger.logMastersContextFetched(trackingId, context.length);
-			return context.map((contextBit) => {
-				const metadata = contextBit.metadata as { url: string };
-				return {
-					id: contextBit.id,
-					data: JSON.stringify({
-						text: contextBit.data,
-						url: metadata.url,
-						userData: {
-							name: user?.unsafeMetadata.name || "",
-							occupation: user?.unsafeMetadata.occupation || "",
-							traits: user?.unsafeMetadata.traits || "",
-							preferences: user?.unsafeMetadata.preferences || ""
-						}
-					}),
-					metadata: contextBit.metadata
-				};
-			});
-		}
+	const result = runAgent({
+		messages: messages.map((m) => ({
+			role: m.role as "user" | "assistant" | "system",
+			content: m.content,
+		})),
+		model,
+		userData: user
+			? {
+					name: (user.unsafeMetadata.name as string) || "",
+					occupation: (user.unsafeMetadata.occupation as string) || "",
+					traits: (user.unsafeMetadata.traits as string) || "",
+					preferences:
+						(user.unsafeMetadata.preferences as string) || "",
+				}
+			: undefined,
 	});
 
 	Logger.logMastersRequestCompleted(trackingId);
 
-	return aiUseChatAdapter(response);
+	return result.toTextStreamResponse();
 };

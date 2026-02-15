@@ -5,7 +5,7 @@ interface InitialQuestionsProps {
 }
 
 const InitialQuestions = ({ onClickQuestion }: InitialQuestionsProps) => (
-	<div className="mb-5 mt-4 grid gap-2 md:mb-0 md:mt-6 md:grid-cols-2 md:gap-4">
+	<div className="my-4 grid gap-2 md:mt-6 md:grid-cols-2 md:gap-4">
 		{INITIAL_QUESTIONS.map((message) => (
 			<button
 				key={message.content}

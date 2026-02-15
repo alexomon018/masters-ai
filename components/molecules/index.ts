@@ -30,6 +30,7 @@ import {
 } from "./CommandSearch/CommandSearch";
 import ChatItem from "./ChatItem/ChatItem";
 import ChatItemSection from "./ChatItemSection/ChatItemSection";
+import MobileHeader from "./MobileHeader/MobileHeader";
 
 export {
 	ExpertCard,
@@ -61,5 +62,6 @@ export {
 	CommandShortcut,
 	CommandSeparator,
 	ChatItem,
-	ChatItemSection
+	ChatItemSection,
+	MobileHeader
 };

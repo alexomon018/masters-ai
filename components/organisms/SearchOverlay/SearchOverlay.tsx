@@ -106,7 +106,7 @@ const SearchOverlay = ({
 
 		document.addEventListener("keydown", down);
 		return () => document.removeEventListener("keydown", down);
-	}, []);
+	}, [setOpenSearch]);
 
 	return (
 		<CommandDialog open={openSearch} onOpenChange={handleClose}>

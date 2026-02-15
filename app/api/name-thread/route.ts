@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 	const validationResult = nameThreadSchema.safeParse(body);
 	if (!validationResult.success) {
 		return NextResponse.json(
-			{ error: "Invalid request body", details: validationResult.error.errors },
+			{ error: "Invalid request body", details: validationResult.error.issues },
 			{ status: 400 }
 		);
 	}
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
 	const { data, error } = await tryCatch(runLLM(messages as AIMessage[]));
 
 	if (error) {
+		// eslint-disable-next-line no-console
 		console.error("Error naming thread:", error);
 		return NextResponse.json(
 			{ error: "Failed to name thread" },

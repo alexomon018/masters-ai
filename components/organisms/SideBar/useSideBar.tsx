@@ -34,32 +34,30 @@ const useSideBar = () => {
 	const pinnedThreads = useLiveQuery(
 		() =>
 			dxdb.threads
-				.toArray()
-				.then((threadList) =>
-					threadList
-						.filter((thread) => thread.isPinned)
-						.filter(
-							(thread) =>
-								searchQuery === "" ||
-								thread.title.toLowerCase().includes(searchQuery.toLowerCase())
-						)
-				),
-		[searchQuery] // Add searchQuery as a dependency
+				.orderBy("created_at")
+				.reverse()
+				.filter(
+					(thread) =>
+						thread.isPinned &&
+						(searchQuery === "" ||
+							thread.title.toLowerCase().includes(searchQuery.toLowerCase()))
+				)
+				.toArray(),
+		[searchQuery]
 	)!;
 	const unpinnedThreads = useLiveQuery(
 		() =>
 			dxdb.threads
-				.toArray()
-				.then((threadList) =>
-					threadList
-						.filter((thread) => !thread.isPinned)
-						.filter(
-							(thread) =>
-								searchQuery === "" ||
-								thread.title.toLowerCase().includes(searchQuery.toLowerCase())
-						)
-				),
-		[searchQuery] // Add searchQuery as a dependency
+				.orderBy("created_at")
+				.reverse()
+				.filter(
+					(thread) =>
+						!thread.isPinned &&
+						(searchQuery === "" ||
+							thread.title.toLowerCase().includes(searchQuery.toLowerCase()))
+				)
+				.toArray(),
+		[searchQuery]
 	)!;
 
 	const { mutateAsync: deleteThread } = useMutation({
@@ -71,22 +69,14 @@ const useSideBar = () => {
 				// Delete locally first
 				await dxdb.deleteThread(threadId);
 
-				// Wait for server deletion to complete
-				const response = await fetch("/api/sync", {
+				// Navigate immediately after local delete
+				router.replace("/");
+
+				// Server sync in background — don't block navigation
+				fetch("/api/sync", {
 					method: "DELETE",
 					body: JSON.stringify({ threadId })
-				});
-
-				if (!response.ok) {
-					throw new Error("Failed to delete thread on server");
-				}
-
-				// Invalidate any cached data
-				await queryClient.invalidateQueries({ queryKey: ["sync"] });
-
-				// Force a fresh reload of the page instead of client-side navigation
-				// window.location.href = "/chat";
-				router.push("/chat");
+				}).then(() => queryClient.invalidateQueries({ queryKey: ["sync"] }));
 			} finally {
 				// Re-enable cloud sync
 				setIsCloudSyncEnabled(true);
@@ -120,6 +110,7 @@ const useSideBar = () => {
 
 			router.push(`/chat/${threadId}`);
 		} catch (error) {
+			// eslint-disable-next-line no-console
 			console.error("Failed to create chat:", error);
 		}
 	}, [router, allThreads]);

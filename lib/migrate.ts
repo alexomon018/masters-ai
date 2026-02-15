@@ -9,6 +9,7 @@ async function main() {
 	await migrate(db, {
 		migrationsFolder: path.join(__dirname, "./migrations")
 	});
+	// eslint-disable-next-line no-console
 	console.log(`Migrations complete`);
 }
 
