@@ -1,4 +1,5 @@
 import { cn } from "@utils";
+import { InitialQuestions } from "@molecules";
 import CustomForm from "../CustomForm/CustomForm";
 import MessageLimit from "../MessageLimit/MessageLimit";
 
@@ -8,6 +9,8 @@ interface ChatFormProps {
 	input: string;
 	handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 	streaming: boolean;
+	showInitialQuestions?: boolean;
+	onClickQuestion?: (value: string) => void;
 }
 
 const ChatForm = ({
@@ -15,23 +18,26 @@ const ChatForm = ({
 	onSubmit,
 	input,
 	handleInputChange,
-	streaming
+	streaming,
+	showInitialQuestions,
+	onClickQuestion
 }: ChatFormProps) => (
 	<div
 		className={cn(
 			"fixed inset-x-0 bottom-0 z-10",
 			"flex flex-col items-center justify-center",
-
+			"bg-gradient-to-t from-white from-90% to-transparent dark:from-[#1a1a1a]",
 			"md:ml-80"
 		)}
 	>
-		<span className="pointer-events-none absolute inset-x-0 bottom-[89%] h-10 bg-gradient-to-b from-white/0 to-white dark:hidden" />
 		<div
 			className={cn(
-				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-6 md:px-5"
+				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-3 md:px-5 md:py-6"
 			)}
 		>
-			<MessageLimit className="z-10 flex justify-center" />
+			{showInitialQuestions && onClickQuestion && (
+				<InitialQuestions onClickQuestion={onClickQuestion} />
+			)}
 			<CustomForm
 				ref={formRef}
 				onSubmit={onSubmit}
@@ -44,6 +50,7 @@ const ChatForm = ({
 					disabled: streaming
 				}}
 			/>
+			<MessageLimit className="flex justify-center pt-1 text-xs opacity-60" />
 		</div>
 	</div>
 );

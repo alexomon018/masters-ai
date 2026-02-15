@@ -12,7 +12,7 @@ const Page = () => (
 			<p className="text-muted-foreground">
 				{`Sign in below (we'll increase your message limits if you do 😉)`}
 			</p>
-			<SignInButton>
+			<SignInButton forceRedirectUrl="/chat">
 				<Button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">
 					<CustomIcon icon="google" className="size-5" />
 					Continue with Google
