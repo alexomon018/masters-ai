@@ -1,18 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { DEX_Thread } from "@/localdb/dexie";
 import { Avatar, AvatarFallback, AvatarImage, Button, Input } from "@atoms";
 import { Settings2Icon, Search } from "lucide-react";
 import { ChatItemSection } from "@molecules";
 import { useRouter } from "next/navigation";
+import { cn } from "@utils";
 import useSideBar from "./useSideBar";
 
 interface SideBarProps {
 	activeThread: DEX_Thread | null;
+	isOpen?: boolean;
+	onClose?: () => void;
 }
 
-const SideBar = ({ activeThread }: SideBarProps) => {
+const SideBar = ({ activeThread, isOpen, onClose }: SideBarProps) => {
 	const router = useRouter();
 	const {
 		startNewChat,
@@ -26,6 +29,19 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 		onSearch,
 		searchQuery
 	} = useSideBar();
+
+	const handleChatSelectAndClose = useCallback(
+		(chatId: string) => {
+			handleChatSelect(chatId);
+			onClose?.();
+		},
+		[handleChatSelect, onClose]
+	);
+
+	const startNewChatAndClose = useCallback(() => {
+		startNewChat();
+		onClose?.();
+	}, [startNewChat, onClose]);
 
 	const groupThreadsByDate = (threads: DEX_Thread[]) => {
 		if (!threads?.length) return { recent: [], older: [] };
@@ -51,7 +67,25 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 		groupThreadsByDate(unpinnedThreads);
 
 	return (
-		<aside className="sticky top-0 z-30 hidden h-screen w-80 flex-col border-r border-gray-200 bg-white dark:border-[#2a2a2a] dark:bg-[#1a1a1a] md:flex">
+		<>
+			<div
+				className={cn(
+					"fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 md:hidden",
+					isOpen
+						? "opacity-100"
+						: "pointer-events-none opacity-0"
+				)}
+				onClick={onClose}
+				aria-hidden="true"
+			/>
+			<aside
+				className={cn(
+					"fixed left-0 top-0 z-50 flex h-screen w-80 flex-col border-r border-gray-200 bg-white dark:border-[#2a2a2a] dark:bg-[#1a1a1a]",
+					"transition-transform duration-300 ease-in-out",
+					isOpen ? "translate-x-0" : "-translate-x-full",
+					"md:sticky md:z-30 md:translate-x-0"
+				)}
+			>
 			<div className="flex items-center justify-center p-4">
 				<h1 className="text-center text-lg font-medium text-gray-900 dark:text-[#e2e8f0]">
 					masters.chat
@@ -60,7 +94,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 			<div className="flex flex-col gap-4 px-4 pb-4">
 				<Button
 					type="button"
-					onClick={startNewChat}
+					onClick={startNewChatAndClose}
 					className="w-full rounded-md bg-gray-200 py-3 text-center font-medium text-gray-900 hover:bg-gray-300 dark:bg-[#2a2a2a] dark:text-[#e2e8f0] dark:hover:bg-[#3a3a3a]"
 				>
 					New Chat
@@ -82,7 +116,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 					<ChatItemSection
 						title="Pinned"
 						threads={pinnedThreads}
-						handleChatSelect={handleChatSelect}
+						handleChatSelect={handleChatSelectAndClose}
 						handlePinThread={handlePinThread}
 						deleteThread={deleteThread}
 						activeThread={activeThread}
@@ -93,7 +127,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 					<ChatItemSection
 						title="Last 30 Days"
 						threads={recentUnpinned}
-						handleChatSelect={handleChatSelect}
+						handleChatSelect={handleChatSelectAndClose}
 						handlePinThread={handlePinThread}
 						deleteThread={deleteThread}
 						activeThread={activeThread}
@@ -104,7 +138,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 					<ChatItemSection
 						title="Older"
 						threads={olderUnpinned}
-						handleChatSelect={handleChatSelect}
+						handleChatSelect={handleChatSelectAndClose}
 						handlePinThread={handlePinThread}
 						deleteThread={deleteThread}
 						activeThread={activeThread}
@@ -147,6 +181,7 @@ const SideBar = ({ activeThread }: SideBarProps) => {
 				</div>
 			)}
 		</aside>
+		</>
 	);
 };
 

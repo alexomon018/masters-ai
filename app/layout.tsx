@@ -80,9 +80,7 @@ const RootLayout = ({
 
 	if (!clerkKey) return content;
 
-	return (
-		<ClerkProvider publishableKey={clerkKey}>{content}</ClerkProvider>
-	);
+	return <ClerkProvider publishableKey={clerkKey}>{content}</ClerkProvider>;
 };
 
 export default RootLayout;

@@ -33,7 +33,7 @@ import {
 	DropdownMenuTrigger,
 	DropdownMenuCheckboxItem
 } from "./Dropdown/Dropdown";
-import { ThemeToggle } from "./ThemeToggle/ThemeToggle";
+
 import CustomIcon from "./CustomIcon/CustomIcon";
 import {
 	Dialog,
@@ -76,7 +76,6 @@ export {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 	DropdownMenuCheckboxItem,
-	ThemeToggle,
 	CustomIcon,
 	Dialog,
 	DialogContent,
