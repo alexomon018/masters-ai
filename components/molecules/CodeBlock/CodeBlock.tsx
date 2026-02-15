@@ -12,6 +12,7 @@ const CodeBlock = ({ children }: { children: string; className?: string }) => {
 			setIsCopied(true);
 			setTimeout(() => setIsCopied(false), 2000);
 		} catch (err) {
+			// eslint-disable-next-line no-console
 			console.error("Failed to copy text: ", err);
 		}
 	};

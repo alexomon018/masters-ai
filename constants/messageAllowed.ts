@@ -1,6 +1,6 @@
 const messageAllowed = {
-	free: 10,
-	authenticated: 20
+	free: 50,
+	authenticated: 80
 };
 
 export default messageAllowed;

@@ -39,9 +39,11 @@ export const useDangerZone = ({
 
 					return result;
 				} catch (error) {
+					// eslint-disable-next-line no-console
 					console.error("Error deleting data:", error);
 					const errorMessage =
 						error instanceof Error ? error.message : "Failed to delete data";
+					// eslint-disable-next-line no-console
 					console.error(errorMessage);
 					throw error;
 				}
@@ -67,6 +69,7 @@ export const useDangerZone = ({
 
 					return result;
 				} catch (error) {
+					// eslint-disable-next-line no-console
 					console.error("Error deleting user:", error);
 					throw error;
 				}
@@ -84,6 +87,7 @@ export const useDangerZone = ({
 			}
 			setIsAlertOpen(false);
 		} catch (error) {
+			// eslint-disable-next-line no-console
 			console.error("Error during deletion:", error);
 			setIsAlertOpen(false);
 		}

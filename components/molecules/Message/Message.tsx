@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import Markdown from "markdown-to-jsx";
 import cn from "@/utils/cn";
-import { Message as MessageProps } from "ai/react";
+import type { ChatMessage as MessageProps } from "@/components/organisms/Chat/useAskChat";
 import { User as UserIcon } from "lucide-react";
 import {
 	Avatar,
@@ -34,6 +34,10 @@ const UnorderedList: React.FC<BaseProps> = ({ children }) => (
 	<ol className="list-disc">{children}</ol>
 );
 
+const Paragraph: React.FC<BaseProps> = ({ children }) => (
+	<div className="my-2">{children}</div>
+);
+
 const PreBlock: React.FC<BaseProps> = ({ children }) => (
 	<div className="not-prose">{children}</div>
 );
@@ -56,6 +60,7 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 	const markdownOptions = useMemo(
 		() => ({
 			overrides: {
+				p: Paragraph,
 				ol: OrderedList,
 				ul: UnorderedList,
 				code: CodeComponent,

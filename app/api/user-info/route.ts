@@ -51,6 +51,7 @@ export async function GET(req: Request) {
 
 		return NextResponse.json(usageData, { status: 200 });
 	} catch (error) {
+		// eslint-disable-next-line no-console
 		console.error("Error fetching data:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch data" },

@@ -39,12 +39,14 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
+const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 const RootLayout = ({
 	children
 }: Readonly<{
 	children: React.ReactNode;
-}>) => (
-	<ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+}>) => {
+	const content = (
 		<html lang="en" suppressHydrationWarning>
 			<head>
 				<script
@@ -74,7 +76,13 @@ const RootLayout = ({
 				</ThemeProvider>
 			</body>
 		</html>
-	</ClerkProvider>
-);
+	);
+
+	if (!clerkKey) return content;
+
+	return (
+		<ClerkProvider publishableKey={clerkKey}>{content}</ClerkProvider>
+	);
+};
 
 export default RootLayout;

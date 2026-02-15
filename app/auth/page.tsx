@@ -1,6 +1,8 @@
 import { SignInButton } from "@clerk/nextjs";
 import { Button, CustomIcon } from "@atoms";
 
+export const dynamic = "force-dynamic";
+
 const Page = () => (
 	<div className="flex min-h-screen items-center justify-center bg-background">
 		<div className="flex flex-col items-center gap-4">
