@@ -3,7 +3,6 @@ import { cn } from "@/utils";
 
 export interface InputProps
 	extends React.InputHTMLAttributes<HTMLInputElement> {
-	// eslint-disable-next-line react/require-default-props
 	type?: "text" | "password" | "email" | "number";
 }
 

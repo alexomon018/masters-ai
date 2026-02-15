@@ -63,6 +63,7 @@ const useMessageHistory = () => {
 				"success"
 			);
 		} catch (error) {
+			// eslint-disable-next-line no-console
 			console.error("Error exporting data:", error);
 			showAlert(
 				"Export Failed",
@@ -153,6 +154,7 @@ const useMessageHistory = () => {
 						"success"
 					);
 				} catch (error) {
+					// eslint-disable-next-line no-console
 					console.error("Error processing import file:", error);
 					showAlert(
 						"Import Failed",
@@ -166,6 +168,7 @@ const useMessageHistory = () => {
 
 			fileInput.click();
 		} catch (error) {
+			// eslint-disable-next-line no-console
 			console.error("Error importing data:", error);
 			showAlert(
 				"Import Failed",

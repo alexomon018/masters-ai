@@ -1,169 +1,212 @@
 "use client";
 
-import { Message, useChat } from "@ai-sdk/react";
-import { useState, useEffect } from "react";
+import {
+	useState,
+	useCallback,
+	useRef,
+	useOptimistic,
+	startTransition,
+	useEffect
+} from "react";
 import { dxdb } from "@/localdb/dexie";
-import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getQueryClient } from "@/providers/getQueryClient";
 import useSync from "@/components/molecules/CloudSyncSection/useSync";
-import { messageAllowed, queryKeys } from "@/constants";
+import { queryKeys } from "@/constants";
 import { useModelStore } from "@/providers";
+import {
+	readStream,
+	ensureThread,
+	handleErrorResponse,
+	autoNameThread
+} from "./helpers";
+
+export interface ChatMessage {
+	id: string;
+	role: "user" | "assistant" | "system";
+	content: string;
+}
+
+const WELCOME_MESSAGE: ChatMessage = {
+	id: "0",
+	role: "system",
+	content:
+		"**Welcome to Masters Chat** Your ultimate companion in navigating Frontend Masters courses."
+};
 
 const useAskChat = (threadId: string) => {
-	const [streaming, setStreaming] = useState<boolean>(false);
-	const router = useRouter();
+	const [input, setInput] = useState("");
+	const [streaming, setStreaming] = useState(false);
+	const streamingRef = useRef(false);
+	const [streamingContent, setStreamingContent] = useState("");
+	const pendingFlushRef = useRef(false);
+	const [activeThreadId, setActiveThreadId] = useState(threadId);
+	const abortControllerRef = useRef<AbortController | null>(null);
 	const queryClient = getQueryClient();
-
 	const { importDBFromServer } = useSync();
-
-	let currentThreadId = threadId;
-
 	const { selectedModel } = useModelStore((state) => state);
 
-	const activeThread = useLiveQuery(() =>
-		dxdb.threads.get(currentThreadId || "")
+	const activeThread = useLiveQuery(
+		() => dxdb.threads.get(activeThreadId || ""),
+		[activeThreadId]
 	);
 
-	const messages = useLiveQuery(() => dxdb.getThreadMessages(currentThreadId));
+	const dexieMessages = useLiveQuery(
+		() => dxdb.getThreadMessages(activeThreadId),
+		[activeThreadId]
+	);
 
-	const handleMessageFinish = async (message: Message) => {
-		try {
-			await dxdb.addMessage({
-				content: message.content,
-				role: message.role as "user" | "assistant",
-				threadId: currentThreadId
-			});
+	const baseChatMessages: ChatMessage[] = (dexieMessages ?? []).map((msg) => ({
+		id: msg.id,
+		role: msg.role as "user" | "assistant",
+		content: msg.content
+	}));
 
-			const thread = await dxdb.threads.get(currentThreadId || "");
-
-			if (thread?.title === "New Chat" || !currentThreadId) {
-				const response = await fetch("/api/name-thread", {
-					method: "POST",
-					body: JSON.stringify({
-						messages: [message],
-						model: selectedModel.id
-					})
-				});
-
-				const title = await response.json();
-				await dxdb.updateThread(currentThreadId, { title });
-			}
-
-			// Trigger an immediate sync after message is saved
-			await importDBFromServer();
-			queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
-
-			router.push(`/chat/${currentThreadId}`);
-		} catch (error) {
-			console.error("Failed to save message:", error);
-			setStreaming(false);
-		}
-
-		setStreaming(false);
-	};
-
-	const initialMessages = [
-		{
-			id: "0",
-			role: "system",
-			content: `**Welcome to Masters Chat** Your ultimate companion in navigating Frontend Masters courses.`
-		},
-		...(messages?.map((msg) => ({
-			id: msg.id,
-			role: msg.role,
-			content: msg.content
-		})) || [])
-	];
-
-	const chatConfig = useChat({
-		api: "/api/masters",
-		initialMessages: initialMessages as Message[],
-		body: {
-			chatId: currentThreadId,
-			model: selectedModel.id
-		},
-		experimental_throttle: 100,
-		onResponse: async (response) => {
-			if (response.status === 403) {
-				await dxdb.addMessage({
-					content: `You've reached your daily message limit of ${messageAllowed.free} messages.`,
-					role: "assistant",
-					threadId: currentThreadId
-				});
-
-				chatConfig.setMessages([
-					...chatConfig.messages,
-					{
-						id: "403",
-						role: "assistant",
-						content: `You've reached your daily message limit of ${messageAllowed.free} messages.`
-					}
-				]);
-				setStreaming(false);
-
-				chatConfig.stop();
-			}
-		},
-		onFinish: handleMessageFinish
-	});
+	const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+		baseChatMessages,
+		(state, newMessage: ChatMessage) => [...state, newMessage]
+	);
 
 	useEffect(() => {
-		const fetchMessages = async () => {
-			try {
-				if (!messages) {
-					return;
-				}
-				const formattedMessages = [
-					{
-						id: "0",
-						role: "system" as const,
-						content: `**Welcome to Masters Chat** Your ultimate companion in navigating Frontend Masters courses.`
-					},
-					...messages.map((msg) => ({
-						id: msg.id,
-						role: msg.role,
-						content: msg.content
-					}))
-				];
-				chatConfig.setMessages([...formattedMessages]);
-			} catch (error) {
-				console.error("Failed to fetch messages:", error);
+		if (pendingFlushRef.current && dexieMessages?.length) {
+			const lastMsg = dexieMessages[dexieMessages.length - 1];
+			if (lastMsg.role === "assistant") {
+				pendingFlushRef.current = false;
+				setStreaming(false);
+				setStreamingContent("");
 			}
-		};
-
-		if (currentThreadId) {
-			fetchMessages();
 		}
-	}, [currentThreadId, chatConfig.setMessages]);
+	}, [dexieMessages]);
+
+	const messages: ChatMessage[] = [
+		WELCOME_MESSAGE,
+		...optimisticMessages,
+		...(streamingContent
+			? [
+					{
+						id: "streaming",
+						role: "assistant" as const,
+						content: streamingContent
+					}
+				]
+			: [])
+	];
+
+	const handleInputChange = useCallback(
+		(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value),
+		[]
+	);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		if (!input.trim()) return;
 
-		if (!currentThreadId) {
-			currentThreadId = await dxdb.createThread({
-				title: "New Chat",
-				isPinned: false
-			});
-		}
-		if (chatConfig.input.trim()) {
-			await dxdb.addMessage({
-				content: chatConfig.input,
+		const userMessage = input;
+		const needsNavigation = !activeThreadId;
+
+		startTransition(() => {
+			addOptimisticMessage({
+				id: `optimistic-${Date.now()}`,
 				role: "user",
-				threadId: currentThreadId
+				content: userMessage
 			});
+		});
+
+		setInput("");
+		streamingRef.current = true;
+		setStreaming(true);
+		setStreamingContent("");
+
+		const resolvedThreadId = await ensureThread(activeThreadId);
+
+		if (needsNavigation) {
+			setActiveThreadId(resolvedThreadId);
+			window.history.replaceState(null, "", `/chat/${resolvedThreadId}`);
 		}
 
-		chatConfig.handleSubmit(e);
-		setStreaming(true);
+		await dxdb.addMessage({
+			content: userMessage,
+			role: "user",
+			threadId: resolvedThreadId
+		});
+
+		const history = await dxdb.getThreadMessages(resolvedThreadId);
+		const apiMessages = history.map((m) => ({
+			content: m.content,
+			role: m.role
+		}));
+
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
+
+		try {
+			const response = await fetch("/api/masters", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: apiMessages,
+					model: selectedModel.id,
+					id: resolvedThreadId
+				}),
+				signal: controller.signal
+			});
+
+			const wasError = await handleErrorResponse(
+				response.status,
+				resolvedThreadId
+			);
+			if (wasError) return;
+
+			if (!response.ok || !response.body) {
+				throw new Error(`Request failed with status ${response.status}`);
+			}
+
+			const fullContent = await readStream(response.body, setStreamingContent);
+
+			pendingFlushRef.current = true;
+			streamingRef.current = false;
+
+			await dxdb.addMessage({
+				content: fullContent,
+				role: "assistant",
+				threadId: resolvedThreadId
+			});
+
+			await autoNameThread(resolvedThreadId, fullContent, selectedModel.id);
+			await importDBFromServer();
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.messageLimit()
+			});
+		} catch (error) {
+			if ((error as Error).name !== "AbortError") {
+				// eslint-disable-next-line no-console
+				console.error("Stream error:", error);
+			}
+		} finally {
+			streamingRef.current = false;
+			abortControllerRef.current = null;
+			if (!pendingFlushRef.current) {
+				setStreaming(false);
+				setStreamingContent("");
+			}
+		}
 	};
+
+	const stop = useCallback(() => {
+		abortControllerRef.current?.abort();
+	}, []);
+
 	return {
-		...chatConfig,
+		messages,
+		input,
+		handleInputChange,
+		handleSubmit,
+		setInput,
 		streaming,
 		setStreaming,
-		threadId,
-		handleSubmit,
-		activeThread
+		threadId: activeThreadId,
+		activeThread,
+		stop
 	};
 };
 

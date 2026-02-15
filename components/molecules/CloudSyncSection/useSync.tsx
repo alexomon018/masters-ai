@@ -86,6 +86,7 @@ const useSync = () => {
 
 				return await response.json();
 			} catch (error) {
+				// eslint-disable-next-line no-console
 				console.error("Failed to sync json to db", error);
 				throw error;
 			}
@@ -107,6 +108,7 @@ const useSync = () => {
 				}
 				return await response.json();
 			} catch (error) {
+				// eslint-disable-next-line no-console
 				console.error("Failed to sync db from server", error);
 				throw error;
 			}
@@ -213,6 +215,7 @@ const useSync = () => {
 					await exportDBToServer();
 				}
 			} catch (error) {
+				// eslint-disable-next-line no-console
 				console.error("Error during sync:", error);
 			} finally {
 				setIsSyncing(false);
@@ -242,6 +245,7 @@ const useSync = () => {
 		};
 
 		performSync();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isCloudSyncEnabled, user?.id, importDBFromServer]);
 
 	// Modified return to include a manual sync function

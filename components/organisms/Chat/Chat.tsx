@@ -69,7 +69,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 							messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
 						/>
 					</div>
-					{messages.length === 1 && (
+					{messages.length === 1 && !streaming && (
 						<div className="my-5">
 							<InitialQuestions onClickQuestion={onClickQuestion} />
 						</div>

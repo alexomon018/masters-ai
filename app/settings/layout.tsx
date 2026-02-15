@@ -42,6 +42,7 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 			resetsAt
 		};
 	} catch (error) {
+		// eslint-disable-next-line no-console
 		console.error("Error fetching usage data:", error);
 		// Will use the fallback data defined above
 	}
@@ -52,8 +53,8 @@ const SettingsLayout = async ({ children }: { children: React.ReactNode }) => {
 		<div className="min-h-screen bg-background">
 			<SettingsHeader />
 			<SettingsNavigation className="flex lg:hidden" />
-			<div className="container mx-auto max-w-[90rem] px-4 py-8">
-				<div className="flex flex-col gap-10 justify-center lg:flex-row lg:gap-16">
+			<div className="container mx-auto max-w-8xl px-4 py-8">
+				<div className="flex flex-col justify-center gap-10 lg:flex-row lg:gap-16">
 					<aside className="flex w-full flex-col space-y-8 lg:w-[340px]">
 						<UserProfile
 							name={user?.fullName || ""}

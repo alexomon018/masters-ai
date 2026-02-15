@@ -1,4 +1,4 @@
-import { Message as MessageProps } from "ai/react";
+import type { ChatMessage as MessageProps } from "@/components/organisms/Chat/useAskChat";
 import { MessageLoader } from "@atoms";
 import { VList } from "virtua";
 import Message from "../Message/Message";
