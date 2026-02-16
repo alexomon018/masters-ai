@@ -24,15 +24,13 @@ const ChatForm = ({
 }: ChatFormProps) => (
 	<div
 		className={cn(
-			"fixed inset-x-0 bottom-0 z-10",
-			"flex flex-col items-center justify-center",
-			"bg-gradient-to-t from-white from-90% to-transparent dark:from-[#1a1a1a]",
-			"md:ml-80"
+			"shrink-0",
+			"flex flex-col items-center justify-center"
 		)}
 	>
 		<div
 			className={cn(
-				"md:pl-inherit w-full max-w-screen-md rounded-xl px-4 py-3 md:px-5 md:py-6"
+				"w-full max-w-screen-md rounded-xl px-4 py-3 md:px-5 md:py-6"
 			)}
 		>
 			{showInitialQuestions && onClickQuestion && (

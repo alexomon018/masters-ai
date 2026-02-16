@@ -4,13 +4,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MessageList, MobileHeader } from "@molecules";
 import { cn } from "@/utils";
 import { useUser } from "@clerk/nextjs";
+import type { VListHandle } from "virtua";
 import SideBar from "../SideBar/SideBar";
 import useAskChat from "./useAskChat";
 import ChatForm from "../ChatForm/ChatForm";
 
 const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	const formRef = useRef<HTMLFormElement>(null);
-	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const listRef = useRef<VListHandle>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const { user, isLoaded } = useUser();
 
@@ -22,6 +23,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 		setInput,
 		streaming,
 		setStreaming,
+		loading,
 		activeThread
 	} = useAskChat(threadId);
 
@@ -44,11 +46,22 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 		[setInput]
 	);
 
+	const prevMessageCountRef = useRef(messages.length);
+
 	useEffect(() => {
-		if (messagesEndRef.current) {
-			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-		}
-	}, [messages]);
+		if (!listRef.current || messages.length === 0) return;
+		const prevCount = prevMessageCountRef.current;
+		prevMessageCountRef.current = messages.length;
+
+		// Only auto-scroll when new messages are added or loading starts
+		const hasNewMessages = messages.length > prevCount;
+		if (!hasNewMessages && !loading) return;
+
+		const totalItems = messages.length + (loading ? 1 : 0) + 1;
+		listRef.current.scrollToIndex(totalItems - 1, {
+			align: "end"
+		});
+	}, [messages, loading]);
 
 	const onSubmit = useCallback(
 		(e: React.FormEvent<HTMLFormElement>) => {
@@ -60,7 +73,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	);
 
 	return (
-		<div className="flex min-h-svh">
+		<div className="flex h-full">
 			<MobileHeader
 				onOpenSidebar={() => setSidebarOpen(true)}
 				user={user}
@@ -73,13 +86,13 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 			/>
 			<main
 				className={cn(
-					"relative mx-auto max-w-screen-md flex-1 overflow-y-auto p-4 pt-16 !pb-28 md:p-6 md:pt-6"
+					"relative mx-auto flex max-w-screen-md flex-1 flex-col overflow-hidden px-4 pt-16 md:px-6 md:pt-6"
 				)}
 			>
 				<MessageList
 					messages={messages}
-					streaming={streaming}
-					messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+					loading={loading}
+					listRef={listRef as React.RefObject<VListHandle>}
 				/>
 				<ChatForm
 					formRef={formRef as React.RefObject<HTMLFormElement>}
