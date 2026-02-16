@@ -28,7 +28,7 @@ const ChatModelSelector = () => {
 	};
 
 	return (
-		<div className="absolute bottom-3 left-3">
+		<div>
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button

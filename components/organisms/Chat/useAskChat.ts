@@ -196,6 +196,8 @@ const useAskChat = (threadId: string) => {
 		abortControllerRef.current?.abort();
 	}, []);
 
+	const loading = streaming && !streamingContent;
+
 	return {
 		messages,
 		input,
@@ -204,6 +206,7 @@ const useAskChat = (threadId: string) => {
 		setInput,
 		streaming,
 		setStreaming,
+		loading,
 		threadId: activeThreadId,
 		activeThread,
 		stop

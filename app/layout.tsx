@@ -57,7 +57,7 @@ const RootLayout = ({
 			</head>
 			<body
 				className={cn(
-					"min-h-screen bg-background font-sans antialiased",
+					"h-dvh overflow-hidden bg-background font-sans antialiased",
 					fontSans.variable
 				)}
 			>
@@ -69,8 +69,10 @@ const RootLayout = ({
 				>
 					<ModelStoreProvider>
 						<Toaster />
-						<div className="flex h-screen flex-col">
-							<main className="flex-1">{children}</main>
+						<div className="flex h-full flex-col">
+							<main className="flex-1 overflow-hidden">
+								{children}
+							</main>
 						</div>
 					</ModelStoreProvider>
 				</ThemeProvider>

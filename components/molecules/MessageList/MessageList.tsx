@@ -1,28 +1,29 @@
 import type { ChatMessage as MessageProps } from "@/components/organisms/Chat/useAskChat";
 import { MessageLoader } from "@atoms";
-import { VList } from "virtua";
+import { VList, type VListHandle } from "virtua";
 import Message from "../Message/Message";
 
 interface MessageListProps {
 	messages: MessageProps[];
-	streaming: boolean;
-	messagesEndRef: React.RefObject<HTMLDivElement>;
+	loading: boolean;
+	listRef: React.RefObject<VListHandle>;
 }
 
 const MessageList = ({
 	messages,
-	streaming,
-	messagesEndRef
+	loading,
+	listRef
 }: MessageListProps) => (
 	<VList
-		className="scrollbar-hide overflow-x-hidden"
-		style={{ minHeight: "200px", width: "100%" }}
+		ref={listRef}
+		className="scrollbar-hide flex-1 overflow-x-hidden"
+		style={{ width: "100%" }}
 	>
 		{messages.map((message: MessageProps) => (
 			<Message key={message.id} {...message} />
 		))}
-		{streaming && <MessageLoader />}
-		<div ref={messagesEndRef} />
+		{loading && <MessageLoader />}
+		<div style={{ height: 1 }} aria-hidden />
 	</VList>
 );
 
