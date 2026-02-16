@@ -21,8 +21,7 @@ const Form = (
 		inputProps,
 		buttonProps,
 		onSubmit,
-		icon = <MousePointerClick className="rotate-90 size-7" />,
-		buttonPosition = "inside",
+		icon = <MousePointerClick className="size-7 rotate-90" />,
 		isLoading = false,
 		variant = "modern",
 		children,
@@ -34,21 +33,21 @@ const Form = (
 	// Determine styles based on variant
 	const getInputStyles = () => {
 		const baseStyles =
-			"flex-1 w-full transition focus-outline-none outline-none ring-0 dark:bg-[#2D2D2D] !pt-[12px] resize-none";
+			"flex-1 w-full transition focus-outline-none outline-none ring-0 dark:bg-[#2D2D2D] resize-none max-h-[200px] overflow-y-auto";
 
 		switch (variant) {
 			case "modern":
 				return cn(
 					baseStyles,
-					"min-h-[80px] rounded-2xl p-4 md:min-h-[100px] md:p-5",
-					"border-2 border-gray-300 text-base focus:border-gray-300 focus-outline-none",
+					"min-h-[60px] rounded-t-2xl p-4 md:min-h-[80px] md:p-5",
+					"border-2 border-b-0 border-gray-300 text-base focus:border-gray-300 focus-outline-none",
 					"disabled:bg-gray-100",
 					inputProps.className
 				);
 			case "minimal":
 				return cn(
 					baseStyles,
-					"min-h-[80px] rounded-lg bg-transparent p-3 md:min-h-[100px]",
+					"min-h-[60px] rounded-t-lg bg-transparent p-3 md:min-h-[80px]",
 					"border-b-2 border-gray-300 text-base focus:border-primary",
 					"disabled:bg-gray-100/50",
 					inputProps.className
@@ -56,29 +55,23 @@ const Form = (
 			default:
 				return cn(
 					baseStyles,
-					"min-h-[80px] rounded-xl  p-4 pt-1 md:min-h-[100px]",
-					"border border-gray-400 text-base",
+					"min-h-[60px] rounded-t-xl p-4 pt-1 md:min-h-[80px]",
+					"border border-b-0 border-gray-400 text-base",
 					"disabled:bg-gray-100",
 					inputProps.className
 				);
 		}
 	};
 
-	const getButtonStyles = () => {
-		if (buttonPosition === "outside") {
-			return cn(
-				"h-10 md:h-12 px-4 rounded-xl ml-2",
-				"bg-primary text-white hover:bg-primary/90",
-				"disabled:bg-gray-300",
-				buttonProps.className
-			);
+	const getToolbarStyles = () => {
+		switch (variant) {
+			case "modern":
+				return "rounded-b-2xl border-2 border-t-0 border-gray-300 bg-white px-3 py-2 dark:bg-[#2D2D2D]";
+			case "minimal":
+				return "rounded-b-lg bg-transparent px-3 py-2";
+			default:
+				return "rounded-b-xl border border-t-0 border-gray-400 bg-white px-3 py-2 dark:bg-[#2D2D2D]";
 		}
-
-		return cn(
-			"absolute right-5 bottom-5",
-			isLoading ? "opacity-30" : "opacity-50 hover:opacity-100",
-			buttonProps.className
-		);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -94,35 +87,40 @@ const Form = (
 	return (
 		<form
 			onSubmit={onSubmit}
-			className={cn("flex relative flex-col gap-4 m-auto")}
+			className={cn("relative m-auto flex flex-col")}
 			ref={ref}
 			{...formProps}
 		>
-			<div className="relative">
-				<textarea
-					placeholder="Your question..."
-					required
-					{...inputProps}
-					onKeyDown={(e) => {
-						handleKeyDown(e);
-						inputProps.onKeyDown?.(e);
-					}}
-					className={cn(getInputStyles())}
-					disabled={isLoading || inputProps.disabled}
-				/>
+			<textarea
+				placeholder="Your question..."
+				required
+				{...inputProps}
+				onKeyDown={(e) => {
+					handleKeyDown(e);
+					inputProps.onKeyDown?.(e);
+				}}
+				className={cn(getInputStyles())}
+				disabled={isLoading || inputProps.disabled}
+			/>
 
+			<div
+				className={cn("flex items-center justify-between", getToolbarStyles())}
+			>
 				<ChatModelSelector />
 
 				<button
 					{...buttonProps}
 					type="submit"
 					tabIndex={-1}
-					className={getButtonStyles()}
+					className={cn(
+						isLoading ? "opacity-30" : "opacity-50 hover:opacity-100",
+						buttonProps.className
+					)}
 					disabled={isLoading || buttonProps.disabled}
 				>
 					{isLoading ? (
-						<span className="flex justify-center items-center">
-							<svg className="animate-spin size-5" viewBox="0 0 24 24">
+						<span className="flex items-center justify-center">
+							<svg className="size-5 animate-spin" viewBox="0 0 24 24">
 								<circle
 									className="opacity-25"
 									cx="12"
