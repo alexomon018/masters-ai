@@ -21,8 +21,7 @@ const Form = (
 		inputProps,
 		buttonProps,
 		onSubmit,
-		icon = <MousePointerClick className="rotate-90 size-7" />,
-		buttonPosition = "inside",
+		icon = <MousePointerClick className="size-7 rotate-90" />,
 		isLoading = false,
 		variant = "modern",
 		children,
@@ -88,7 +87,7 @@ const Form = (
 	return (
 		<form
 			onSubmit={onSubmit}
-			className={cn("flex relative flex-col m-auto")}
+			className={cn("relative m-auto flex flex-col")}
 			ref={ref}
 			{...formProps}
 		>
@@ -105,10 +104,7 @@ const Form = (
 			/>
 
 			<div
-				className={cn(
-					"flex items-center justify-between",
-					getToolbarStyles()
-				)}
+				className={cn("flex items-center justify-between", getToolbarStyles())}
 			>
 				<ChatModelSelector />
 
@@ -123,8 +119,8 @@ const Form = (
 					disabled={isLoading || buttonProps.disabled}
 				>
 					{isLoading ? (
-						<span className="flex justify-center items-center">
-							<svg className="animate-spin size-5" viewBox="0 0 24 24">
+						<span className="flex items-center justify-center">
+							<svg className="size-5 animate-spin" viewBox="0 0 24 24">
 								<circle
 									className="opacity-25"
 									cx="12"
