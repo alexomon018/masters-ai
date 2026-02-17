@@ -12,10 +12,8 @@ interface SyncResponse {
 
 // Define sync data type
 interface SyncData {
-	json: {
-		threads: DEX_Thread[];
-		messages: DEX_Message[];
-	};
+	threads: DEX_Thread[];
+	messages: DEX_Message[];
 }
 
 const useSync = () => {
@@ -106,7 +104,8 @@ const useSync = () => {
 				if (!response.ok) {
 					throw new Error("Failed to sync db from server");
 				}
-				return await response.json();
+				const text = await response.text();
+				return SuperJSON.parse(text) as SyncData;
 			} catch (error) {
 				// eslint-disable-next-line no-console
 				console.error("Failed to sync db from server", error);
@@ -148,9 +147,8 @@ const useSync = () => {
 
 				if (!serverData) return;
 
-				const {
-					json: { threads: serverThreads, messages: serverMessages }
-				} = serverData;
+				const { threads: serverThreads, messages: serverMessages } =
+					serverData;
 
 				// Get local data
 				const localThreads = await dxdb.threads.toArray();

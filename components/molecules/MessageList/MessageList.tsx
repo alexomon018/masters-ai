@@ -9,11 +9,7 @@ interface MessageListProps {
 	listRef: React.RefObject<VListHandle>;
 }
 
-const MessageList = ({
-	messages,
-	loading,
-	listRef
-}: MessageListProps) => (
+const MessageList = ({ messages, loading, listRef }: MessageListProps) => (
 	<VList
 		ref={listRef}
 		className="scrollbar-hide flex-1 overflow-x-hidden"

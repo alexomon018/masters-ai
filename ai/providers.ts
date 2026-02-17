@@ -8,11 +8,14 @@ const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export function getModel(modelId: LLMModel): LanguageModel {
 	switch (modelId) {
-		case "claude-3-haiku-20240307":
 		case "claude-3-5-sonnet-latest":
+		case "claude-3-haiku-20240307":
+		case "claude-sonnet-4-5":
+		case "claude-opus-4-6":
 			return anthropic.languageModel(modelId);
 		case "gpt-4o-mini":
 		case "gpt-4o":
+		case "gpt-5":
 		case "gpt-3.5-turbo":
 			return openai.languageModel(modelId);
 		case "grok-2-latest":

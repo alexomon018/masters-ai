@@ -73,7 +73,7 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 	);
 
 	return (
-		<div className="flex h-full">
+		<div className="flex h-full overflow-hidden">
 			<MobileHeader
 				onOpenSidebar={() => setSidebarOpen(true)}
 				user={user}

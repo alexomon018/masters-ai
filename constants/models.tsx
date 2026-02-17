@@ -85,6 +85,64 @@ const modelCards: Model[] = [
 				icon: <BrainIcon className="size-4" color="purple" />
 			}
 		]
+	},
+	{
+		id: "gpt-5",
+		name: "GPT-5",
+		shortDescription: "OpenAI's most capable model.",
+		longDescription:
+			"OpenAI's most capable model. Excels at complex reasoning, code generation, and multimodal tasks with significantly improved accuracy and reliability.",
+		icon: "openai",
+		features: [
+			{
+				name: "Reasoning",
+				icon: <BrainIcon className="size-4" color="purple" />
+			},
+			{
+				name: "Vision",
+				icon: <EyeIcon className="size-4" color="blue" />
+			},
+			{
+				name: "Fast",
+				icon: <ZapIcon className="size-4" color="#FF9800" />
+			}
+		]
+	},
+	{
+		id: "claude-sonnet-4-5",
+		name: "Claude Sonnet 4.5",
+		shortDescription: "Balanced intelligence and speed from Anthropic.",
+		longDescription:
+			"Anthropic's Claude Sonnet 4.5 strikes the ideal balance between intelligence and speed. Excellent at code, analysis, and nuanced reasoning tasks.",
+		icon: "anthropic",
+		features: [
+			{
+				name: "Reasoning",
+				icon: <BrainIcon className="size-4" color="purple" />
+			},
+			{
+				name: "Fast",
+				icon: <ZapIcon className="size-4" color="#FF9800" />
+			}
+		]
+	},
+	{
+		id: "claude-opus-4-6",
+		name: "Claude 4.6 Opus",
+		shortDescription: "Anthropic's most powerful model.",
+		longDescription:
+			"Anthropic's flagship Claude 4.6 Opus model. The most capable Claude model, designed for the most complex and demanding tasks requiring deep reasoning.",
+		icon: "anthropic",
+		features: [
+			{
+				name: "Reasoning",
+				icon: <BrainIcon className="size-4" color="purple" />
+			},
+			{
+				name: "Vision",
+				icon: <EyeIcon className="size-4" color="blue" />
+			}
+		]
 	}
 ];
 
