@@ -59,7 +59,9 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 	};
 
 	useEffect(() => {
-		if (scrollScheduledRef.current) return;
+		if (scrollScheduledRef.current) {
+			return undefined;
+		}
 		scrollScheduledRef.current = true;
 		const raf = requestAnimationFrame(() => {
 			scrollScheduledRef.current = false;

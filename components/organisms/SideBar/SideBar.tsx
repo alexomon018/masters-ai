@@ -52,12 +52,12 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 		onClose?.();
 	}, [startNewChat, onClose]);
 
-	const groupThreadsByDate = (threads: ThreadDto[]) => {
-		if (!threads?.length) return { recent: [], older: [] };
+	const groupThreadsByDate = (threadList: ThreadDto[]) => {
+		if (!threadList?.length) return { recent: [], older: [] };
 
 		const thirtyDaysAgoMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-		return threads.reduce(
+		return threadList.reduce(
 			(acc, thread) => {
 				if (thread.createdAt >= thirtyDaysAgoMs) {
 					acc.recent.push(thread);
