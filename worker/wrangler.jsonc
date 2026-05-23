@@ -40,6 +40,9 @@
 		// and NEXT_PUBLIC_WORKER_URL point here. Not a separate product env.
 		"preview": {
 			"name": "masters-ai-agent-preview",
+			"vars": {
+				"ALLOWED_ORIGINS": "http://localhost:3000,https://masters-ai.vercel.app,https://*.vercel.app"
+			},
 			"durable_objects": {
 				"bindings": [
 					{
