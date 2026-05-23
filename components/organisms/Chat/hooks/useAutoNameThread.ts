@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { UIMessage } from "ai";
-import { useQueryClient } from "@tanstack/react-query";
-import { type ThreadDto } from "@/components/organisms/SideBar/threadsApi";
+import { useAuth } from "@clerk/nextjs";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchThreads } from "@/components/organisms/SideBar/threadsApi";
 import { autoNameThread } from "../helpers";
 
 const THREADS_QUERY_KEY = ["threads"] as const;
@@ -41,6 +42,18 @@ const useAutoNameThread = ({
 	modelId
 }: Args) => {
 	const queryClient = useQueryClient();
+	const { getToken } = useAuth();
+
+	const tokenFn = useCallback(
+		async () => (typeof getToken === "function" ? getToken() : null),
+		[getToken]
+	);
+
+	const { data: threads = [], isFetched: threadsFetched } = useQuery({
+		queryKey: THREADS_QUERY_KEY,
+		queryFn: () => fetchThreads(tokenFn),
+		staleTime: 30_000
+	});
 
 	// Recompute the user/assistant pair only when the message count
 	// changes — streamed chunks mutate the *last* message in place but
@@ -62,9 +75,9 @@ const useAutoNameThread = ({
 	useEffect(() => {
 		if (!activeThreadId) return;
 		if (isStreaming) return;
+		if (!threadsFetched) return;
 
-		const threads = queryClient.getQueryData<ThreadDto[]>(THREADS_QUERY_KEY);
-		const meta = threads?.find((t) => t.id === activeThreadId);
+		const meta = threads.find((t) => t.id === activeThreadId);
 		if (meta?.title && meta.title !== UNTITLED_THREAD_TITLE) return;
 
 		const { firstUser, lastAssistant } = namingPair;
@@ -95,7 +108,15 @@ const useAutoNameThread = ({
 					autoNamedAssistantByThread.delete(activeThreadId);
 				}
 			});
-	}, [namingPair, isStreaming, activeThreadId, modelId, queryClient]);
+	}, [
+		namingPair,
+		isStreaming,
+		activeThreadId,
+		modelId,
+		queryClient,
+		threads,
+		threadsFetched
+	]);
 };
 
 export default useAutoNameThread;
