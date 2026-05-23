@@ -1,1 +1,0 @@
-ALTER TABLE "master_sync_.threads_table" ADD CONSTRAINT "master_sync_.threads_table_user_provided_id_unique" UNIQUE("user_provided_id");

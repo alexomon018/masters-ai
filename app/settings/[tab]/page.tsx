@@ -1,10 +1,5 @@
 import { SettingsNavigation } from "@molecules";
-import {
-	HistoryAndSync,
-	AccountUpgrade,
-	Customization,
-	ModelsPicker
-} from "@organisms";
+import { AccountUpgrade, Customization, ModelsPicker } from "@organisms";
 import QueryClientProvider from "@/providers/queryClientProvider";
 
 type Params = Promise<{ tab: string }>;
@@ -18,8 +13,6 @@ const SettingsPage = async ({ params }: PageProps) => {
 
 	const renderTabContent = () => {
 		switch (tab) {
-			case "history":
-				return <HistoryAndSync />;
 			case "account":
 				return <AccountUpgrade />;
 			case "customization":

@@ -1,6 +1,10 @@
-import { dxdb } from "@/localdb/dexie";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useCallback, useState } from "react";
+import {
+	deleteThreadRemote,
+	fetchThreads
+} from "@/components/organisms/SideBar/threadsApi";
 
 interface UseDangerZoneReturn {
 	isDeletingAllData: boolean;
@@ -16,70 +20,46 @@ export const useDangerZone = ({
 	isAccountDeletion?: boolean;
 }): UseDangerZoneReturn => {
 	const queryClient = useQueryClient();
+	const { getToken } = useAuth();
 	const [isAlertOpen, setIsAlertOpen] = useState(false);
 
-	// Create a mutation for deleting all user data
+	const tokenFn = useCallback(
+		async () =>
+			typeof getToken === "function" ? getToken() : null,
+		[getToken]
+	);
+
 	const { mutateAsync: deleteAllDataMutation, isPending: isDeletingAllData } =
 		useMutation({
 			mutationFn: async () => {
-				try {
-					const response = await fetch("/api/sync", {
-						method: "DELETE",
-						headers: {
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify({ deleteAll: true })
-					});
-
-					const result = await response.json();
-
-					await Promise.all([dxdb.messages.clear(), dxdb.threads.clear()]);
-
-					queryClient.invalidateQueries();
-
-					return result;
-				} catch (error) {
-					// eslint-disable-next-line no-console
-					console.error("Error deleting data:", error);
-					const errorMessage =
-						error instanceof Error ? error.message : "Failed to delete data";
-					// eslint-disable-next-line no-console
-					console.error(errorMessage);
-					throw error;
-				}
+				// No bulk endpoint yet — fetch and delete one by one. Fine for
+				// "Danger Zone" usage where the user clicked a confirm dialog.
+				const threads = await fetchThreads(tokenFn);
+				await Promise.all(
+					threads.map((t) => deleteThreadRemote(tokenFn, t.id))
+				);
+				queryClient.invalidateQueries();
 			}
 		});
 
 	const { mutateAsync: deleteUserMutation, isPending: isDeletingUser } =
 		useMutation({
 			mutationFn: async () => {
-				try {
-					const response = await fetch("/api/delete-user", {
-						method: "DELETE"
-					});
+				const response = await fetch("/api/delete-user", { method: "DELETE" });
+				const result = await response.json();
 
-					const result = await response.json();
+				await queryClient.resetQueries();
+				queryClient.clear();
 
-					// Clear all React Query cache and invalidate queries
-					await queryClient.resetQueries();
-					queryClient.clear();
+				window.location.href = "/auth";
 
-					// Redirect to login page after successful deletion
-					window.location.href = "/auth";
-
-					return result;
-				} catch (error) {
-					// eslint-disable-next-line no-console
-					console.error("Error deleting user:", error);
-					throw error;
-				}
+				return result;
 			}
 		});
 
 	const handleDelete = async () => {
 		try {
 			if (isAccountDeletion) {
-				// First delete all data, then delete user
 				await deleteAllDataMutation();
 				await deleteUserMutation();
 			} else {

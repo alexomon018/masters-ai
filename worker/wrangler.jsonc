@@ -1,0 +1,92 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "masters-ai-agent",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2025-04-01",
+	"compatibility_flags": ["nodejs_compat"],
+
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "MastersChatAgent",
+				"class_name": "MastersChatAgent"
+			}
+		]
+	},
+
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["MastersChatAgent"]
+		}
+	],
+
+	// Default + `wrangler dev` / local D1 — masters-dev
+	"d1_databases": [
+		{
+			"binding": "THREAD_INDEX",
+			"database_name": "masters-dev",
+			"database_id": "c738c04a-09c9-4c3f-b281-8007d9844825",
+			"migrations_dir": "./db/migrations"
+		}
+	],
+
+	"observability": {
+		"enabled": true
+	},
+
+	"env": {
+		// Dev / staging: shared remote worker + masters-dev D1. Vercel Preview
+		// and NEXT_PUBLIC_WORKER_URL point here. Not a separate product env.
+		"preview": {
+			"name": "masters-ai-agent-preview",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "MastersChatAgent",
+						"class_name": "MastersChatAgent"
+					}
+				]
+			},
+			"migrations": [
+				{
+					"tag": "v1",
+					"new_sqlite_classes": ["MastersChatAgent"]
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "THREAD_INDEX",
+					"database_name": "masters-dev",
+					"database_id": "c738c04a-09c9-4c3f-b281-8007d9844825",
+					"migrations_dir": "./db/migrations"
+				}
+			]
+		},
+		"production": {
+			"name": "masters-ai-agent",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "MastersChatAgent",
+						"class_name": "MastersChatAgent"
+					}
+				]
+			},
+			"migrations": [
+				{
+					"tag": "v1",
+					"new_sqlite_classes": ["MastersChatAgent"]
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "THREAD_INDEX",
+					"database_name": "masters-prod",
+					"database_id": "9269b74a-5e6e-4c08-8cc8-77a506a02322",
+					"migrations_dir": "./db/migrations"
+				}
+			]
+		}
+	}
+}
