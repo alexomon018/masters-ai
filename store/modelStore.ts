@@ -73,6 +73,25 @@ export const createModelStore = (initState: ModelState = defaultInitState) =>
 			}),
 			{
 				name: "model-store",
+				merge: (persisted, current) => {
+					const persistedState = persisted as Partial<ModelStore>;
+					const persistedEnabled =
+						persistedState.enabledModels ?? new Set();
+
+					// Ensure newly added models are enabled by default
+					const mergedEnabled = new Set(persistedEnabled);
+					for (const model of modelCards) {
+						if (!persistedEnabled.has(model.id)) {
+							mergedEnabled.add(model.id);
+						}
+					}
+
+					return {
+						...current,
+						...persistedState,
+						enabledModels: mergedEnabled
+					};
+				},
 				storage: {
 					getItem: (name) => {
 						const str = localStorage.getItem(name);
