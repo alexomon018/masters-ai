@@ -12,7 +12,11 @@
 // which onConnect reads and stashes on the *connection* (not on `this`)
 // so it survives DO hibernation.
 
-import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
+import {
+	AIChatAgent,
+	type ChatResponseResult,
+	type OnChatMessageOptions
+} from "@cloudflare/ai-chat";
 import type { Connection, ConnectionContext } from "agents";
 import {
 	convertToModelMessages,
@@ -160,26 +164,22 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			}
 		});
 
-		// Deliver Braintrust spans once the turn finishes. The Workers runtime
-		// has no auto-flush (unlike Vercel's waitUntil integration), so without
-		// this the streamed turn is traced but never sent. waitUntil keeps the
-		// DO alive until the flush lands.
-		this.ctx.waitUntil(
-			(async () => {
-				try {
-					await result.text;
-					await flushBraintrust();
-				} catch {
-					// Never let tracing break the chat response.
-				}
-			})()
-		);
-
 		// UI-message stream emits text parts AND tool parts (with state).
 		// The browser receives `tool-ragSearch` parts that transition from
 		// `input-streaming` → `output-available`, which is what makes the
 		// inline tool-call status pill possible.
 		return result.toUIMessageStreamResponse();
+	}
+
+	// Fires after the assistant message is persisted — the reliable point to
+	// flush Braintrust spans on Workers (better than awaiting result.text in
+	// onChatMessage, which can race the SDK's stream teardown).
+	protected onChatResponse(_result: ChatResponseResult): void {
+		this.ctx.waitUntil(
+			flushBraintrust().catch((err) => {
+				console.error("[braintrust] flush failed:", err);
+			})
+		);
 	}
 
 	async clearHistory(): Promise<void> {

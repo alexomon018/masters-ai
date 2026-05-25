@@ -11,7 +11,9 @@
 // wrapped functions are a no-op, so the worker (and the eval harness, which
 // imports agent-core but never calls startBraintrust) runs fine without a key.
 
-import { initLogger, wrapAISDK } from "braintrust";
+// Workers must use the workerd entry so tracing channels and AsyncLocalStorage
+// bind to Cloudflare's runtime instead of the Node bundle.
+import { flush, initLogger, wrapAISDK } from "braintrust/workerd";
 import * as ai from "ai";
 
 // Project names live in code (not an env var). BRAINTRUST_ENV is set per
@@ -37,7 +39,13 @@ export function startBraintrust(
 ): void {
 	if (started || !apiKey) return;
 	started = true;
-	logger = initLogger({ projectName: resolveProjectName(environment), apiKey });
+	logger = initLogger({
+		projectName: resolveProjectName(environment),
+		apiKey,
+		// Workers have no Vercel-style auto-flush; we call flushBraintrust()
+		// explicitly from the agent after each turn.
+		asyncFlush: false
+	});
 }
 
 // Flush queued spans to Braintrust. The Workers runtime has no automatic flush
@@ -46,7 +54,10 @@ export function startBraintrust(
 // No-ops when the logger was never started. Callers should run this inside
 // `ctx.waitUntil` after the turn finishes so the DO stays alive until it lands.
 export async function flushBraintrust(): Promise<void> {
-	await logger?.flush();
+	if (!logger) return;
+	await logger.flush();
+	// Belt-and-suspenders: also drain the global background logger queue.
+	await flush();
 }
 
 // Tracing-wrapped AI SDK entry points. Drop-in replacements for the `ai`

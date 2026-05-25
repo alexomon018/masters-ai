@@ -8,13 +8,8 @@
 // system prompt is the Frontend Masters tutor persona, and casual greetings
 // short-circuit tool use entirely.
 
-import {
-	stepCountIs,
-	type LanguageModel,
-	type ModelMessage,
-} from "ai";
-// Braintrust-wrapped generateText/streamText — same signatures as the `ai`
-// exports, but each call is traced when the logger is active.
+import { stepCountIs, type LanguageModel, type ModelMessage } from "ai";
+
 import { generateText, streamText } from "./braintrust";
 import { buildTools } from "./tools/registry";
 import type { ToolEnv } from "./env";
@@ -61,7 +56,7 @@ interface SystemPromptParams {
 // shared core so any future tweak lands in both the Worker and the eval.
 export function buildSystemPrompt({
 	modelLabel,
-	userData,
+	userData
 }: SystemPromptParams): string {
 	const currentTime = new Date().toLocaleString();
 	const userBlock = userData?.name
@@ -117,7 +112,7 @@ export function streamAgent({
 	messages,
 	userData,
 	maxSteps = 20,
-	env,
+	env
 }: AgentArgs) {
 	const casual = isCasualMessage(messages);
 	return streamText({
@@ -126,7 +121,7 @@ export function streamAgent({
 		messages,
 		tools: buildTools(env),
 		activeTools: casual ? [] : undefined,
-		stopWhen: stepCountIs(maxSteps),
+		stopWhen: stepCountIs(maxSteps)
 	});
 }
 
@@ -140,7 +135,7 @@ export async function runAgent({
 	messages,
 	userData,
 	maxSteps = 20,
-	env,
+	env
 }: AgentArgs) {
 	const casual = isCasualMessage(messages);
 	const result = await generateText({
@@ -149,13 +144,13 @@ export async function runAgent({
 		messages,
 		tools: buildTools(env),
 		activeTools: casual ? [] : undefined,
-		stopWhen: stepCountIs(maxSteps),
+		stopWhen: stepCountIs(maxSteps)
 	});
 
 	return {
 		text: result.text,
 		toolCalls: result.steps.flatMap((s) => s.toolCalls ?? []),
 		steps: result.steps,
-		casual,
+		casual
 	};
 }
