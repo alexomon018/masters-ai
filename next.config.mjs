@@ -8,6 +8,12 @@ const workerWsUrl = workerHttpUrl
 	.replace(/^http:/, "ws:");
 const workerSources = [workerHttpUrl, workerWsUrl].filter(Boolean).join(" ");
 
+// Clerk Frontend API proxy (production DNS). Dev uses *.clerk.accounts.dev
+// directly; prod loads clerk-js and API calls via this subdomain.
+const clerkProxyUrl =
+	process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://clerk.femasters.chat";
+const clerkProxySource = clerkProxyUrl ? ` ${clerkProxyUrl}` : "";
+
 // Tightened CSP. `unsafe-inline` for styles is unavoidable without per-
 // request nonces (Next inlines critical CSS as <style> blocks); script
 // uses `unsafe-eval`/`unsafe-inline` because Clerk's JS runtime needs
@@ -17,10 +23,10 @@ const CSP_DIRECTIVES = [
 	"default-src 'self'",
 	"img-src 'self' data: blob: https://static.frontendmasters.com https://frontendmasters.com https://img.clerk.com",
 	"font-src 'self' data:",
-	`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com`,
+	`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com${clerkProxySource}`,
 	"style-src 'self' 'unsafe-inline'",
-	`connect-src 'self' ${workerSources} https://*.clerk.accounts.dev https://*.clerk.com wss://*.clerk.accounts.dev`,
-	"frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com",
+	`connect-src 'self' ${workerSources} https://*.clerk.accounts.dev https://*.clerk.com wss://*.clerk.accounts.dev${clerkProxySource}`,
+	`frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com${clerkProxySource}`,
 	"worker-src 'self' blob:",
 	"object-src 'none'",
 	"base-uri 'self'",
