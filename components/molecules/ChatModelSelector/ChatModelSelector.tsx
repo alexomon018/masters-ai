@@ -10,7 +10,6 @@ import {
 } from "@atoms";
 import { Model, modelCards } from "@constants";
 import { useModelStore } from "@providers";
-import Icons from "@/assets/icons";
 
 const ChatModelSelector = () => {
 	const { selectedModel, selectModel, enabledModels } = useModelStore(
@@ -36,7 +35,7 @@ const ChatModelSelector = () => {
 						className="h-8 gap-2 px-2 hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
 					>
 						<div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
-							<CustomIcon icon={selectedModel.icon as keyof typeof Icons} />
+							<CustomIcon icon={selectedModel.icon} />
 						</div>
 						<span className="text-sm font-medium">{selectedModel.name}</span>
 						<svg
@@ -59,7 +58,7 @@ const ChatModelSelector = () => {
 							onClick={() => onModelSelect(model)}
 						>
 							<div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
-								<CustomIcon icon={model.icon as keyof typeof Icons} />
+								<CustomIcon icon={model.icon} />
 							</div>
 							<span className="text-sm font-medium">{model.name}</span>
 						</Button>

@@ -1,234 +1,200 @@
-# Masters AI - Next.js AI Chat Application
+# Masters AI — Next.js + Cloudflare Worker AI Chat
 
-This project is an AI-powered chat application built with Next.js, featuring a modern UI with Tailwind CSS and ShadCN components. It implements a conversational AI interface with memory, RAG (Retrieval-Augmented Generation), and agent capabilities.
+A RAG chat app grounded in Frontend Masters course transcripts. The Next.js front end handles UI, auth, and account management; a Cloudflare Worker (one Durable Object per thread) runs the agent loop and streams responses back over a WebSocket.
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Features](#features)
-- [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
-- [Usage](#usage)
+- [Architecture](#architecture)
+- [Models](#models)
+- [Auth & security](#auth--security)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Project structure](#project-structure)
 - [Scripts](#scripts)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
+- [Branch conventions](#branch-conventions)
 - [License](#license)
 
-## Getting Started
-
-To get started with this project, follow these steps:
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/yourusername/masters-ai.git
-   cd masters-ai
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   yarn install
-   ```
-
-3. **Set up environment variables:**
-
-   Copy the `.env.example` file to `.env` and fill in the required values:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Run the development server:**
-
-   ```bash
-   yarn dev
-   ```
-
-5. **Open your browser:**
-
-   Navigate to [http://localhost:3000](http://localhost:3000) to see your app in action.
-
-## Features
-
-- **AI Chat Interface**: Conversational UI with streaming responses
-- **Memory System**: Persistent chat history and context management
-- **RAG (Retrieval-Augmented Generation)**: Enhanced responses with relevant information retrieval
-- **Agent Capabilities**: AI tools and actions for enhanced functionality
-- **Authentication**: User authentication via Clerk
-- **Database**: Drizzle ORM with Neon Database (PostgreSQL)
-- **Vector Storage**: Upstash Vector for embedding storage and retrieval
-- **Rate Limiting**: Upstash Rate Limit for API protection
-- **Modern UI**: Built with Tailwind CSS, ShadCN, and Radix UI components
-- **Atomic Design**: Component structure following Atomic Design principles
-- **Storybook**: Component development and documentation
-- **Testing**: Jest for unit and integration testing
-- **TypeScript**: Type-safe code throughout the application
-
-## Environment Variables
-
-This application requires several environment variables to function properly. Create a `.env` file in the root directory with the following variables:
+## Architecture
 
 ```
-# Base URL for the application
+Browser
+   │
+   ├── POST /ws-ticket   ─▶ Cloudflare Worker (Clerk JWT → single-use ticket)
+   │
+   ├── WebSocket ────────▶ Cloudflare Worker
+   │                         ├─ onBeforeConnect: ticket / anonId → userId
+   │                         ├─ checkThreadAccess: D1 ownership
+   │                         └─ MastersChatAgent (Durable Object, 1 per thread)
+   │                               ├─ identity on connection.state (survives hibernation)
+   │                               ├─ Upstash Redis (per-day quota)
+   │                               ├─ Upstash Vector (RAG)
+   │                               └─ streamAgent → toUIMessageStreamResponse()
+   │
+   ├── HTTP /threads* ───▶ D1 thread index
+   ├── HTTP /users/me ───▶ Cascade-delete on account removal
+   │
+   ├── /api/name-thread ─▶ Anthropic Haiku 4.5 (auto-titles new threads)
+   ├── /api/user-info   ─▶ Reads Redis quota counter for the current identity
+   └── /api/delete-user ─▶ Cascade on worker, then Clerk user delete
+```
+
+- **The browser talks directly to the Worker over a WebSocket** using `useAgent` + `useAgentChat`. Tool calls arrive as `UIMessage` parts (`tool-ragSearch`) with a live state, so the UI renders an inline "ragSearch ⏳ → ✓" pill while the agent runs.
+- **Home → thread handoff** uses `window.history.replaceState('/chat/<id>')` (ChatGPT / Claude.ai pattern). No `router.push`, no remount, no pending-message stash. Same React tree throughout.
+- **Identity** survives Durable Object hibernation: it's stashed on `connection.state` (which is backed by the WebSocket attachment), not on `this`.
+- **No Next.js proxy for chat.** There's no `/api/masters`; chat traffic is browser-to-Worker only.
+
+## Models
+
+The selectable lineup lives in [`constants/models.tsx`](constants/models.tsx) and is validated by [`constants/llmValidationSchema.ts`](constants/llmValidationSchema.ts):
+
+| Model              | Provider  | When to use                                   |
+| ------------------ | --------- | --------------------------------------------- |
+| Claude Haiku 4.5   | Anthropic | Default — fast, cheap, near-frontier          |
+| Claude Sonnet 4.6  | Anthropic | Best speed/intelligence balance               |
+| GPT-5.5            | OpenAI    | Strongest answers, higher cost/latency        |
+| GPT-5.4            | OpenAI    | Mid-tier OpenAI                               |
+| GPT-5.4 mini       | OpenAI    | Fastest OpenAI option                         |
+
+Adding or removing a model is three files: the union in [`types/Model.ts`](types/Model.ts), the Zod enum in [`constants/llmValidationSchema.ts`](constants/llmValidationSchema.ts), and the provider switch in [`worker/src/providers.ts`](worker/src/providers.ts). The worker switch is exhaustive — TypeScript will fail compilation if a new id is added but not wired.
+
+## Auth & security
+
+- **Authenticated users**: browser POSTs the Clerk JWT to `/ws-ticket` (Authorization header) and receives a single-use 30-second ticket. Subsequent requests pass `?ticket=...`. Clerk JWTs never appear in URLs (no access-log leakage).
+- **Anonymous users**: Next.js middleware issues an HMAC-signed cookie `masters_anon_id` (format `<rawId>.<sig>`). Browser passes the cookie value as `?anonId=...`. The worker rejects unsigned / tampered values. Signature is HMAC-SHA256 with `ANON_ID_SECRET`, shared between middleware and worker.
+- **Per-thread access control**: every `/agents/*` request checks D1 for ownership of the thread id. First-claim semantics — an unclaimed thread id (no D1 row yet) is accepted to let the home page's eager-connect work; the first successful submit writes the D1 row, locking the thread.
+- **Daily quota**: 10 messages/day anon, 20 authenticated. Counter lives in Upstash Redis, keyed by `user:<id>` or `anon:<rawId>`.
+- **CORS**: the worker reflects only origins listed in `ALLOWED_ORIGINS`. Next.js API routes are same-origin only.
+- **Account deletion** (`/api/delete-user`): cascades to the worker via `DELETE /users/me` (drops every D1 row + DO history for the user), wipes Redis quota counters, then deletes the Clerk user.
+- **CSP**: locked-down content-security-policy ships on every Next.js response. See [`next.config.mjs`](next.config.mjs).
+
+## Getting started
+
+```bash
+git clone https://github.com/yourusername/masters-ai.git
+cd masters-ai
+yarn install
+
+# 1. Generate a shared HMAC secret for the anon cookie:
+openssl rand -base64 32
+
+# 2. Put it in .env.local (Next.js side) AND worker/.dev.vars (Worker side)
+#    as ANON_ID_SECRET. They MUST match.
+cp .env.example .env.local
+
+# 3. In one terminal:
+yarn worker:dev      # http://localhost:8787
+
+# 4. In another:
+yarn dev             # http://localhost:3000
+```
+
+`NEXT_PUBLIC_WORKER_URL` points the browser at the dev worker (`http://localhost:8787`). The worker independently needs its own secrets in `worker/.dev.vars`.
+
+## Environment variables
+
+### Next.js (`.env.local`)
+
+```dotenv
 NEXT_PUBLIC_API_URL="http://localhost:3000"
+NEXT_PUBLIC_WORKER_URL="http://localhost:8787"
 
-# Upstash Redis for rate limiting and caching
-# Get these from https://console.upstash.com/
-UPSTASH_REDIS_REST_URL="your-upstash-redis-url"
-UPSTASH_REDIS_REST_TOKEN="your-upstash-redis-token"
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="..."
+CLERK_SECRET_KEY="..."
+NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL="http://localhost:3000"
 
-# Upstash Vector for embedding storage and retrieval
-# Get these from https://console.upstash.com/vector
-UPSTASH_VECTOR_REST_URL="your-upstash-vector-url"
-UPSTASH_VECTOR_REST_TOKEN="your-upstash-vector-token"
+# Upstash Redis (quota + ticket store + naming rate limit)
+UPSTASH_REDIS_REST_URL="..."
+UPSTASH_REDIS_REST_TOKEN="..."
 
-# PostgreSQL database URL (Neon)
-POSTGRES_URL="your-postgres-connection-string"
+# Anthropic — used by /api/name-thread for thread titles
+ANTHROPIC_API_KEY="..."
 
-# OpenAI API key for AI functionality
-# Get this from https://platform.openai.com/api-keys
-OPENAI_API_KEY="your-openai-api-key"
-
-# Clerk authentication keys
-# Get these from your Clerk dashboard
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
-CLERK_SECRET_KEY="your-clerk-secret-key"
-NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL="http://localhost:3000/chat"
+# Shared HMAC secret for the anon cookie. MUST match the worker.
+ANON_ID_SECRET="..."
 ```
 
-> **Important**: Never commit your `.env` file to version control. The repository includes a `.env.example` file that you can use as a template.
+### Worker (`worker/.dev.vars`, or `wrangler secret put` for prod)
 
-## Project Structure
+```dotenv
+CLERK_SECRET_KEY="..."
+OPENAI_API_KEY="..."
+ANTHROPIC_API_KEY="..."
+UPSTASH_VECTOR_REST_URL="..."
+UPSTASH_VECTOR_REST_TOKEN="..."
+UPSTASH_REDIS_REST_URL="..."
+UPSTASH_REDIS_REST_TOKEN="..."
 
-This project follows a modular and scalable folder structure based on Atomic Design principles:
+# Shared HMAC secret for the anon cookie. MUST match Next.js.
+ANON_ID_SECRET="..."
 
-```
-├── app/             # Next.js app router pages and API routes
-├── components/      # UI components organized by Atomic Design
-│   ├── atoms/       # Basic building blocks (buttons, inputs, etc.)
-│   ├── molecules/   # Combinations of atoms (form fields, cards, etc.)
-│   └── organisms/   # Complex UI sections (chat interface, sidebar, etc.)
-├── ai/              # AI-related functionality
-│   ├── tools/       # AI agent tools
-│   ├── agent.ts     # Agent implementation
-│   ├── llm.ts       # Language model configuration
-│   ├── memory.ts    # Memory and context management
-│   └── rag.ts       # Retrieval-augmented generation
-├── lib/             # Utility libraries and shared code
-├── providers/       # React context providers
-├── hooks/           # Custom React hooks
-├── utils/           # Utility functions
-├── public/          # Static assets
-└── localdb/         # Local database implementation
+# Comma-separated browser origins permitted for CORS.
+ALLOWED_ORIGINS="http://localhost:3000,https://masters-ai.vercel.app"
 ```
 
-## Branch Name Conventions
-
-### Bug Fixes
-
-If you are working on a bug ticket, name your branch:
+## Project structure
 
 ```
-bugfix/B{TICKET_ID}-{SHORT_TICKET_NAME}
-```
-
-### Feature Development
-
-If you are working on a feature ticket, name your branch:
-
-```
-features/U{TICKET_ID}-{SHORT_TICKET_NAME}
-```
-
----
-
-## Usage
-
-### Storybook
-
-To start Storybook and develop components in isolation:
-
-```bash
-yarn storybook
-```
-
-Storybook will run on [http://localhost:6006](http://localhost:6006).
-
-### Database Management
-
-To generate database migrations:
-
-```bash
-yarn db:generate
-```
-
-To run the Drizzle Studio for database management:
-
-```bash
-yarn db:studio
-```
-
-### Linting
-
-To lint your code using ESLint:
-
-```bash
-yarn lint
-```
-
-### Testing
-
-To run tests using Jest:
-
-```bash
-yarn test
+ai/llm.ts              # Anthropic Haiku 4.5 — thread auto-naming only
+app/
+  page.tsx             # Home — mints thread id, eager-connects, replaceState on submit
+  chat/[id]/page.tsx   # Direct-link / refresh entry for an existing thread
+  settings/[tab]/      # Clerk-protected user settings
+  api/name-thread/     # Anthropic-backed title generation (Clerk-gated, rate-limited)
+  api/user-info/       # Quota read
+  api/delete-user/     # Cascade-delete + Clerk user remove
+components/            # Atomic design: atoms / molecules / organisms
+  organisms/Chat/
+    Chat.tsx           # Layout + scroll behavior
+    useChat.ts         # Composer of useAgent + useAgentChat + sub-hooks
+    hooks/             # useAutoNameThread, useQuotaInvalidation
+    helpers/           # resolveAgentAuth, autoNameThread
+constants/             # Models, validation schemas, query keys, routes
+lib/redis.ts           # Upstash Redis (Next.js side)
+middleware.ts          # Clerk + signed anon cookie issuance
+providers/             # Theme, model store, query client
+store/                 # Zustand model preferences
+utils/
+  anonId.ts            # HMAC-signed anon id (mirrored in worker/src)
+  tryCatch.ts          # Result-style error wrapper
+worker/                # Cloudflare Worker — owns the chat agent
+  src/
+    worker.ts          # Entry, CORS, route dispatch
+    agent.ts           # MastersChatAgent DO (identity on connection.state)
+    agent-core.ts      # streamAgent / runAgent (shared between WS + eval)
+    auth-ticket.ts     # Issue/redeem single-use WS tickets
+    clerk-auth.ts      # Resolve ?ticket=/?anonId= → identity
+    thread-access.ts   # Per-thread D1 ownership check
+    providers.ts       # Strict LLMModel → provider switch
+    quota.ts           # Daily message quota
+    tools/rag-search.ts# Upstash Vector retrieval
+    routes/threads.ts  # D1 thread index handlers + cascade delete
+    anonId.ts          # Verifier — mirrors utils/anonId.ts
+  wrangler.jsonc       # DO binding, D1 binding, secrets
 ```
 
 ## Scripts
 
-Here are the main scripts available in this project:
+```bash
+# Next.js
+yarn dev                yarn build              yarn start
+yarn lint               yarn tsc                yarn test
+yarn storybook          yarn build-storybook    yarn chromatic
 
-- `dev`: Starts the Next.js development server
-- `build`: Builds the Next.js application for production
-- `start`: Starts the production server
-- `lint`: Lints the codebase using ESLint
-- `test`: Runs tests using Jest
-- `tsc`: Runs TypeScript compiler
-- `storybook`: Starts the Storybook server
-- `build-storybook`: Builds the Storybook for production
-- `chromatic`: Runs Chromatic for visual testing
-- `db:generate`: Generates Drizzle migrations
-- `db:studio`: Starts Drizzle Studio for database management
-- `db:migrate`: Runs database migrations
-- `prepare`: Installs Husky hooks
+# Worker
+yarn worker:dev              yarn worker:deploy           yarn worker:tsc
+yarn worker:deploy:preview   yarn worker:smoke
+yarn db:d1:generate
+yarn db:d1:migrate:local
+yarn db:d1:migrate:dev:remote
+yarn db:d1:migrate:prod:remote
+```
 
-## Configuration
+## Branch conventions
 
-### Environment Variables
-
-The application requires several environment variables to be set. Check the `.env.example` file for the required variables.
-
-### ESLint
-
-The ESLint configuration is located in `.eslintrc.json` and `eslint.config.mjs`. It is pre-configured with recommended rules and plugins for Next.js, React, and Tailwind CSS.
-
-### Tailwind CSS
-
-The Tailwind CSS configuration is located in `tailwind.config.ts`. It includes custom theme settings and plugins.
-
-### TypeScript
-
-The TypeScript configuration is located in `tsconfig.json`. It includes settings for Next.js and React.
-
-## Contributing
-
-Contributions are welcome! If you find any bugs or want to add new features, please feel free to open an issue or submit a pull request.
+- Bug fixes: `bugfix/B{TICKET_ID}-{short-name}`
+- Features:  `features/U{TICKET_ID}-{short-name}`
 
 ## License
 
-This project is licensed under the MIT License.
-
----
-
-Happy coding! 🚀
+MIT.

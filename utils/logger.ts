@@ -41,7 +41,10 @@ type LogType =
 	| "masters_context_fetched"
 	| "masters_request_completed"
 	| "masters_context_error"
-	| "masters_rag_error";
+	| "masters_rag_error"
+	| "masters_worker_proxy_started"
+	| "masters_worker_proxy_error"
+	| "masters_worker_proxy_completed";
 
 interface BaseLogData {
 	timestamp?: string;
@@ -115,7 +118,10 @@ interface MastersLogData extends BaseLogData {
 		| "masters_message_limit_error"
 		| "masters_rag_chat_started"
 		| "masters_context_fetched"
-		| "masters_request_completed";
+		| "masters_request_completed"
+		| "masters_worker_proxy_started"
+		| "masters_worker_proxy_error"
+		| "masters_worker_proxy_completed";
 }
 
 type LogData =
@@ -372,5 +378,26 @@ export class Logger {
 
 	static logMastersRagError(trackingId: string, error: string) {
 		Logger.log("masters_rag_error", { trackingId, error });
+	}
+
+	// Worker-proxy events. started/completed bracket the upstream fetch;
+	// error fires on a non-2xx from the Worker.
+	static logMastersWorkerProxyStarted(trackingId: string, threadId: string) {
+		Logger.log("masters_worker_proxy_started", { trackingId, threadId });
+	}
+
+	static logMastersWorkerProxyError(
+		trackingId: string,
+		threadId: string,
+		error: string
+	) {
+		Logger.log("masters_worker_proxy_error", { trackingId, threadId, error });
+	}
+
+	static logMastersWorkerProxyCompleted(
+		trackingId: string,
+		threadId: string
+	) {
+		Logger.log("masters_worker_proxy_completed", { trackingId, threadId });
 	}
 }

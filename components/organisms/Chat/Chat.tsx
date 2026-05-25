@@ -4,28 +4,32 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MessageList, MobileHeader } from "@molecules";
 import { cn } from "@/utils";
 import { useUser } from "@clerk/nextjs";
-import type { VListHandle } from "virtua";
 import SideBar from "../SideBar/SideBar";
-import useAskChat from "./useAskChat";
+import useChat from "./useChat";
 import ChatForm from "../ChatForm/ChatForm";
 
-const Chat = React.memo(({ threadId }: { threadId: string }) => {
+interface ChatProps {
+	threadId: string;
+	isNewThread: boolean;
+}
+
+const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 	const formRef = useRef<HTMLFormElement>(null);
-	const listRef = useRef<VListHandle>(null);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const { user, isLoaded } = useUser();
 
 	const {
 		messages,
+		isEmpty,
 		input,
 		handleInputChange,
 		handleSubmit,
-		setInput,
+		submitMessage,
 		streaming,
-		setStreaming,
 		loading,
-		activeThread
-	} = useAskChat(threadId);
+		threadId: activeThreadId
+	} = useChat({ threadId, isNewThread });
 
 	useEffect(() => {
 		document.body.style.overflow = sidebarOpen ? "hidden" : "";
@@ -36,51 +40,59 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 
 	const onClickQuestion = useCallback(
 		(value: string) => {
-			setInput(value);
-			setTimeout(() => {
-				formRef.current?.dispatchEvent(
-					new Event("submit", { cancelable: true, bubbles: true })
-				);
-			}, 1);
+			submitMessage(value);
 		},
-		[setInput]
+		[submitMessage]
 	);
 
-	const prevMessageCountRef = useRef(messages.length);
+	// Auto-scroll only when the user is already near the bottom. Coalesce
+	// streamed-chunk updates with rAF so we do at most one scrollTop write
+	// per frame (forcing layout on every chunk was the source of the lag).
+	const wasAtBottomRef = useRef(true);
+	const scrollScheduledRef = useRef(false);
+	const handleScroll = () => {
+		const el = scrollContainerRef.current;
+		if (!el) return;
+		const distanceFromBottom =
+			el.scrollHeight - el.scrollTop - el.clientHeight;
+		wasAtBottomRef.current = distanceFromBottom < 60;
+	};
 
 	useEffect(() => {
-		if (!listRef.current || messages.length === 0) return;
-		const prevCount = prevMessageCountRef.current;
-		prevMessageCountRef.current = messages.length;
-
-		// Only auto-scroll when new messages are added or loading starts
-		const hasNewMessages = messages.length > prevCount;
-		if (!hasNewMessages && !loading) return;
-
-		const totalItems = messages.length + (loading ? 1 : 0) + 1;
-		listRef.current.scrollToIndex(totalItems - 1, {
-			align: "end"
+		if (scrollScheduledRef.current) {
+			return undefined;
+		}
+		scrollScheduledRef.current = true;
+		const raf = requestAnimationFrame(() => {
+			scrollScheduledRef.current = false;
+			const el = scrollContainerRef.current;
+			if (!el) return;
+			if (wasAtBottomRef.current) {
+				el.scrollTop = el.scrollHeight;
+			}
 		});
+		return () => cancelAnimationFrame(raf);
 	}, [messages, loading]);
 
 	const onSubmit = useCallback(
 		(e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			handleSubmit(e);
-			setStreaming(true);
 		},
-		[handleSubmit, setStreaming]
+		[handleSubmit]
 	);
 
+	const showInitialQuestions = isEmpty && !streaming;
+
 	return (
-		<div className="flex h-full overflow-hidden">
+		<div className="flex h-full">
 			<MobileHeader
 				onOpenSidebar={() => setSidebarOpen(true)}
 				user={user}
 				isLoaded={isLoaded}
 			/>
 			<SideBar
-				activeThread={activeThread || null}
+				activeThreadId={activeThreadId}
 				isOpen={sidebarOpen}
 				onClose={() => setSidebarOpen(false)}
 			/>
@@ -89,18 +101,29 @@ const Chat = React.memo(({ threadId }: { threadId: string }) => {
 					"relative mx-auto flex max-w-screen-md flex-1 flex-col overflow-hidden px-4 pt-16 md:px-6 md:pt-6"
 				)}
 			>
-				<MessageList
-					messages={messages}
-					loading={loading}
-					listRef={listRef as React.RefObject<VListHandle>}
-				/>
+				<div
+					ref={scrollContainerRef}
+					onScroll={handleScroll}
+					className="scrollbar-hide flex-1 overflow-y-auto overflow-x-hidden"
+				>
+					{isEmpty && (
+						<div className="mb-4 flex w-full items-start gap-3 rounded-2xl p-3 md:gap-4 md:p-5">
+							<p className="text-base">
+								<strong>Welcome to Masters Chat</strong>{" "}
+								Your ultimate companion in navigating Frontend Masters
+								courses.
+							</p>
+						</div>
+					)}
+					<MessageList messages={messages} loading={loading} />
+				</div>
 				<ChatForm
 					formRef={formRef as React.RefObject<HTMLFormElement>}
 					onSubmit={onSubmit}
 					input={input}
 					handleInputChange={handleInputChange}
 					streaming={streaming}
-					showInitialQuestions={messages.length === 1 && !streaming}
+					showInitialQuestions={showInitialQuestions}
 					onClickQuestion={onClickQuestion}
 				/>
 			</main>

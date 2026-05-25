@@ -1,23 +1,45 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { currentUser } from "@clerk/nextjs/server";
 import redis from "@/lib/redis";
 import { messageAllowed } from "@/constants";
+import { verifyAnonId } from "@/utils/anonId";
 
-export async function GET(req: Request) {
+const ANON_COOKIE = "masters_anon_id";
+
+export async function GET() {
 	const user = await currentUser();
 	const isAuthenticated = !!user;
 
-	let ipAddress = req.headers.get("x-real-ip") as string;
-
-	const forwardedFor = req.headers.get("x-forwarded-for") as string;
-	if (!ipAddress && forwardedFor) {
-		ipAddress = forwardedFor?.split(",").at(0) ?? "Unknown";
+	// Mirror the worker's identity scheme (worker/src/clerk-auth.ts) so the
+	// Redis key the UI reads is the same one the worker increments. The
+	// anon cookie is `<rawId>.<sig>`; the worker stores quotas under
+	// `anon:<rawId>` (signature stripped after verification).
+	let trackingId: string;
+	if (isAuthenticated) {
+		trackingId = `user:${user!.id}`;
+	} else {
+		const cookieStore = await cookies();
+		const cookieValue = cookieStore.get(ANON_COOKIE)?.value;
+		const secret = process.env.ANON_ID_SECRET;
+		const rawId =
+			cookieValue && secret
+				? await verifyAnonId(cookieValue, secret)
+				: null;
+		if (!rawId) {
+			return NextResponse.json(
+				{
+					userId: "anonymous",
+					used: 0,
+					remaining: messageAllowed.free,
+					total: messageAllowed.free,
+					resetsAt: "never"
+				},
+				{ status: 200 }
+			);
+		}
+		trackingId = `anon:${rawId}`;
 	}
-
-	// Track message usage based on user ID or IP
-	const trackingId = isAuthenticated
-		? `user:${user!.id}`
-		: `anonymous:${ipAddress || "unknown"}`;
 	const messageKey = `message_count:${trackingId}`;
 
 	try {

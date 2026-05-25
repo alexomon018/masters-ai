@@ -2,8 +2,8 @@
 
 import React, { memo, useMemo, useState } from "react";
 import Markdown from "markdown-to-jsx";
+import type { UIMessage } from "ai";
 import cn from "@/utils/cn";
-import type { ChatMessage as MessageProps } from "@/components/organisms/Chat/useAskChat";
 import { User as UserIcon, ThumbsUp, ThumbsDown } from "lucide-react";
 import {
 	Avatar,
@@ -13,6 +13,7 @@ import {
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { useUser } from "@clerk/nextjs";
 import CodeBlock from "../CodeBlock/CodeBlock";
+import ToolStatus from "./ToolStatus";
 
 interface BaseProps {
 	children: React.ReactNode;
@@ -44,19 +45,28 @@ const PreBlock: React.FC<BaseProps> = ({ children }) => (
 	<div className="not-prose">{children}</div>
 );
 
-const CodeComponent: React.FC<CodeComponentProps> = ({
-	children,
-	className
-}) => {
+const CodeComponent: React.FC<CodeComponentProps> = ({ children, className }) => {
 	if (!className) {
 		return <InlineCode>{children}</InlineCode>;
 	}
 	return <CodeBlock className={className}>{children as string}</CodeBlock>;
 };
 
-const Message: React.FC<MessageProps> = ({ content, role }) => {
-	const isUser = role === "user";
-	const isAssistant = role === "assistant";
+interface MessageProps {
+	message: UIMessage;
+}
+
+const toolStateToStatus = (
+	state: string | undefined
+): "running" | "complete" | "error" => {
+	if (state === "output-available") return "complete";
+	if (state === "output-error") return "error";
+	return "running";
+};
+
+const Message: React.FC<MessageProps> = ({ message }) => {
+	const isUser = message.role === "user";
+	const isAssistant = message.role === "assistant";
 	const { user } = useUser();
 	const isAnonymous = !user;
 	const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
@@ -73,6 +83,46 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 		}),
 		[]
 	);
+
+	const parts = message.parts ?? [];
+	const hasRenderableContent = parts.some(
+		(p) =>
+			(p.type === "text" &&
+				typeof (p as { text?: string }).text === "string" &&
+				(p as { text: string }).text.length > 0) ||
+			(typeof p.type === "string" && p.type.startsWith("tool-"))
+	);
+
+	// Skip rendering an assistant bubble that has no parts yet — prevents the
+	// "ghost" avatar row that appears between submit and the first stream chunk.
+	if (isAssistant && !hasRenderableContent) return null;
+
+	const renderedParts = parts.map((part, i) => {
+		if (part.type === "text") {
+			const text = (part as { text: string }).text ?? "";
+			if (!text) return null;
+			return (
+				<Markdown
+					key={`text-${i}`}
+					className={cn(
+						"w-fit max-w-[600px] space-y-4 py-1.5 md:py-1",
+						isUser ? "font-semibold" : ""
+					)}
+					options={markdownOptions}
+				>
+					{text}
+				</Markdown>
+			);
+		}
+
+		if (typeof part.type === "string" && part.type.startsWith("tool-")) {
+			const toolName = part.type.replace("tool-", "");
+			const status = toolStateToStatus((part as { state?: string }).state);
+			return <ToolStatus key={`tool-${i}`} name={toolName} status={status} />;
+		}
+
+		return null;
+	});
 
 	return (
 		<article
@@ -107,15 +157,7 @@ const Message: React.FC<MessageProps> = ({ content, role }) => {
 				</Avatar>
 			)}
 			<div className="flex flex-col">
-				<Markdown
-					className={cn(
-						"w-fit max-w-[600px] space-y-4 py-1.5 md:py-1",
-						isUser ? "font-semibold" : ""
-					)}
-					options={markdownOptions}
-				>
-					{content}
-				</Markdown>
+				{renderedParts}
 				{isAssistant && (
 					<div className="mt-2 flex items-center gap-1">
 						<button

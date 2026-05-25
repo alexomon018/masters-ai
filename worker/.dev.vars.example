@@ -1,0 +1,21 @@
+# Copy to worker/.dev.vars and fill in. Loaded by `wrangler dev`.
+# .dev.vars is gitignored; this .example file is the checked-in template.
+
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+UPSTASH_VECTOR_REST_URL=
+UPSTASH_VECTOR_REST_TOKEN=
+
+# Daily message quotas live in Upstash Redis. Same instance the Next.js app
+# uses; the worker is the only writer now.
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# Clerk session token verification (/ws-ticket and ticket redemption).
+CLERK_SECRET_KEY=
+
+# HMAC secret for the masters_anon_id cookie. MUST match Next.js ANON_ID_SECRET.
+ANON_ID_SECRET=
+
+# Comma-separated browser origins for CORS (local dev example below).
+ALLOWED_ORIGINS=http://localhost:3000

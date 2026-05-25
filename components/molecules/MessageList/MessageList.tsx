@@ -1,26 +1,19 @@
-import type { ChatMessage as MessageProps } from "@/components/organisms/Chat/useAskChat";
+import type { UIMessage } from "ai";
 import { MessageLoader } from "@atoms";
-import { VList, type VListHandle } from "virtua";
 import Message from "../Message/Message";
 
 interface MessageListProps {
-	messages: MessageProps[];
+	messages: UIMessage[];
 	loading: boolean;
-	listRef: React.RefObject<VListHandle>;
 }
 
-const MessageList = ({ messages, loading, listRef }: MessageListProps) => (
-	<VList
-		ref={listRef}
-		className="scrollbar-hide flex-1 overflow-x-hidden"
-		style={{ width: "100%" }}
-	>
-		{messages.map((message: MessageProps) => (
-			<Message key={message.id} {...message} />
+const MessageList = ({ messages, loading }: MessageListProps) => (
+	<div className="flex w-full flex-col">
+		{messages.map((message) => (
+			<Message key={message.id} message={message} />
 		))}
 		{loading && <MessageLoader />}
-		<div style={{ height: 1 }} aria-hidden />
-	</VList>
+	</div>
 );
 
 export default MessageList;

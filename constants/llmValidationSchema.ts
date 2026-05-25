@@ -1,43 +1,25 @@
 import { z } from "zod";
 
-// Existing schemas
+// Generic example schema used by the Form storybook story. The Form
+// organism is reused across the app, but the story needs *some* concrete
+// validator to demonstrate it.
 const formSchema = z.object({
 	username: z.string().min(2).max(50)
 });
 
-// LLM Model validation
+// Model lineup the Next.js side accepts on inbound API calls. The worker
+// has its own copy at worker/src/providers.ts:LLMModel — they MUST stay
+// in lockstep. The Zod enum lets us reject stale model ids from
+// out-of-date browsers at the API boundary rather than at the LLM call.
 const llmModelSchema = z.enum([
-	"gpt-4o-mini",
-	"gpt-4o",
-	"gpt-5",
-	"claude-3-5-sonnet-latest",
-	"claude-3-haiku-20240307",
-	"claude-sonnet-4-5",
-	"claude-opus-4-6",
-	"grok-2-latest",
-	"gpt-3.5-turbo"
+	"claude-haiku-4-5",
+	"claude-sonnet-4-6",
+	"gpt-5.5",
+	"gpt-5.4",
+	"gpt-5.4-mini"
 ]);
 
-// Chat message validation
-const chatMessageSchema = z.object({
-	content: z.string(),
-	role: z.enum(["user", "assistant", "system", "function"]),
-	name: z.string().optional(),
-	function_call: z.any().optional()
-});
-
-// Masters API request validation
-export const mastersRequestSchema = z.object({
-	messages: z.array(chatMessageSchema),
-	model: llmModelSchema,
-	id: z.string()
-});
-
-// Masters API response validation for error cases
-export const mastersErrorResponseSchema = z.object({
-	error: z.string()
-});
-
+// `/api/name-thread` body shape.
 const aiMessageSchema = z.union([
 	z.object({
 		role: z.literal("assistant"),
@@ -55,10 +37,4 @@ const nameThreadSchema = z.object({
 	model: llmModelSchema
 });
 
-export {
-	formSchema,
-	llmModelSchema,
-	chatMessageSchema,
-	aiMessageSchema,
-	nameThreadSchema
-};
+export { formSchema, llmModelSchema, aiMessageSchema, nameThreadSchema };

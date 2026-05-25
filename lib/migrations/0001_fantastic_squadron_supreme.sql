@@ -1,1 +1,0 @@
-ALTER TABLE "master_sync_.threads_table" ALTER COLUMN "project_id" SET DATA TYPE uuid;
