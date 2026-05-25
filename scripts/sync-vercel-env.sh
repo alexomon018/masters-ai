@@ -21,7 +21,7 @@ set +a
 
 PREVIEW_WORKER_URL="${PREVIEW_WORKER_URL:-https://masters-ai-agent-preview.aleksa-mitic5859.workers.dev}"
 PROD_WORKER_URL="${PROD_WORKER_URL:-https://masters-ai-agent.aleksa-mitic5859.workers.dev}"
-PROD_APP_URL="${PROD_APP_URL:-https://masters-ai.vercel.app}"
+PROD_APP_URL="${PROD_APP_URL:-https://femasters.guru}"
 
 put() {
 	local name="$1"

@@ -24,6 +24,7 @@ import {
 import { z } from "zod";
 import { compactHistory } from "./context/compaction";
 import { streamAgent } from "./agent-core";
+import { startBraintrust } from "./braintrust";
 import {
 	getModel,
 	resolveWorkerModelLabel,
@@ -139,6 +140,12 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		_onFinish: StreamTextOnFinishCallback<ToolSet>,
 		options?: OnChatMessageOptions
 	) {
+		// Start Braintrust tracing on first use. The key + environment come
+		// off the Env binding (process.env is empty at module scope on
+		// Workers); no-ops when the key is unset so the worker runs fine
+		// without Braintrust.
+		startBraintrust(this.env.BRAINTRUST_API_KEY, this.env.BRAINTRUST_ENV);
+
 		const { model, modelId, userData, messages } =
 			await this.gateChatTurn(options);
 
