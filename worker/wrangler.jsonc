@@ -68,6 +68,9 @@
 		},
 		"production": {
 			"name": "masters-ai-agent",
+			"vars": {
+				"ALLOWED_ORIGINS": "https://masters-ai.vercel.app"
+			},
 			"durable_objects": {
 				"bindings": [
 					{
