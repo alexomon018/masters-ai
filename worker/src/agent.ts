@@ -12,7 +12,11 @@
 // which onConnect reads and stashes on the *connection* (not on `this`)
 // so it survives DO hibernation.
 
-import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
+import {
+	AIChatAgent,
+	type ChatResponseResult,
+	type OnChatMessageOptions
+} from "@cloudflare/ai-chat";
 import type { Connection, ConnectionContext } from "agents";
 import {
 	convertToModelMessages,
@@ -24,7 +28,7 @@ import {
 import { z } from "zod";
 import { compactHistory } from "./context/compaction";
 import { streamAgent } from "./agent-core";
-import { startBraintrust } from "./braintrust";
+import { flushBraintrust, startBraintrust } from "./braintrust";
 import {
 	getModel,
 	resolveWorkerModelLabel,
@@ -165,6 +169,17 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		// `input-streaming` → `output-available`, which is what makes the
 		// inline tool-call status pill possible.
 		return result.toUIMessageStreamResponse();
+	}
+
+	// Fires after the assistant message is persisted — the reliable point to
+	// flush Braintrust spans on Workers (better than awaiting result.text in
+	// onChatMessage, which can race the SDK's stream teardown).
+	protected onChatResponse(_result: ChatResponseResult): void {
+		this.ctx.waitUntil(
+			flushBraintrust().catch((err) => {
+				console.error("[braintrust] flush failed:", err);
+			})
+		);
 	}
 
 	async clearHistory(): Promise<void> {
