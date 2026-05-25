@@ -26,6 +26,7 @@ export function resolveProjectName(environment: string | undefined): string {
 }
 
 let started = false;
+let logger: ReturnType<typeof initLogger> | undefined;
 
 // Start the Braintrust logger once, using the API key + environment from the
 // Env binding. No-ops if the key is absent (the app must run without
@@ -36,7 +37,16 @@ export function startBraintrust(
 ): void {
 	if (started || !apiKey) return;
 	started = true;
-	initLogger({ projectName: resolveProjectName(environment), apiKey });
+	logger = initLogger({ projectName: resolveProjectName(environment), apiKey });
+}
+
+// Flush queued spans to Braintrust. The Workers runtime has no automatic flush
+// integration (unlike Vercel, where the SDK flushes via waitUntil), so a
+// streamed turn is traced but never delivered unless we flush it ourselves.
+// No-ops when the logger was never started. Callers should run this inside
+// `ctx.waitUntil` after the turn finishes so the DO stays alive until it lands.
+export async function flushBraintrust(): Promise<void> {
+	await logger?.flush();
 }
 
 // Tracing-wrapped AI SDK entry points. Drop-in replacements for the `ai`

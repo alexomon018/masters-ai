@@ -24,7 +24,7 @@ import {
 import { z } from "zod";
 import { compactHistory } from "./context/compaction";
 import { streamAgent } from "./agent-core";
-import { startBraintrust } from "./braintrust";
+import { flushBraintrust, startBraintrust } from "./braintrust";
 import {
 	getModel,
 	resolveWorkerModelLabel,
@@ -159,6 +159,21 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN
 			}
 		});
+
+		// Deliver Braintrust spans once the turn finishes. The Workers runtime
+		// has no auto-flush (unlike Vercel's waitUntil integration), so without
+		// this the streamed turn is traced but never sent. waitUntil keeps the
+		// DO alive until the flush lands.
+		this.ctx.waitUntil(
+			(async () => {
+				try {
+					await result.text;
+					await flushBraintrust();
+				} catch {
+					// Never let tracing break the chat response.
+				}
+			})()
+		);
 
 		// UI-message stream emits text parts AND tool parts (with state).
 		// The browser receives `tool-ragSearch` parts that transition from
