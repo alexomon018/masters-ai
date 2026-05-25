@@ -1,5 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { generateText } from "ai";
+// Braintrust-wrapped generateText — same signature as the `ai` export, but
+// each call is traced. Logger setup + dev/prod project routing live there.
+import { generateText } from "./braintrust";
 
 export interface NameThreadMessage {
 	role: "user" | "assistant";

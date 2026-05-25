@@ -1,0 +1,26 @@
+# Braintrust eval harness env. Copy to .dev.vars (gitignored) and fill in.
+#   cp .dev.vars.example .dev.vars
+#
+# The eval scripts (yarn eval / eval:rag / eval:name-thread / eval:chat) load
+# this file via dotenv-cli, then `braintrust eval` runs the *.eval.ts files.
+# These import real production code (ai/llm.ts, worker/src/agent-core.ts,
+# worker/src/tools/rag-search.ts), so the harness needs the same provider keys
+# the app uses plus a Braintrust key for the dashboard.
+
+# Braintrust — free signup at https://www.braintrust.dev. Each `yarn eval` run
+# becomes an experiment, auto-tagged with the current git branch + commit.
+BRAINTRUST_API_KEY=
+
+# Anthropic — console.anthropic.com/settings/keys.
+# Used by thread naming (Haiku 4.5) and the chat-agent eval (Claude models).
+ANTHROPIC_API_KEY=
+
+# OpenAI — platform.openai.com/api-keys.
+# Only needed if you run the chat-agent eval against a gpt-* model.
+OPENAI_API_KEY=
+
+# Upstash Vector — console.upstash.com. The Frontend Masters transcript index.
+# Used by the RAG retrieval eval and the chat-agent eval (ragSearch tool).
+# Same values as worker/.dev.vars.
+UPSTASH_VECTOR_REST_URL=
+UPSTASH_VECTOR_REST_TOKEN=

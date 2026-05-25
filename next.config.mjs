@@ -11,7 +11,7 @@ const workerSources = [workerHttpUrl, workerWsUrl].filter(Boolean).join(" ");
 // Clerk Frontend API proxy (production DNS). Dev uses *.clerk.accounts.dev
 // directly; prod loads clerk-js and API calls via this subdomain.
 const clerkProxyUrl =
-	process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://clerk.femasters.chat";
+	process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://clerk.femasters.guru";
 const clerkProxySource = clerkProxyUrl ? ` ${clerkProxyUrl}` : "";
 
 // Tightened CSP. `unsafe-inline` for styles is unavoidable without per-
