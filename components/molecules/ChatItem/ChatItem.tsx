@@ -1,7 +1,7 @@
-import { DEX_Thread } from "@/localdb/dexie";
 import { cn } from "@utils";
 import { PinIcon, XIcon } from "lucide-react";
 import React from "react";
+import type { ThreadDto } from "@/components/organisms/SideBar/threadsApi";
 
 const ChatItem = React.memo(
 	({
@@ -12,7 +12,7 @@ const ChatItem = React.memo(
 		handlePinThread,
 		onDelete
 	}: {
-		chat: DEX_Thread;
+		chat: ThreadDto;
 		isActive: boolean;
 		onSelect: (id: string) => void;
 		isPinned: boolean;
@@ -52,7 +52,6 @@ const ChatItem = React.memo(
 					onClick={(e) => {
 						e.stopPropagation();
 						onDelete(chat.id);
-						// Handle delete
 					}}
 				>
 					<XIcon className="size-4 text-gray-500 dark:text-[#e2e8f0]" />

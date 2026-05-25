@@ -1,0 +1,10 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"types": ["node"],
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"noEmit": false
+	},
+	"include": ["scripts/**/*.ts", "../utils/anonId.ts"]
+}

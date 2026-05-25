@@ -40,18 +40,6 @@
       "@lib": [
         "./lib"
       ],
-      "@reducers": [
-        "./reducers"
-      ],
-      "@hooks": [
-        "./hooks"
-      ],
-      "@services": [
-        "./services"
-      ],
-      "@models": [
-        "./models"
-      ],
       "@images": [
         "./assets/images"
       ],
@@ -87,6 +75,7 @@
     "**/*.cjs"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "worker"
   ]
 }

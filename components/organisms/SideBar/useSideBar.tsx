@@ -1,28 +1,57 @@
 "use client";
 
-/* eslint-disable import/no-extraneous-dependencies */
-import { dxdb } from "@/localdb/dexie";
-import { useUser } from "@clerk/nextjs";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import debounce from "lodash/debounce";
-import { useCallback, useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocalStorage } from "@/hooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	useMutation,
+	useQuery,
+	useQueryClient
+} from "@tanstack/react-query";
+import {
+	deleteThreadRemote,
+	fetchThreads,
+	upsertThreadRemote,
+	type ThreadDto
+} from "./threadsApi";
+import useClaimAnonThreads from "./useClaimAnonThreads";
+
+const THREADS_QUERY_KEY = ["threads"] as const;
 
 const useSideBar = () => {
-	const allThreads = useLiveQuery(() => dxdb.threads.toArray())!;
 	const router = useRouter();
 	const { user, isLoaded } = useUser();
+	const { getToken } = useAuth();
 	const [openSearch, setOpenSearch] = useState(false);
-	const [, setIsCloudSyncEnabled] = useLocalStorage("isCloudSyncEnabled", true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const queryClient = useQueryClient();
 
-	// Create a debounced search function
-	const debouncedSetSearchQuery = debounce((query: string) => {
-		setSearchQuery(query);
-	}, 50);
+	const tokenFn = useCallback(
+		async () =>
+			typeof getToken === "function" ? getToken() : null,
+		[getToken]
+	);
+
+	useClaimAnonThreads();
+
+	const { data: threads = [] } = useQuery({
+		queryKey: THREADS_QUERY_KEY,
+		queryFn: () => fetchThreads(tokenFn),
+		// The list mutates from inside this app and from the auto-name
+		// background call. Refetch on window focus keeps the sidebar honest
+		// without us wiring optimistic updates on every code path.
+		refetchOnWindowFocus: true,
+		staleTime: 30_000
+	});
+
+	const debouncedSetSearchQuery = useMemo(
+		() =>
+			debounce((query: string) => {
+				setSearchQuery(query);
+			}, 50),
+		[]
+	);
 
 	const onSearch = useCallback(
 		(query: string) => {
@@ -31,89 +60,59 @@ const useSideBar = () => {
 		[debouncedSetSearchQuery]
 	);
 
-	const pinnedThreads = useLiveQuery(
-		() =>
-			dxdb.threads
-				.orderBy("created_at")
-				.reverse()
-				.filter(
-					(thread) =>
-						thread.isPinned &&
-						(searchQuery === "" ||
-							thread.title.toLowerCase().includes(searchQuery.toLowerCase()))
-				)
-				.toArray(),
+	const filterByQuery = useCallback(
+		(t: ThreadDto) =>
+			searchQuery === "" ||
+			t.title.toLowerCase().includes(searchQuery.toLowerCase()),
 		[searchQuery]
-	)!;
-	const unpinnedThreads = useLiveQuery(
-		() =>
-			dxdb.threads
-				.orderBy("created_at")
-				.reverse()
-				.filter(
-					(thread) =>
-						!thread.isPinned &&
-						(searchQuery === "" ||
-							thread.title.toLowerCase().includes(searchQuery.toLowerCase()))
-				)
-				.toArray(),
-		[searchQuery]
-	)!;
+	);
+
+	const sortedThreads = useMemo(
+		() => [...threads].sort((a, b) => b.createdAt - a.createdAt),
+		[threads]
+	);
+
+	const pinnedThreads = useMemo(
+		() => sortedThreads.filter((t) => t.pinned && filterByQuery(t)),
+		[sortedThreads, filterByQuery]
+	);
+
+	const unpinnedThreads = useMemo(
+		() => sortedThreads.filter((t) => !t.pinned && filterByQuery(t)),
+		[sortedThreads, filterByQuery]
+	);
 
 	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
-			// Temporarily disable cloud sync
-			setIsCloudSyncEnabled(false);
-
-			try {
-				// Delete locally first
-				await dxdb.deleteThread(threadId);
-
-				// Navigate immediately after local delete
-				router.replace("/");
-
-				// Server sync in background — don't block navigation
-				fetch("/api/sync", {
-					method: "DELETE",
-					body: JSON.stringify({ threadId })
-				}).then(() => queryClient.invalidateQueries({ queryKey: ["sync"] }));
-			} finally {
-				// Re-enable cloud sync
-				setIsCloudSyncEnabled(true);
+			await deleteThreadRemote(tokenFn, threadId);
+		},
+		onMutate: async (threadId) => {
+			await queryClient.cancelQueries({ queryKey: THREADS_QUERY_KEY });
+			const previous = queryClient.getQueryData<ThreadDto[]>(
+				THREADS_QUERY_KEY
+			);
+			queryClient.setQueryData<ThreadDto[]>(
+				THREADS_QUERY_KEY,
+				(prev) => prev?.filter((t) => t.id !== threadId) ?? []
+			);
+			router.replace("/");
+			return { previous };
+		},
+		onError: (_err, _threadId, ctx) => {
+			if (ctx?.previous) {
+				queryClient.setQueryData(THREADS_QUERY_KEY, ctx.previous);
 			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: THREADS_QUERY_KEY });
 		}
 	});
 
-	const startNewChat = useCallback(async () => {
-		try {
-			if (allThreads.length === 0) {
-				const threadId = await dxdb.createThread({
-					title: "New Chat",
-					isPinned: false
-				});
-				router.push(`/chat/${threadId}`);
-				return;
-			}
-
-			const existingThread = allThreads.find(
-				(thread) => thread.title === "New Chat"
-			);
-
-			if (existingThread) {
-				return;
-			}
-
-			const threadId = await dxdb.createThread({
-				title: "New Chat",
-				isPinned: false
-			});
-
-			router.push(`/chat/${threadId}`);
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error("Failed to create chat:", error);
-		}
-	}, [router, allThreads]);
+	const startNewChat = useCallback(() => {
+		// Don't pre-create rows. /chat/<id> with no id lands on the same page
+		// and the chat hook mints + persists the thread on the first message.
+		router.push("/");
+	}, [router]);
 
 	const handleChatSelect = useCallback(
 		(chatId: string) => {
@@ -122,16 +121,43 @@ const useSideBar = () => {
 		[router]
 	);
 
-	const handlePinThread = useCallback(
-		async (threadId: string) => {
-			const thread = allThreads.find((t) => t.id === threadId);
-			if (thread) {
-				await dxdb.updateThread(threadId, {
-					isPinned: !thread.isPinned
-				});
+	const { mutate: togglePin } = useMutation({
+		mutationFn: async ({
+			threadId,
+			pinned
+		}: {
+			threadId: string;
+			pinned: boolean;
+		}) => upsertThreadRemote(tokenFn, { threadId, pinned }),
+		onMutate: async ({ threadId, pinned }) => {
+			await queryClient.cancelQueries({ queryKey: THREADS_QUERY_KEY });
+			const previous = queryClient.getQueryData<ThreadDto[]>(
+				THREADS_QUERY_KEY
+			);
+			queryClient.setQueryData<ThreadDto[]>(
+				THREADS_QUERY_KEY,
+				(prev) =>
+					prev?.map((t) => (t.id === threadId ? { ...t, pinned } : t)) ?? []
+			);
+			return { previous };
+		},
+		onError: (_err, _vars, ctx) => {
+			if (ctx?.previous) {
+				queryClient.setQueryData(THREADS_QUERY_KEY, ctx.previous);
 			}
 		},
-		[allThreads]
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: THREADS_QUERY_KEY });
+		}
+	});
+
+	const handlePinThread = useCallback(
+		(threadId: string) => {
+			const thread = threads.find((t) => t.id === threadId);
+			if (!thread) return;
+			togglePin({ threadId, pinned: !thread.pinned });
+		},
+		[threads, togglePin]
 	);
 
 	useEffect(() => {
@@ -151,7 +177,7 @@ const useSideBar = () => {
 	}, [startNewChat]);
 
 	return {
-		threads: allThreads,
+		threads,
 		deleteThread,
 		startNewChat,
 		handleChatSelect,
@@ -159,8 +185,8 @@ const useSideBar = () => {
 		isLoaded,
 		openSearch,
 		setOpenSearch,
-		pinnedThreads: pinnedThreads || [],
-		unpinnedThreads: unpinnedThreads || [],
+		pinnedThreads,
+		unpinnedThreads,
 		handlePinThread,
 		onSearch,
 		searchQuery

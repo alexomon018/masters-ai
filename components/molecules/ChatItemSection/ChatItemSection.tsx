@@ -1,14 +1,14 @@
 import React from "react";
-import { DEX_Thread } from "@/localdb/dexie";
+import type { ThreadDto } from "@/components/organisms/SideBar/threadsApi";
 import ChatItem from "../ChatItem/ChatItem";
 
 interface ChatItemSectionProps {
 	title: string;
-	threads: DEX_Thread[];
+	threads: ThreadDto[];
 	handleChatSelect: (id: string) => void;
 	handlePinThread: (id: string) => void;
 	deleteThread: (id: string) => void;
-	activeThread: DEX_Thread | null;
+	activeThread: ThreadDto | null;
 }
 
 const ChatItemSection = ({
@@ -30,7 +30,7 @@ const ChatItemSection = ({
 					chat={chat}
 					isActive={activeThread?.id === chat.id}
 					onSelect={handleChatSelect}
-					isPinned
+					isPinned={chat.pinned}
 					handlePinThread={handlePinThread}
 					onDelete={deleteThread}
 				/>

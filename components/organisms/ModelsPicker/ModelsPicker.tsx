@@ -20,7 +20,6 @@ import {
 import { useState } from "react";
 import { modelCards } from "@constants";
 import { useModelStore } from "@providers";
-import Icons from "@/assets/icons";
 
 type Feature = {
 	name: string;
@@ -156,7 +155,7 @@ const ModelSelector = () => {
 								<div className="flex items-start justify-between">
 									<div className="flex gap-4">
 										<div className="bg-primary/10 flex size-12 shrink-0 items-center justify-center rounded-lg">
-											<CustomIcon icon={model.icon as keyof typeof Icons} />
+											<CustomIcon icon={model.icon} />
 										</div>
 										<div>
 											<div className="flex items-center gap-2">

@@ -24,8 +24,8 @@ const UpgradeSection = () => (
 				<Rocket className="size-6 text-primary" />
 				<h3 className="text-lg font-semibold">All AI Models</h3>
 				<p className="text-muted-foreground">
-					Get access to our full suite of models including Claude 3.5 Sonnet,
-					gpt-4o, and more!
+					Get access to our full suite of models including Claude Sonnet 4.6,
+					GPT-5.5, and more!
 				</p>
 			</div>
 
