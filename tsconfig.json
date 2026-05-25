@@ -76,6 +76,7 @@
   ],
   "exclude": [
     "node_modules",
-    "worker"
+    "worker",
+    "evals"
   ]
 }

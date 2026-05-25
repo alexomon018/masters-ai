@@ -16,6 +16,14 @@ export interface Env {
 	OPENAI_API_KEY: string;
 	ANTHROPIC_API_KEY: string;
 
+	// Braintrust tracing. Optional — when unset the logger is never started
+	// and all instrumentation is a no-op, so the worker runs without it.
+	BRAINTRUST_API_KEY?: string;
+
+	// Selects the Braintrust project: "production" → prod project, anything
+	// else (preview / development / unset) → dev project. Set per wrangler env.
+	BRAINTRUST_ENV?: string;
+
 	// Upstash Vector for RAG retrieval over Frontend Masters transcripts.
 	UPSTASH_VECTOR_REST_URL: string;
 	UPSTASH_VECTOR_REST_TOKEN: string;
@@ -36,7 +44,7 @@ export interface Env {
 
 	// Comma-separated allowlist of browser origins permitted to call the
 	// worker. Used by the CORS layer to set Access-Control-Allow-Origin
-	// reflectively (not "*"). Example: "https://femasters.chat,http://localhost:3000"
+	// reflectively (not "*"). Example: "https://femasters.guru,http://localhost:3000"
 	ALLOWED_ORIGINS: string;
 }
 

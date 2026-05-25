@@ -19,3 +19,6 @@ ANON_ID_SECRET=
 
 # Comma-separated browser origins for CORS (local dev example below).
 ALLOWED_ORIGINS=http://localhost:3000
+
+# Braintrust tracing. Optional — leave unset to run the worker without tracing.
+BRAINTRUST_API_KEY=

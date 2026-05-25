@@ -15,7 +15,7 @@ const LIGHT_THEME_COLOR = "#ffffff";
 const DARK_THEME_COLOR = "#1a1a1a";
 
 export const metadata: Metadata = {
-	metadataBase: new URL("https://femasters.chat"),
+	metadataBase: new URL("https://femasters.guru"),
 	title: "FE Masters Chat",
 	description:
 		"FE Masters Chat is an AI-powered chatbot that helps you learn and grow. Gives you access to a wide range of resources and tools to help you achieve your goals."
@@ -70,9 +70,7 @@ const RootLayout = ({
 					<ModelStoreProvider>
 						<Toaster />
 						<div className="flex h-full flex-col">
-							<main className="flex-1 overflow-auto">
-								{children}
-							</main>
+							<main className="flex-1 overflow-auto">{children}</main>
 						</div>
 					</ModelStoreProvider>
 				</ThemeProvider>

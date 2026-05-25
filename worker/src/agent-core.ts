@@ -9,12 +9,13 @@
 // short-circuit tool use entirely.
 
 import {
-	generateText,
-	streamText,
 	stepCountIs,
 	type LanguageModel,
 	type ModelMessage,
 } from "ai";
+// Braintrust-wrapped generateText/streamText — same signatures as the `ai`
+// exports, but each call is traced when the logger is active.
+import { generateText, streamText } from "./braintrust";
 import { buildTools } from "./tools/registry";
 import type { ToolEnv } from "./env";
 
