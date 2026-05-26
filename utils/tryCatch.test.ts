@@ -30,7 +30,6 @@ describe("tryCatch", () => {
 	it("narrows the discriminated union on the success flag", async () => {
 		const result = await tryCatch(Promise.resolve("hello"));
 		if (result.success) {
-			// Type-narrowed: data is string, error is never.
 			expect(result.data.toUpperCase()).toBe("HELLO");
 		} else {
 			throw new Error("expected success");

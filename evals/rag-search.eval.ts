@@ -1,12 +1,3 @@
-// RAG retrieval eval. Calls the production searchRagIndex directly against the
-// live Upstash Vector index and scores *what* came back: did the expected
-// course/instructor surface, and how much of the expected vocabulary is in the
-// snippets. This is the harness for tuning SCORE_THRESHOLD / TOP_K /
-// MAX_RESULTS_AFTER_DEDUP in worker/src/tools/rag-search.ts — change a knob,
-// re-run, compare experiments in Braintrust.
-//
-// Run with:  yarn eval:rag
-
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Eval } from "braintrust";

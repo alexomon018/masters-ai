@@ -3,8 +3,6 @@ import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ModelStoreProvider } from "@/providers";
 
-// Builds a QueryClient with retries off so failing queries reject immediately
-// instead of stalling the test for the default retry/backoff window.
 export function makeTestQueryClient(): QueryClient {
 	return new QueryClient({
 		defaultOptions: {
@@ -32,8 +30,6 @@ interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
 	queryClient?: QueryClient;
 }
 
-// Drop-in for RTL `render` that wires the providers the chat tree needs.
-// Clerk is mocked at the module level per-test, so no ClerkProvider here.
 export function renderWithProviders(
 	ui: ReactElement,
 	{ queryClient, ...options }: CustomRenderOptions = {}

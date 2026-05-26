@@ -6,8 +6,6 @@ const env = {
 	UPSTASH_REDIS_REST_TOKEN: "token"
 };
 
-// Stub global fetch to model the Upstash /pipeline REST endpoint. Each call
-// returns the queued result so we can drive INCR/DECR outcomes per-test.
 let pipelineResults: Array<Array<{ result?: unknown }>>;
 
 beforeEach(() => {
@@ -35,13 +33,12 @@ describe("checkAndIncrementQuota", () => {
 
 	it("denies an anon user once the count passes 10 and decrements back", async () => {
 		pipelineResults = [
-			[{ result: 11 }, { result: 1 }], // INCR over limit
-			[{ result: 10 }] // DECR rollback
+			[{ result: 11 }, { result: 1 }],
+			[{ result: 10 }]
 		];
 		const res = await checkAndIncrementQuota(env, "anon:x", false);
 		expect(res.allowed).toBe(false);
 		expect(res.reason).toContain("10");
-		// Two pipeline calls: the INCR/EXPIRE and the DECR rollback.
 		expect(globalThis.fetch).toHaveBeenCalledTimes(2);
 	});
 

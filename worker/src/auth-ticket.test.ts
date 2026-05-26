@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { issueTicket, redeemTicket } from "./auth-ticket";
 
-// Note: the "valid JWT → minted ticket" path can't be unit-tested in the
-// workers pool — it calls @clerk/backend's verifyToken against the real Clerk
-// secret, and module mocking is unreliable inside workerd (see Cloudflare's
-// vitest-pool-workers known issues). We cover the security-critical rejection
-// branches here; the full mint+redeem round-trip is exercised by
-// `yarn worker:smoke` against a running worker.
+// Full mint+redeem is covered by yarn worker:smoke — workerd can't mock @clerk/backend.
 
 const env = {
 	CLERK_SECRET_KEY: "clerk-secret",
@@ -39,7 +34,6 @@ describe("issueTicket — rejections", () => {
 	});
 
 	it("returns null when the token fails verification (malformed JWT)", async () => {
-		// Real verifyToken rejects a non-JWT string; issueTicket swallows it.
 		await expect(issueTicket(env, "Bearer not-a-real-jwt")).resolves.toBeNull();
 	});
 });

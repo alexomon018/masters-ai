@@ -1,16 +1,7 @@
 import { vi } from "vitest";
 
-// Reusable Clerk mock shapes for the unit project. Tests call
-// `vi.mock("@clerk/nextjs", ...)` at the top of the file and use these
-// factories to control auth state per-case.
-//
-// Usage:
-//   vi.mock("@clerk/nextjs", () => clerkClientMock({ token: "jwt" }));
-
 export interface ClerkMockOptions {
-	// JWT returned by getToken(); null = anonymous (no token).
 	token?: string | null;
-	// unsafeMetadata for useUser().user; undefined = signed out.
 	user?: Record<string, unknown> | null;
 }
 
@@ -29,8 +20,6 @@ export function clerkClientMock({ token = null, user = null }: ClerkMockOptions 
 	};
 }
 
-// Server-side counterpart for app/api route tests: mock
-// `@clerk/nextjs/server`'s currentUser() / auth().
 export interface ClerkServerMockOptions {
 	userId?: string | null;
 	token?: string | null;

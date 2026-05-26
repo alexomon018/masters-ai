@@ -1,12 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-// Stub the braintrust-wrapped SDK so importing llm.ts doesn't pull in the AI
-// SDK / braintrust runtime. sanitizeTitle is pure; runLLM just delegates.
 vi.mock("./braintrust", () => ({
 	generateText: vi.fn(async () => ({ text: "React Server Components" }))
 }));
 
-// Stub the provider factory used by runLLM.
 vi.mock("@ai-sdk/anthropic", () => ({
 	anthropic: { languageModel: vi.fn(() => "model-stub") }
 }));

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 
-// --- Boundary mocks -------------------------------------------------------
-// vi.hoisted so these refs exist when the hoisted vi.mock factories run.
 const { currentUser, cookieGet, runLLM, redis } = vi.hoisted(() => ({
 	currentUser: vi.fn(),
 	cookieGet: vi.fn(),

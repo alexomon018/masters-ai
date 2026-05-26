@@ -17,9 +17,6 @@ import { makeTestQueryClient } from "../../../test/utils/renderWithProviders";
 
 const WORKER = "http://localhost:8787";
 
-// --- Controllable SDK mocks ----------------------------------------------
-// useAgentChat captures the options so tests can drive status / inspect the
-// getInitialMessages + body callbacks. sendMessage is a spy.
 const sendMessage = vi.fn();
 const stop = vi.fn();
 const agentChatState: {
@@ -66,7 +63,6 @@ vi.mock("@/components/organisms/SideBar/threadsApi", () => ({
 	upsertThreadRemote
 }));
 
-// Silence the real auto-name effect; covered in its own test.
 vi.mock("./hooks", () => ({
 	useAutoNameThread: vi.fn(),
 	useQuotaInvalidation: vi.fn()

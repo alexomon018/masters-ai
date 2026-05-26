@@ -5,7 +5,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { makeTestQueryClient } from "../../../../test/utils/renderWithProviders";
 
-// --- Mocks for the hook's boundaries -------------------------------------
 const { autoNameThread, fetchThreads } = vi.hoisted(() => ({
 	autoNameThread: vi.fn<
 		(input: {
@@ -30,7 +29,6 @@ vi.mock("@clerk/nextjs", () => ({
 
 import useAutoNameThread from "./useAutoNameThread";
 
-// --- Helpers --------------------------------------------------------------
 const userMsg = (id: string, text: string): UIMessage =>
 	({ id, role: "user", parts: [{ type: "text", text }] }) as UIMessage;
 const assistantMsg = (id: string, text: string): UIMessage =>
@@ -87,7 +85,6 @@ describe("useAutoNameThread", () => {
 	it("does not fire while streaming", async () => {
 		const messages = [userMsg("u1", "Q"), assistantMsg("a1", "A")];
 		renderHookFor("thread-streaming", messages, true);
-		// Give effects a tick.
 		await new Promise((r) => setTimeout(r, 20));
 		expect(autoNameThread).not.toHaveBeenCalled();
 	});
@@ -104,7 +101,6 @@ describe("useAutoNameThread", () => {
 		const { rerender } = renderHookFor("thread-guard", messages, false);
 		await waitFor(() => expect(autoNameThread).toHaveBeenCalledTimes(1));
 
-		// Re-render with the identical assistant id → guard should suppress.
 		rerender({
 			activeThreadId: "thread-guard",
 			agentMessages: messages,

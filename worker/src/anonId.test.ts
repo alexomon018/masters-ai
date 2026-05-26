@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-// The worker copy only verifies; reuse the app signer to mint test values so
-// this doubles as a cross-package wire-format regression guard.
 import {
 	generateRawAnonId,
 	signAnonId

@@ -29,7 +29,6 @@ const signedIn = () => ({
 beforeEach(() => {
 	vi.clearAllMocks();
 	auth.mockResolvedValue(signedIn());
-	// Happy worker cascade by default.
 	server.use(
 		http.post(`${WORKER}/ws-ticket`, () =>
 			HttpResponse.json({ ticket: "tkt" })

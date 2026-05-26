@@ -1,6 +1,4 @@
 import { anthropic } from "@ai-sdk/anthropic";
-// Braintrust-wrapped generateText — same signature as the `ai` export, but
-// each call is traced. Logger setup + dev/prod project routing live there.
 import { generateText } from "./braintrust";
 
 export interface NameThreadMessage {
@@ -18,20 +16,12 @@ Rules:
 - Do NOT echo conversation markers like HUMAN, ASSISTANT, END, etc.
 - If the topic is unclear, output exactly: New Chat`;
 
-// Strip anything the model adds despite the prompt: markdown emphasis, code
-// fences, surrounding quotes, conversation tokens, and excess whitespace.
-// Trim to a reasonable length so a verbose model can't blow out the sidebar.
 export function sanitizeTitle(raw: string): string {
 	let title = raw.trim();
-	// Strip <<TOKEN>> / <TOKEN> markers and anything that looks like one.
 	title = title.replace(/<<[^>]*>>/g, "").replace(/<[A-Z_]{2,}>/g, "");
-	// Strip markdown emphasis (** *), backticks, and surrounding quotes.
 	title = title.replace(/[*`]+/g, "");
 	title = title.replace(/^["'""''](.*)["'""'']$/, "$1");
-	// Collapse whitespace including any leftover newlines.
 	title = title.replace(/\s+/g, " ").trim();
-	// Clamp to ~40 chars; the sidebar truncates anyway, but a short DB write
-	// keeps the UI predictable.
 	if (title.length > 40) title = `${title.slice(0, 37).trim()}…`;
 	return title || "New Chat";
 }

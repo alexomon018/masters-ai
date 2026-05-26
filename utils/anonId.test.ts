@@ -70,7 +70,6 @@ describe("verifyAnonId malformed input", () => {
 
 	it("returns null on a signature length mismatch without throwing", async () => {
 		const raw = generateRawAnonId();
-		// Truncated signature triggers the length-mismatch fast path.
 		await expect(verifyAnonId(`${raw}.abc`, SECRET)).resolves.toBeNull();
 	});
 });

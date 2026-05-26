@@ -1,16 +1,9 @@
-// Citation + keyword scorers for the chat-agent eval, run against the final
-// answer text. The system prompt in agent-core.ts instructs the agent to cite
-// the instructor and course it relied on; these check that it actually did and
-// used the right vocabulary.
-
 import type { EvalScorer } from "braintrust";
 import type { ChatTestCase } from "../types";
 import type { ChatAgentOutput } from "./chatOutput";
 
 type ChatScorer = EvalScorer<ChatTestCase, ChatAgentOutput, ChatTestCase>;
 
-// Expected course and/or instructor names appear in the answer. Skips cases
-// that declare neither.
 export const citationScorer: ChatScorer = ({ output, expected }) => {
 	const wants: string[] = [];
 	if (expected?.expectedCourse) wants.push(expected.expectedCourse);
@@ -27,7 +20,6 @@ export const citationScorer: ChatScorer = ({ output, expected }) => {
 	};
 };
 
-// Fraction of expected keywords present in the answer text.
 export const answerKeywordScorer: ChatScorer = ({ output, expected }) => {
 	const keywords = expected?.expectedKeywords;
 	if (!keywords || keywords.length === 0) return null;

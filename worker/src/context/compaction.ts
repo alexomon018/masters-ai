@@ -1,13 +1,3 @@
-// Chat history compaction. When the DO-persisted conversation grows past the
-// threshold we summarize the older portion and replace it with a single
-// system message containing the summary. Keeps token cost bounded while
-// preserving the most recent turns verbatim for conversational continuity.
-//
-// Pure function: does not mutate the input array. Direct lift of the same
-// utility in ai-engineering-fundamentals/src/context/compaction.ts —
-// re-implemented here because the file lives in the worker tree and we
-// don't share source across the two repos.
-
 import { generateText, type LanguageModel, type ModelMessage } from "ai";
 
 interface CompactOptions {

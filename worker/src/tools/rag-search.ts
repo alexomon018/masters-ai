@@ -1,7 +1,3 @@
-// RAG search over the Frontend Masters transcript Upstash Vector index.
-// Direct port of ai/tools/ragSearch.ts, refactored as a factory so the Index
-// client is built per-request with env-bound credentials.
-
 import { tool } from "ai";
 import { z } from "zod";
 import { Index } from "@upstash/vector";
@@ -14,16 +10,7 @@ interface ChunkMetadata {
 	teacherName: string;
 }
 
-// TUNE: retrieval knobs. These are the obvious eval targets when wiring
-// up the harness — score them against a golden set of (question, expected
-// course/instructor/keyphrases) cases.
-//
-// - SCORE_THRESHOLD: drop chunks below this cosine score. Too high → empty
-//   results on legit questions. Too low → noise drowns the citation.
-// - TOP_K: how many raw chunks to pull from Upstash. Bigger = more dedup
-//   opportunity, more cost, more latency.
-// - MAX_RESULTS_AFTER_DEDUP: how many distinct (course, file) snippets we
-//   actually hand to the model.
+// Eval targets: SCORE_THRESHOLD, TOP_K, MAX_RESULTS_AFTER_DEDUP.
 const SCORE_THRESHOLD = 0.7;
 const TOP_K = 10;
 const MAX_RESULTS_AFTER_DEDUP = 5;
@@ -32,9 +19,6 @@ function formatCourseName(raw: string): string {
 	return raw.replace(/^\d{4}-\d{2}-\d{2}-/, "").replaceAll("-", " ");
 }
 
-// One retrieved snippet, post-threshold and post-dedup. The course name is
-// already formatted (date prefix stripped, dashes → spaces) so both the
-// model-facing string and the eval scorers see identical values.
 export interface RagHit {
 	courseName: string;
 	fileName: string;
@@ -44,11 +28,6 @@ export interface RagHit {
 	text: string;
 }
 
-// Core retrieval: query Upstash Vector, drop low-score chunks, dedup by
-// (course, file), and return the top-N as structured hits. Split out from the
-// tool's execute closure so the eval harness can score *what* was retrieved
-// (course/instructor/keywords) rather than only the formatted string the model
-// sees. The tool below reuses this, so production behavior is unchanged.
 export async function searchRagIndex(
 	query: string,
 	vector: Index
@@ -65,9 +44,6 @@ export async function searchRagIndex(
 		const message = err instanceof Error ? err.message : String(err);
 		// eslint-disable-next-line no-console
 		console.error(`[ragSearch] vector.query threw: ${message}`);
-		// Re-throw with a model-friendly message so the SDK reports an
-		// output-error and the UI shows the failed pill — but include
-		// the cause in the worker logs above so we can diagnose.
 		throw new Error(`ragSearch failed: ${message}`);
 	}
 
@@ -80,10 +56,7 @@ export async function searchRagIndex(
 		return [];
 	}
 
-	// Deduplicate by course + fileName, keeping the highest-scoring chunk.
-	// Course transcripts are chunked into overlapping windows; without this
-	// dedup the agent often sees three near-identical snippets and cites the
-	// same lesson three times.
+	// Dedup overlapping chunks by (course, file), keep highest score.
 	const seen = filtered.reduce(
 		(map, r) => {
 			const meta = r.metadata as ChunkMetadata | undefined;
@@ -111,8 +84,6 @@ export async function searchRagIndex(
 	});
 }
 
-// Render hits into the model-facing string. Kept separate so the format is in
-// one place; the byte layout matches the original execute() return exactly.
 export function formatRagHits(hits: RagHit[]): string {
 	return hits
 		.map(
