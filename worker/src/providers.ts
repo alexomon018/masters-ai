@@ -1,8 +1,3 @@
-// LLM provider factory. Mirrors the model lineup declared on the client
-// (constants/models.tsx + types/Model.ts) and routes each model id to the
-// correct provider. Keys come off the Env binding so the same path works
-// inside a Durable Object where process.env is unavailable.
-
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
@@ -25,16 +20,10 @@ const VALID_MODELS: ReadonlySet<LLMModel> = new Set<LLMModel>([
 
 const DEFAULT_MODEL: LLMModel = "claude-haiku-4-5";
 
-// Returns `null` for unknown labels. Callers decide whether to substitute
-// the default or reject the request — having that choice live at the call
-// site is clearer than a silent fallback inside the factory.
 export function parseModelLabel(label: string): LLMModel | null {
 	return VALID_MODELS.has(label as LLMModel) ? (label as LLMModel) : null;
 }
 
-// Convenience for the common "use what the client sent, fall back to
-// default on garbage" path. Logs at info-level so unknown labels are
-// visible without breaking the user's turn.
 export function resolveWorkerModelLabel(label: string): LLMModel {
 	const parsed = parseModelLabel(label);
 	if (parsed) return parsed;
@@ -56,8 +45,6 @@ export function getModel(modelId: LLMModel, env: Env): LanguageModel {
 		case "gpt-5.4-mini":
 			return openai.languageModel(modelId);
 		default: {
-			// Exhaustiveness check — TS will error here if a new model id
-			// is added to LLMModel but not wired above.
 			const _exhaustive: never = modelId;
 			throw new Error(`Unhandled model id: ${String(_exhaustive)}`);
 		}

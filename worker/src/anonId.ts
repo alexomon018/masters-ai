@@ -1,12 +1,4 @@
-// HMAC-signed anonymous identifier — worker-side verifier.
-//
-// MIRRORS `utils/anonId.ts` in the Next.js app. The two packages can't
-// share source (different tsconfig roots), so this is a deliberate copy.
-// If you change the wire format here, update the other file too — the
-// browser cookie (signed by middleware) and the worker check must agree.
-//
-// Format: `<rawId>.<base64url(HMAC-SHA256(rawId))>`.
-
+// Mirror of utils/anonId.ts — keep wire format in sync across packages.
 const RAW_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SIG_RE = /^[A-Za-z0-9_-]+$/;
 

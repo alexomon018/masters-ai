@@ -1,12 +1,3 @@
-// Clerk JWT verification for the agent's WebSocket upgrade. Browsers can't
-// set custom headers on `new WebSocket()`, so the client passes the Clerk
-// session token via the `token` query parameter. We pull it off the URL,
-// verify it against the Clerk secret, and return the user id.
-//
-// Anonymous chat is still supported: requests with no token are accepted
-// and assigned an `anon:<id>` identity sourced from an `anonId` query param
-// (set by the client from the masters_anon_id cookie).
-
 import { verifyAnonId } from "./anonId";
 import { redeemTicket } from "./auth-ticket";
 import type { Env } from "./env";
@@ -16,17 +7,8 @@ export interface AuthIdentity {
 	isAuthenticated: boolean;
 }
 
-// Generic "unauthorized" for external responses. Detailed reasons (token
-// expired, signature mismatch, etc.) are logged server-side only — leaking
-// them in the body helps an attacker probe the auth surface.
 const UNAUTHORIZED = "Unauthorized";
 
-// Identity resolution for `/agents/*`, `/threads`, and `/users/me`. Two
-// paths:
-//   - Authenticated: POST /ws-ticket with the Clerk JWT in Authorization,
-//     forward `?ticket=...` on subsequent requests.
-//   - Anonymous: forward the HMAC-signed `masters_anon_id` cookie as
-//     `?anonId=...`. Unsigned values are rejected.
 export async function authenticateAgentConnection(
 	request: Request,
 	env: Env

@@ -15,7 +15,6 @@ interface ChatFormProps {
 	onClickQuestion?: (value: string) => void;
 }
 
-// Submit on Enter, newline on Shift+Enter. Standard chat-input behavior.
 const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 	if (e.key === "Enter" && !e.shiftKey) {
 		e.preventDefault();

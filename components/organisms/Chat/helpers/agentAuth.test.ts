@@ -11,7 +11,6 @@ import {
 const WORKER = "http://localhost:8787";
 
 afterEach(() => {
-	// Clear any cookie a test set.
 	document.cookie =
 		"masters_anon_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
 });

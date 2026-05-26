@@ -14,14 +14,11 @@ describe("Checkbox component", () => {
 		render(<Checkbox />);
 		const checkboxElement = screen.getByRole("checkbox");
 
-		// Initially unchecked
 		expect(checkboxElement).not.toBeChecked();
 
-		// Check the checkbox
 		fireEvent.click(checkboxElement);
 		expect(checkboxElement).toBeChecked();
 
-		// Uncheck the checkbox
 		fireEvent.click(checkboxElement);
 		expect(checkboxElement).not.toBeChecked();
 	});

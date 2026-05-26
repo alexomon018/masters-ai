@@ -1,13 +1,3 @@
-// Resolves the auth payload the worker expects on every request.
-//
-// Authenticated users: POST the Clerk JWT to /ws-ticket (Authorization
-// header) and forward the returned single-use ticket as `?ticket=...`.
-// Keeps long-lived bearer tokens out of URLs and access logs.
-//
-// Anonymous users: forward the HMAC-signed `masters_anon_id` cookie value
-// as `?anonId=...`. The cookie is issued and signed by middleware.ts; the
-// worker rejects unsigned/tampered values.
-
 export const ANON_COOKIE = "masters_anon_id";
 
 export function readAnonCookie(): string {
@@ -42,9 +32,6 @@ export async function fetchWorkerTicket(jwt: string): Promise<string | null> {
 
 export type AgentAuthQuery = Record<string, string>;
 
-// Single canonical resolver. Returns a plain auth-claim object that can
-// be spread into URLSearchParams or passed directly to `useAgent({ query })`
-// (which accepts an async function returning a Record).
 export async function resolveAgentAuth(
 	getToken: () => Promise<string | null>
 ): Promise<AgentAuthQuery> {
@@ -60,8 +47,6 @@ export async function resolveAgentAuth(
 	return out;
 }
 
-// Convenience for REST callers that need a URLSearchParams to spread
-// into a fetch URL.
 export async function buildAuthQueryParams(
 	getToken: () => Promise<string | null>
 ): Promise<URLSearchParams> {

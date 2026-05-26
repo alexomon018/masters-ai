@@ -16,10 +16,6 @@ const UNTITLED_THREAD_TITLE = "New Chat";
 
 interface Args {
 	threadId: string;
-	// True when the id was minted client-side on the home page and the
-	// worker has no history for it yet. Skips the initial-messages fetch
-	// and triggers `history.replaceState('/chat/<id>')` on first send so
-	// refresh works. Same React tree throughout — no remount.
 	isNewThread: boolean;
 }
 
@@ -31,9 +27,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	const { user } = useUser();
 	const { selectedModel } = useModelStore((state) => state);
 
-	// True only on the home page and only until the first message is sent.
-	// Once set, we never flip back: subsequent sends on the same instance
-	// don't repeat the replaceState or thread upsert.
+	// Once false, stays false — no repeat replaceState or thread upsert.
 	const isFirstSendRef = useRef(isNewThread);
 
 	const tokenFn = useCallback(
@@ -54,11 +48,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	const buildAuthQuery = useCallback(() => resolveAgentAuth(tokenFn), [tokenFn]);
 
 	const fetchInitialMessagesWithAuth = useCallback(async () => {
-		// `useAgentChat` resolves initial messages during render (`use()`).
-		// That can run on the Next server, where fetching localhost:8787 will
-		// hang or throw — never let an error escape into `use()`. The
-		// component tree is `'use client'` and the chat page disables SSR via
-		// `dynamic(..., { ssr: false })`, so this guard is belt-and-braces.
+		// Must not throw into `useAgentChat`'s `use()` — SSR can run this path.
 		if (typeof window === "undefined") return [];
 
 		const getMessagesUrl = getThreadGetMessagesUrl(threadId);
@@ -83,8 +73,6 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		}
 	}, [threadId, buildAuthQuery]);
 
-	// Home (new thread) skips the fetch — the worker has nothing to return
-	// and a 404 round-trip per home load is wasteful.
 	const getInitialMessages = useMemo(
 		() => (isNewThread ? null : fetchInitialMessagesWithAuth),
 		[isNewThread, fetchInitialMessagesWithAuth]
@@ -132,10 +120,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			if (!text) return;
 			setInput("");
 
-			// First send from the home page: register the thread with the
-			// worker and swap the URL to /chat/<id> *without* remounting.
-			// Next.js plays nice with native history APIs in App Router (see
-			// docs: usePathname syncs with replaceState).
+			// First send: register thread + replaceState without remounting.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
 				upsertThreadRemote(tokenFn, {
@@ -180,9 +165,6 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			(m: UIMessage) => m.role === "assistant" && (m.parts ?? []).length > 0
 		);
 
-	// True when there are no real messages yet — used by the UI to render
-	// the welcome banner + suggested questions. Welcome is a UI affordance,
-	// NOT a synthesized system message in the transcript.
 	const isEmpty = agentMessages.length === 0;
 
 	return {

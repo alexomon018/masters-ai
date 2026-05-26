@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { modelCards } from "@constants";
 import { createModelStore } from "./modelStore";
 
-// In-memory localStorage so the persist middleware's custom Set<->Array
-// serializer runs for real without a jsdom-shared store leaking across tests.
 function installMemoryStorage() {
 	const map = new Map<string, string>();
 	const storage = {
@@ -49,7 +47,6 @@ describe("selectModel", () => {
 
 	it("keeps the previous selection when the model is disabled (and not the default)", () => {
 		const store = createModelStore();
-		// Disable Sonnet, then try to select it.
 		store.getState().toggleModelEnabled(SONNET.id);
 		store.getState().selectModel(SONNET);
 		expect(store.getState().selectedModel.id).toBe(HAIKU.id);
@@ -129,14 +126,12 @@ describe("persistence (Set <-> Array serializer)", () => {
 		expect(Array.isArray(persisted.state.enabledModels)).toBe(true);
 		expect(persisted.state.enabledModels).not.toContain(SONNET.id);
 
-		// A fresh store rehydrates from the same storage.
 		const rehydrated = createModelStore();
 		expect(rehydrated.getState().enabledModels).toBeInstanceOf(Set);
 	});
 
 	it("merge enables newly added models that were not in the persisted set", () => {
 		const { map } = installMemoryStorage();
-		// Persist a state that only enabled the default model.
 		map.set(
 			"model-store",
 			JSON.stringify({
@@ -149,7 +144,6 @@ describe("persistence (Set <-> Array serializer)", () => {
 			})
 		);
 		const store = createModelStore();
-		// All cards should be enabled after merge, not just the persisted one.
 		expect(store.getState().enabledModels.size).toBe(modelCards.length);
 	});
 });

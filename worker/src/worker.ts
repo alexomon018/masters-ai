@@ -1,21 +1,3 @@
-// Worker entry point. Surfaces:
-//
-// 1. /threads*    — REST surface backing the sidebar (D1-backed thread index),
-//                   including POST /threads/claim-anon for anon→user migration.
-// 2. /users/me DELETE — cascade-delete every D1 thread + DO history for the
-//                   caller. Called by the Next.js account-deletion route.
-// 3. /ws-ticket POST — exchange a Clerk JWT (Authorization header) for a
-//                   short-lived single-use ticket. Used on WS upgrade and
-//                   server-to-server calls; keeps bearer tokens out of URLs.
-// 4. /agents/*    — chat protocol dispatched to MastersChatAgent via
-//                   routeAgentRequest. Auth and per-thread access control
-//                   happen in onBeforeConnect / onBeforeRequest.
-//
-// Auth resolves to one of:
-//   - `user:<clerk-id>`  via ?ticket=<single-use ticket>
-//   - `anon:<rawId>`     via ?anonId=<HMAC-signed cookie value>
-// All other identifiers are rejected.
-
 import { routeAgentRequest } from "agents";
 import { MastersChatAgent } from "./agent";
 import { authenticateAgentConnection } from "./clerk-auth";
@@ -33,10 +15,6 @@ import type { Env } from "./env";
 
 export { MastersChatAgent };
 
-// Reflective CORS: echo the request Origin only if it appears in the
-// configured allowlist. Browsers send credentials/cookies only when the
-// response includes a specific origin, never `*`, so this also tightens
-// what cross-site code can read from the worker.
 function resolveAllowedOrigin(env: Env, requestOrigin: string | null): string | null {
 	if (!requestOrigin) return null;
 	const allowed = (env.ALLOWED_ORIGINS ?? "")
@@ -52,8 +30,6 @@ function corsHeaders(env: Env, requestOrigin: string | null): Record<string, str
 		"access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
 		"access-control-allow-headers": "content-type,authorization",
 		"access-control-max-age": "86400",
-		// Cache key varies by Origin so a CDN-fronted worker doesn't serve
-		// one origin's CORS headers to another origin's request.
 		vary: "Origin"
 	};
 	if (allowOrigin) {
@@ -104,8 +80,6 @@ export default {
 			});
 		}
 
-		// /ws-ticket — exchange Clerk JWT (in Authorization header) for a
-		// short-lived single-use ticket. Anon users skip this entirely.
 		if (url.pathname === "/ws-ticket" && request.method === "POST") {
 			const result = await issueTicket(
 				env,
@@ -207,9 +181,6 @@ export default {
 			);
 		}
 
-		// Cascade-delete used by the Next.js /api/delete-user route. Drops
-		// every D1 thread row for the caller and clears each thread's DO
-		// history. Called *before* Clerk removes the user.
 		if (url.pathname === "/users/me" && request.method === "DELETE") {
 			return withCorsHeaders(
 				await handleAuthenticated(request, env, (userId) =>
@@ -226,9 +197,6 @@ export default {
 				return new Response(auth.error, { status: 401 });
 			}
 
-			// Per-thread access control. Authentication identifies the user;
-			// this verifies they own the thread room (or the thread is
-			// unclaimed — first-claim semantics for the eager-connect flow).
 			const threadId = extractThreadId(new URL(req.url).pathname);
 			if (threadId) {
 				const access = await checkThreadAccess(env, auth.userId, threadId);

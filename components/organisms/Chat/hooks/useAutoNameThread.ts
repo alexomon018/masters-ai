@@ -10,10 +10,7 @@ import { autoNameThread } from "../helpers";
 const THREADS_QUERY_KEY = ["threads"] as const;
 const UNTITLED_THREAD_TITLE = "New Chat";
 
-// Tracks which assistant message id we've already named-against, per
-// thread. Prevents re-firing `/api/name-thread` on every tab switch (Chat
-// remount loses local refs). The server-side title check on the threads
-// list is the real backstop — this is just to avoid redundant work.
+// Avoids redundant /api/name-thread calls when Chat remounts on tab switch.
 const autoNamedAssistantByThread = new Map<string, string>();
 
 function firstTextPart(message: UIMessage): string {
@@ -30,11 +27,6 @@ interface Args {
 	modelId: string;
 }
 
-/**
- * Posts the first user→assistant exchange to `/api/name-thread` once the
- * turn finishes streaming, then invalidates the threads list so the sidebar
- * reflects the new title.
- */
 const useAutoNameThread = ({
 	activeThreadId,
 	agentMessages,
@@ -55,10 +47,7 @@ const useAutoNameThread = ({
 		staleTime: 30_000
 	});
 
-	// Recompute the user/assistant pair only when the message count
-	// changes — streamed chunks mutate the *last* message in place but
-	// keep the array length stable, so this skips the per-chunk reverse-
-	// and-find work the previous version did.
+	// Streamed chunks mutate the last message in place; length is stable.
 	const namingPair = useMemo(() => {
 		const firstUser = agentMessages.find((m) => m.role === "user");
 		let lastAssistant: UIMessage | undefined;

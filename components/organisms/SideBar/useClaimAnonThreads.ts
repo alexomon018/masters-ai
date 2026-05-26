@@ -7,10 +7,6 @@ import { claimAnonThreadsRemote } from "./threadsApi";
 
 const THREADS_QUERY_KEY = ["threads"] as const;
 
-/**
- * On first sign-in, re-key any anon thread rows in D1 to the Clerk account.
- * Runs once per mounted sidebar session per user id.
- */
 const useClaimAnonThreads = () => {
 	const { isLoaded, isSignedIn, user } = useUser();
 	const { getToken } = useAuth();

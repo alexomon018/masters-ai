@@ -1,8 +1,3 @@
-// Title-format + topic scorers for the name-thread eval. These encode the rules
-// in ai/llm.ts (nameThreadPrompt + sanitizeTitle): 2–4 words, Title Case, no
-// banned generic words, no markdown/quote/angle-bracket leakage. The "New Chat"
-// fallback is exempt from the format rules.
-
 import type { EvalScorer } from "braintrust";
 import type { NameThreadTestCase } from "../types";
 
@@ -17,25 +12,20 @@ const BANNED_WORDS = [
 	"help",
 ];
 
-// Words the prompt says never to emit. "New Chat" is the documented fallback,
-// so it's allowed even though it contains a banned word.
 const FALLBACK = "New Chat";
 
-// Title Case: each word starts uppercase (allow lowercase short connectors and
-// non-alpha leading chars like numbers).
 function isTitleCase(words: string[]): boolean {
 	const connectors = new Set(["and", "or", "the", "of", "for", "to", "in"]);
 	return words.every((w, i) => {
 		if (i > 0 && connectors.has(w.toLowerCase())) return true;
 		const first = w[0];
-		return !/[a-z]/.test(first); // first char is not lowercase
+		return !/[a-z]/.test(first);
 	});
 }
 
 export const titleFormatScorer: TitleScorer = ({ output, expected }) => {
 	const title = output.trim();
 
-	// The fallback is always correctly formatted by definition.
 	if (expected?.shouldBeNewChat || title === FALLBACK) {
 		return {
 			name: "TitleFormat",
@@ -51,7 +41,6 @@ export const titleFormatScorer: TitleScorer = ({ output, expected }) => {
 	checks.noBanned = !words.some((w) =>
 		BANNED_WORDS.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
 	);
-	// sanitizeTitle strips these; their presence means leakage slipped through.
 	checks.noMarkup = !/[*`"'<>]/.test(title);
 	checks.titleCase = isTitleCase(words);
 
@@ -65,8 +54,6 @@ export const titleFormatScorer: TitleScorer = ({ output, expected }) => {
 	};
 };
 
-// Topic recall: does the title mention the conversation's subject? For
-// shouldBeNewChat cases this is a no-op (handled by TitleFormat).
 export const titleTopicScorer: TitleScorer = ({ output, expected }) => {
 	if (expected?.shouldBeNewChat) return null;
 	const keywords = expected?.expectedTopicKeywords;

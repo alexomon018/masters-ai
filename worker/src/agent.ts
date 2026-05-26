@@ -1,17 +1,3 @@
-// MastersChatAgent — the Durable Object that owns one chat thread.
-//
-// AIChatAgent gives us:
-// - this.messages : UIMessage[] persisted in DO SQLite, hydrated on every request
-// - onChatMessage(): hook invoked when a new user message arrives
-// - persistence is automatic; we never write SQL directly
-//
-// The browser connects directly over WebSocket via useAgent + useAgentChat.
-// Auth runs in `routeAgentRequest`'s `onBeforeConnect` hook (see worker.ts)
-// so it can reject with HTTP 401 before the WebSocket is upgraded. The
-// identity is then forwarded to this DO via internal request headers,
-// which onConnect reads and stashes on the *connection* (not on `this`)
-// so it survives DO hibernation.
-
 import {
 	AIChatAgent,
 	type ChatResponseResult,
@@ -44,10 +30,7 @@ interface ConnectionIdentity {
 	isAuthenticated: boolean;
 }
 
-// Body fields the browser sends with each turn. Validated at the boundary
-// because `OnChatMessageOptions.body` is typed as `Record<string, unknown>`
-// — without this Zod check, a malformed client could put anything into
-// `userData` and we'd interpolate it straight into the system prompt.
+// Validated at the boundary — malformed userData would reach the system prompt.
 const userDataSchema = z.object({
 	name: z.string().max(80),
 	occupation: z.string().max(120),
@@ -77,11 +60,7 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		const userId = ctx.request.headers.get("x-masters-user-id");
 		const isAuthenticated =
 			ctx.request.headers.get("x-masters-is-authenticated") === "1";
-		// Stash identity on the *connection*, not on `this`. Instance fields
-		// are lost when the DO hibernates (which happens whenever the room
-		// sits idle — common with eagerly-opened sockets from the home page).
-		// `connection.setState` is backed by the WebSocket attachment and
-		// survives hibernation.
+		// connection.state survives DO hibernation; instance fields do not.
 		if (userId) {
 			connection.setState({ userId, isAuthenticated });
 		}
@@ -96,10 +75,6 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		return null;
 	}
 
-	// All the pre-stream concerns (auth, quota, body shape, model selection,
-	// history compaction) collected in one place. Returns the resolved
-	// inputs streamAgent needs, or throws — `onChatMessage` becomes pure
-	// orchestration on top.
 	private async gateChatTurn(
 		options?: OnChatMessageOptions
 	): Promise<ChatGate> {
@@ -125,9 +100,6 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		const modelId = resolveWorkerModelLabel(body.model ?? DEFAULT_MODEL);
 		const model = getModel(modelId, this.env);
 
-		// Replay full DO history into model messages, then collapse anything
-		// older than the recent window into a summary system message. Keeps
-		// the request payload from growing unbounded.
 		const fullHistory = await convertToModelMessages(this.messages);
 		const messages = await compactHistory(fullHistory, { model });
 
@@ -144,10 +116,6 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		_onFinish: StreamTextOnFinishCallback<ToolSet>,
 		options?: OnChatMessageOptions
 	) {
-		// Start Braintrust tracing on first use. The key + environment come
-		// off the Env binding (process.env is empty at module scope on
-		// Workers); no-ops when the key is unset so the worker runs fine
-		// without Braintrust.
 		startBraintrust(this.env.BRAINTRUST_API_KEY, this.env.BRAINTRUST_ENV);
 
 		const { model, modelId, userData, messages } =
@@ -164,16 +132,10 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			}
 		});
 
-		// UI-message stream emits text parts AND tool parts (with state).
-		// The browser receives `tool-ragSearch` parts that transition from
-		// `input-streaming` → `output-available`, which is what makes the
-		// inline tool-call status pill possible.
 		return result.toUIMessageStreamResponse();
 	}
 
-	// Fires after the assistant message is persisted — the reliable point to
-	// flush Braintrust spans on Workers (better than awaiting result.text in
-	// onChatMessage, which can race the SDK's stream teardown).
+	// Flush after persistence — safer than awaiting in onChatMessage on Workers.
 	protected onChatResponse(_result: ChatResponseResult): void {
 		this.ctx.waitUntil(
 			flushBraintrust().catch((err) => {

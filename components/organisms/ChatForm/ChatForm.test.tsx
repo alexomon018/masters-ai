@@ -7,7 +7,6 @@ import {
 } from "../../../test/utils/renderWithProviders";
 import ChatForm from "./ChatForm";
 
-// Clerk is used transitively by MessageLimit; stub it so it renders anon.
 vi.mock("@clerk/nextjs", () => ({
 	useAuth: () => ({ getToken: vi.fn(async () => null), isSignedIn: false }),
 	useUser: () => ({ user: null, isSignedIn: false, isLoaded: true })
@@ -66,7 +65,6 @@ describe("ChatForm", () => {
 		const { rerender } = renderWithProviders(
 			<ChatForm {...baseProps()} />
 		);
-		// Not shown by default.
 		rerender(
 			<ChatForm
 				{...baseProps()}
@@ -74,7 +72,6 @@ describe("ChatForm", () => {
 				onClickQuestion={onClickQuestion}
 			/>
 		);
-		// InitialQuestions renders buttons; at least one extra button appears.
 		expect(screen.getAllByRole("button").length).toBeGreaterThan(1);
 	});
 });

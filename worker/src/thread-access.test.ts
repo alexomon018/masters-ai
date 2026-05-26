@@ -16,7 +16,6 @@ describe("extractThreadId", () => {
 	});
 });
 
-// Seed a row directly via the D1 binding (real local SQLite from the pool).
 async function seedThread(userId: string, threadId: string) {
 	await env.THREAD_INDEX.prepare(
 		"INSERT INTO threads (user_id, thread_id, pinned) VALUES (?, ?, 0)"

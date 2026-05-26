@@ -3,7 +3,6 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../../../test/msw/server";
 import autoNameThread from "./autoNameThread";
 
-// Mock the worker REST client so we assert the upsert without hitting it.
 const { upsertThreadRemote } = vi.hoisted(() => ({
 	upsertThreadRemote: vi.fn<
 		(
@@ -72,7 +71,6 @@ describe("autoNameThread", () => {
 
 		await autoNameThread(baseInput);
 
-		// The token resolver passed to upsertThreadRemote should pull from Clerk.
 		const [tokenFn] = upsertThreadRemote.mock.calls[0]!;
 		await expect(tokenFn()).resolves.toBe("clerk-jwt");
 		expect(getToken).toHaveBeenCalled();

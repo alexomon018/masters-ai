@@ -1,11 +1,3 @@
-// End-to-end chat-agent eval. Calls the production runAgent (worker/src/
-// agent-core.ts) with the real ragSearch tool against the live Upstash index,
-// then scores: did it call RAG when it should (and skip it on greetings), did
-// it cite the right course/instructor, did it use the right vocabulary, and —
-// via LLM judge — is the answer factually aligned with a reference answer.
-//
-// Run with:  yarn eval:chat
-
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Eval } from "braintrust";
@@ -57,7 +49,6 @@ Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject("Masters Chat Agen
 		ragSearchCalledScorer,
 		citationScorer,
 		answerKeywordScorer,
-		// LLM judge — answer factuality vs. the reference answer, when provided.
 		async ({ output, input }) => {
 			if (!input.expectedAnswer) return null;
 			const result = await Factuality({

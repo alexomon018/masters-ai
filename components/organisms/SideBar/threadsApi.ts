@@ -1,7 +1,3 @@
-// Thin client for the worker's /threads REST surface. The browser uses
-// the same auth payload (Clerk token OR anonId cookie) as the WebSocket
-// upgrade — see helpers/agentAuth.ts.
-
 import {
 	buildAuthQueryParams,
 	fetchWorkerTicket,
@@ -73,7 +69,6 @@ export async function deleteThreadRemote(
 	);
 }
 
-/** Re-key anon D1 rows to the signed-in Clerk user. Idempotent. */
 export async function claimAnonThreadsRemote(
 	getToken: () => Promise<string | null>
 ): Promise<number> {

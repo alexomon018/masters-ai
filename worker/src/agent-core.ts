@@ -1,23 +1,9 @@
-// Shared agent logic. Both the live Worker (streaming chat in onChatMessage)
-// and the eval harness (batch generateText) call into this file. Keeping the
-// system prompt, tool wiring, step limit, and casual-message short-circuit
-// in one place means the eval and production agent cannot drift apart.
-//
-// Mirrors the pattern from ai-engineering-fundamentals/src/agent-core.ts but
-// targets the Masters RAG use case: ragSearch is the only tool today, the
-// system prompt is the Frontend Masters tutor persona, and casual greetings
-// short-circuit tool use entirely.
-
 import { stepCountIs, type LanguageModel, type ModelMessage } from "ai";
 
 import { generateText, streamText } from "./braintrust";
 import { buildTools } from "./tools/registry";
 import type { ToolEnv } from "./env";
 
-// Regex for messages we treat as small-talk. Matched against the most recent
-// user turn; on a hit, tools are disabled for the response so the model
-// doesn't burn a RAG call on "hi". Lifted from ai/agent.ts so both code paths
-// share the exact same heuristic.
 const CASUAL_PATTERN =
 	/^\s*(hi|hey|hello|howdy|sup|yo|thanks|thank you|ok|okay|bye|goodbye|good morning|good evening|good night|what's up|how are you|who are you|what are you)\b/i;
 
@@ -52,8 +38,6 @@ interface SystemPromptParams {
 	userData?: UserData;
 }
 
-// Dynamic system prompt. Lifted from ai/systemPrompt.ts and folded into the
-// shared core so any future tweak lands in both the Worker and the eval.
 export function buildSystemPrompt({
 	modelLabel,
 	userData
@@ -102,10 +86,6 @@ interface AgentArgs {
 	env: ToolEnv;
 }
 
-// Streaming variant. Used by the Worker's onChatMessage for the live chat
-// experience. activeTools=[] on a casual turn disables tool calling for that
-// step without rebuilding the registry — matches the legacy ai/agent.ts
-// behavior exactly.
 export function streamAgent({
 	model,
 	modelLabel,
@@ -125,10 +105,6 @@ export function streamAgent({
 	});
 }
 
-// Non-streaming variant. Used by the Phase 4 eval harness so it can collect
-// the full result, inspect tool calls, and score deterministic outputs. The
-// shape mirrors streamAgent so a regression in either path shows up the same
-// way in evals.
 export async function runAgent({
 	model,
 	modelLabel,

@@ -55,8 +55,6 @@ describe("aiMessageSchema", () => {
 			content: "x",
 			function_call: {}
 		});
-		// The user variant allows unknown keys to be stripped, but missing
-		// `content` should always fail.
 		expect(
 			aiMessageSchema.safeParse({ role: "user" }).success
 		).toBe(false);
