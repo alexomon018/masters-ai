@@ -6,7 +6,7 @@ import { ChatModelSelector, InitialQuestions } from "@molecules";
 import MessageLimit from "../MessageLimit/MessageLimit";
 
 interface ChatFormProps {
-	formRef: React.RefObject<HTMLFormElement>;
+	formRef: React.RefObject<HTMLFormElement | null>;
 	onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 	input: string;
 	handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;

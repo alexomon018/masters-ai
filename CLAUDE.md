@@ -7,8 +7,10 @@ Guidance for Claude Code working in this repository.
 ```bash
 yarn dev              # Next.js dev server (localhost:3000)
 yarn build            # Production build
-yarn test             # Jest
-yarn test -- --testPathPattern=path/to/test
+yarn test             # Vitest — unit (jsdom) + worker (workerd) projects
+yarn test:watch       # Vitest watch mode
+yarn test:cov         # Vitest with coverage (unit project only; worker runs in yarn test)
+yarn test path/to/file.test.ts  # run a single test file
 yarn lint             # ESLint
 yarn tsc              # Type-check Next.js (no emit)
 yarn storybook        # Component dev (localhost:6006)
@@ -155,6 +157,6 @@ Unknown model labels from old browsers fall back to `claude-haiku-4-5` with a se
 
 ## Git workflow
 
-- **Pre-commit** (Husky + lint-staged): prettier on all files, eslint --fix on `src/**/*.{ts,tsx}`, jest.
+- **Pre-commit** (Husky + lint-staged): prettier on all files, eslint --fix on `src/**/*.{ts,tsx}`, vitest on changed files.
 - **Branches**: `bugfix/B{TICKET}-{name}`, `features/U{TICKET}-{name}`.
 - **CI** (GitHub Actions): on PR to `main` — `yarn test` → `yarn lint` → `yarn build`.

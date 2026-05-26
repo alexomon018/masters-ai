@@ -39,7 +39,7 @@ describe("Checkbox component", () => {
 	});
 
 	it("calls onChange handler when clicked", () => {
-		const handleChange = jest.fn();
+		const handleChange = vi.fn();
 		render(<Checkbox onCheckedChange={handleChange} />);
 		const checkboxElement = screen.getByRole("checkbox");
 

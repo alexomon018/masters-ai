@@ -1,0 +1,88 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "../../../../test/msw/server";
+import autoNameThread from "./autoNameThread";
+
+// Mock the worker REST client so we assert the upsert without hitting it.
+const { upsertThreadRemote } = vi.hoisted(() => ({
+	upsertThreadRemote: vi.fn<
+		(
+			getToken: () => Promise<string | null>,
+			input: {
+				threadId: string;
+				title?: string | null;
+				pinned?: boolean;
+				lastMessageAt?: number;
+			}
+		) => Promise<void>
+	>(async () => {})
+}));
+vi.mock("@/components/organisms/SideBar/threadsApi", () => ({
+	upsertThreadRemote
+}));
+
+const baseInput = {
+	threadId: "thread-1",
+	userMessage: "What is RSC?",
+	assistantMessage: "React Server Components…",
+	modelId: "claude-haiku-4-5"
+};
+
+afterEach(() => {
+	upsertThreadRemote.mockClear();
+	delete (window as unknown as { Clerk?: unknown }).Clerk;
+});
+
+describe("autoNameThread", () => {
+	it("posts the exchange and upserts the returned title", async () => {
+		server.use(
+			http.post("/api/name-thread", () =>
+				HttpResponse.json("React Server Components")
+			)
+		);
+
+		await autoNameThread(baseInput);
+
+		expect(upsertThreadRemote).toHaveBeenCalledTimes(1);
+		const [, payload] = upsertThreadRemote.mock.calls[0];
+		expect(payload).toEqual({
+			threadId: "thread-1",
+			title: "React Server Components"
+		});
+	});
+
+	it("does not upsert when /api/name-thread returns non-ok", async () => {
+		server.use(
+			http.post("/api/name-thread", () =>
+				HttpResponse.json({}, { status: 429 })
+			)
+		);
+		await autoNameThread(baseInput);
+		expect(upsertThreadRemote).not.toHaveBeenCalled();
+	});
+
+	it("reads the Clerk token off window when present", async () => {
+		const getToken = vi.fn(async () => "clerk-jwt");
+		(window as unknown as { Clerk: unknown }).Clerk = {
+			session: { getToken }
+		};
+		server.use(
+			http.post("/api/name-thread", () => HttpResponse.json("A Title"))
+		);
+
+		await autoNameThread(baseInput);
+
+		// The token resolver passed to upsertThreadRemote should pull from Clerk.
+		const [tokenFn] = upsertThreadRemote.mock.calls[0]!;
+		await expect(tokenFn()).resolves.toBe("clerk-jwt");
+		expect(getToken).toHaveBeenCalled();
+	});
+
+	it("tolerates a JSON title that is not a string", async () => {
+		server.use(
+			http.post("/api/name-thread", () => HttpResponse.json(123))
+		);
+		await autoNameThread(baseInput);
+		expect(upsertThreadRemote).not.toHaveBeenCalled();
+	});
+});

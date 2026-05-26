@@ -8,26 +8,11 @@ import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
-import { resolveAgentAuth } from "./helpers";
+import { getThreadGetMessagesUrl, resolveAgentAuth } from "./helpers";
 import { useAutoNameThread, useQuotaInvalidation } from "./hooks";
 
 const THREADS_QUERY_KEY = ["threads"] as const;
 const UNTITLED_THREAD_TITLE = "New Chat";
-
-// Same path shape PartySocket uses (`agents/<party>/<room>/get-messages`).
-function getThreadGetMessagesUrl(threadId: string): URL | null {
-	const raw = process.env.NEXT_PUBLIC_WORKER_URL;
-	if (!raw || !threadId) return null;
-	let host = raw.replace(/^(http|https|ws|wss):\/\//, "");
-	if (host.endsWith("/")) host = host.slice(0, -1);
-	const protocol =
-		host.startsWith("localhost:") || host.startsWith("127.0.0.1:")
-			? "http"
-			: "https";
-	return new URL(
-		`${protocol}://${host}/agents/masters-chat-agent/${threadId}/get-messages`
-	);
-}
 
 interface Args {
 	threadId: string;
