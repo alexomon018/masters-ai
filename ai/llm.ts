@@ -21,7 +21,7 @@ Rules:
 // Strip anything the model adds despite the prompt: markdown emphasis, code
 // fences, surrounding quotes, conversation tokens, and excess whitespace.
 // Trim to a reasonable length so a verbose model can't blow out the sidebar.
-function sanitizeTitle(raw: string): string {
+export function sanitizeTitle(raw: string): string {
 	let title = raw.trim();
 	// Strip <<TOKEN>> / <TOKEN> markers and anything that looks like one.
 	title = title.replace(/<<[^>]*>>/g, "").replace(/<[A-Z_]{2,}>/g, "");
