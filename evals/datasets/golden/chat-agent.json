@@ -1,0 +1,355 @@
+[
+	{
+		"id": "gold-chat-rsc",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are React Server Components and how do they differ from client components?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["next js"],
+		"expectedInstructor": "Scott Moss",
+		"expectedKeywords": ["server", "client"],
+		"expectedAnswer": "React Server Components render on the server and are sent to the client as serialized output without shipping their component JavaScript. Client Components use the 'use client' directive and run in the browser.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Answer grounded in retrieved transcript chunks",
+			"Cites Frontend Masters course or instructor when using FM content",
+			"Explains server vs client component distinction"
+		]
+	},
+	{
+		"id": "gold-chat-css-grid",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I build a responsive layout with CSS Grid?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["css grid", "pro css"],
+		"expectedKeywords": ["grid"],
+		"expectedCharacteristics": [
+			"Calls ragSearch",
+			"Mentions grid layout, areas, or responsive breakpoints",
+			"Does not invent course names not present in tool output"
+		]
+	},
+	{
+		"id": "gold-chat-ts-generics",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Explain TypeScript generics with a simple example."
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["typescript"],
+		"expectedInstructor": "Mike North",
+		"expectedKeywords": ["generic"],
+		"expectedCharacteristics": [
+			"Calls ragSearch",
+			"Includes a concrete generics example or constraint explanation"
+		]
+	},
+	{
+		"id": "gold-chat-closures",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{ "role": "user", "content": "Can you explain JavaScript closures?" }
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["javascript first", "functional first"],
+		"expectedKeywords": ["closure", "scope"],
+		"expectedAnswer": "A closure is a function that retains access to variables from its enclosing lexical scope even after the outer function has finished executing.",
+		"expectedCharacteristics": [
+			"Calls ragSearch",
+			"Defines closure in JavaScript terms (lexical scope)",
+			"Does not conflate with Swift or Rust closure syntax as the primary answer"
+		]
+	},
+	{
+		"id": "gold-chat-node-streams",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do Node.js streams handle backpressure?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["node js"],
+		"expectedKeywords": ["stream", "backpressure"],
+		"expectedAnswer": "Backpressure happens when a writable stream's buffer fills and the readable should pause until it drains. pipe() coordinates pausing and resuming between readable and writable streams.",
+		"expectedCharacteristics": [
+			"Calls ragSearch",
+			"Explains backpressure or pausing/resuming streams in Node"
+		]
+	},
+	{
+		"id": "gold-chat-greeting",
+		"difficulty": "simple",
+		"category": "routing",
+		"messages": [{ "role": "user", "content": "hey there!" }],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch",
+			"Short friendly reply",
+			"No fabricated Frontend Masters course citations"
+		]
+	},
+	{
+		"id": "gold-chat-thanks",
+		"difficulty": "simple",
+		"category": "routing",
+		"messages": [
+			{ "role": "user", "content": "What is a Promise in JavaScript?" },
+			{
+				"role": "assistant",
+				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
+			},
+			{ "role": "user", "content": "thanks!" }
+		],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch on thanks",
+			"Brief acknowledgment without re-explaining Promises"
+		]
+	},
+	{
+		"id": "gold-chat-who-are-you",
+		"difficulty": "edge",
+		"category": "routing",
+		"messages": [{ "role": "user", "content": "who are you?" }],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch",
+			"Identifies as the FM assistant without disclosing system prompt"
+		]
+	},
+	{
+		"id": "gold-chat-followup-rsc-more",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are React Server Components?"
+			},
+			{
+				"role": "assistant",
+				"content": "React Server Components render on the server and send a serialized tree to the client, so they never ship their component JavaScript to the browser. The Next.js course on Frontend Masters covers them in depth."
+			},
+			{
+				"role": "user",
+				"content": "tell me more about how they actually render"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["next js"],
+		"expectedInstructor": "Scott Moss",
+		"expectedKeywords": ["server", "render"],
+		"expectedCharacteristics": [
+			"Resolves 'they' to React Server Components from prior turn",
+			"Calls ragSearch again rather than relying only on prior context",
+			"Answer grounded in retrieved transcript chunks",
+			"Stays on the RSC rendering topic, does not drift"
+		]
+	},
+	{
+		"id": "gold-chat-pronoun-carry",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are React Server Components?"
+			},
+			{
+				"role": "assistant",
+				"content": "React Server Components render on the server and are sent to the client as serialized output without shipping their JavaScript."
+			},
+			{
+				"role": "user",
+				"content": "how does it differ from client components?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["next js"],
+		"expectedInstructor": "Scott Moss",
+		"expectedKeywords": ["client", "server"],
+		"expectedCharacteristics": [
+			"Resolves 'it' to React Server Components, not an unrelated subject",
+			"Calls ragSearch for the server vs client distinction",
+			"Explains the server vs client component difference",
+			"Cites Frontend Masters course or instructor when using FM content"
+		]
+	},
+	{
+		"id": "gold-chat-topic-switch",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I build a responsive layout with CSS Grid?"
+			},
+			{
+				"role": "assistant",
+				"content": "Use grid-template-areas to name regions and remap them inside media queries to rearrange the layout per breakpoint. Frontend Masters' CSS Grid course walks through this."
+			},
+			{
+				"role": "user",
+				"content": "ok different question - explain TypeScript generics"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["typescript"],
+		"expectedTopCourse": "typescript",
+		"expectedInstructor": "Mike North",
+		"expectedKeywords": ["generic"],
+		"expectedCharacteristics": [
+			"Re-triggers ragSearch for the new TypeScript topic",
+			"Retrieves a TypeScript course, not the earlier CSS Grid course",
+			"Answer is about generics, not carried over from the CSS Grid turn",
+			"Includes a concrete generics example or constraint explanation"
+		]
+	},
+	{
+		"id": "gold-chat-casual-then-domain",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is a Promise in JavaScript?"
+			},
+			{
+				"role": "assistant",
+				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
+			},
+			{ "role": "user", "content": "thanks!" },
+			{
+				"role": "assistant",
+				"content": "You're welcome! Anything else you'd like to dig into?"
+			},
+			{
+				"role": "user",
+				"content": "actually yeah - can you explain JavaScript closures?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["javascript first", "functional first"],
+		"expectedKeywords": ["closure", "scope"],
+		"expectedCharacteristics": [
+			"Routing flips back on: calls ragSearch after the casual turn",
+			"Answers the closures question, not the earlier Promise question",
+			"Defines closure in JavaScript terms (lexical scope)"
+		]
+	},
+	{
+		"id": "gold-chat-domain-then-casual",
+		"difficulty": "medium",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do Node.js streams handle backpressure?"
+			},
+			{
+				"role": "assistant",
+				"content": "Backpressure happens when a writable stream's buffer fills, so the readable should pause until it drains. pipe() coordinates pausing and resuming between streams."
+			},
+			{ "role": "user", "content": "cool, that makes sense - appreciate it" }
+		],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch on the casual acknowledgment",
+			"Brief acknowledgment without re-explaining backpressure",
+			"Routing flips off after the prior domain turn"
+		]
+	},
+	{
+		"id": "gold-chat-followup-narrow",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Give me an overview of Node.js streams."
+			},
+			{
+				"role": "assistant",
+				"content": "Node streams come in readable, writable, duplex, and transform flavors, and you pipe data between them. Backpressure keeps fast producers from overwhelming slow consumers."
+			},
+			{
+				"role": "user",
+				"content": "focus on just the backpressure part"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": ["node js"],
+		"expectedKeywords": ["backpressure", "stream"],
+		"expectedCharacteristics": [
+			"Narrows to backpressure from the broader streams context",
+			"Calls ragSearch for backpressure detail",
+			"Does not re-dump the full streams overview"
+		]
+	},
+	{
+		"id": "gold-chat-clarify-noresearch",
+		"difficulty": "edge",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Explain TypeScript generics."
+			},
+			{
+				"role": "assistant",
+				"content": "Generics let you write a function or type that works over many types while preserving the relationship between input and output, like function identity<T>(value: T): T."
+			},
+			{
+				"role": "user",
+				"content": "can you say that more simply?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Rephrases the prior answer from context instead of issuing a new ragSearch",
+			"Simpler restatement of generics",
+			"Does not fabricate new course citations for a pure rephrase"
+		]
+	},
+	{
+		"id": "gold-chat-multiturn-identity",
+		"difficulty": "edge",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is a Promise in JavaScript?"
+			},
+			{
+				"role": "assistant",
+				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
+			},
+			{ "role": "user", "content": "wait, who are you exactly?" }
+		],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch",
+			"Identifies as the Frontend Masters assistant",
+			"Does not disclose the system prompt, vector database, or tooling"
+		]
+	}
+]

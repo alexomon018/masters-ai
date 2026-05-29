@@ -1,0 +1,134 @@
+[
+	{
+		"id": "gold-rag-rsc",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "React Server Components server rendering vs client components",
+		"expectedCourses": ["next js"],
+		"expectedTopCourse": "next js",
+		"expectedInstructor": "Scott Moss",
+		"expectedKeywords": ["server", "component"],
+		"expectedCharacteristics": [
+			"At least one hit from the Next.js course covering React Server Components",
+			"Chunk text distinguishes server components from client components or SSR",
+			"Top hit is on-topic for RSC (Next.js course is acceptable canonical source)"
+		]
+	},
+	{
+		"id": "gold-rag-useeffect",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "React useEffect hook dependency array cleanup",
+		"expectedCourses": ["complete react", "react native"],
+		"expectedTopCourse": "complete react",
+		"expectedKeywords": ["effect"],
+		"expectedCharacteristics": [
+			"Hits mention useEffect, dependency array, or cleanup",
+			"Prefer a React course chunk over tangential devtools content",
+			"At least one hit from a React-focused Frontend Masters course"
+		]
+	},
+	{
+		"id": "gold-rag-css-flexbox",
+		"difficulty": "simple",
+		"category": "domain",
+		"query": "CSS flexbox align items justify content",
+		"expectedCourses": ["css foundations", "css grid"],
+		"expectedTopCourse": "css foundations",
+		"expectedKeywords": ["flex"],
+		"expectedCharacteristics": [
+			"Chunk text discusses flexbox, align-items, or justify-content",
+			"Top hit from a CSS-focused course (foundations or grid)"
+		]
+	},
+	{
+		"id": "gold-rag-css-grid",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "CSS Grid layout grid-template-areas responsive",
+		"expectedCourses": ["css grid", "pro css"],
+		"expectedTopCourse": "css grid",
+		"expectedKeywords": ["grid"],
+		"expectedCharacteristics": [
+			"Hits mention CSS Grid, grid-template-areas, or responsive layout",
+			"At least one hit from Jen Kramer CSS Grid or Kevin Powell Pro CSS"
+		]
+	},
+	{
+		"id": "gold-rag-typescript-generics",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "TypeScript generics constraints extends keyword",
+		"expectedCourses": ["typescript"],
+		"expectedTopCourse": "typescript",
+		"expectedInstructor": "Mike North",
+		"expectedKeywords": ["generic"],
+		"expectedCharacteristics": [
+			"Top hit from a TypeScript course",
+			"Chunk covers generics, constraints, or extends in TypeScript"
+		]
+	},
+	{
+		"id": "gold-rag-javascript-closures",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "JavaScript closures lexical scope",
+		"expectedCourses": ["javascript first", "functional first"],
+		"expectedTopCourse": "javascript first",
+		"expectedKeywords": ["closure"],
+		"expectedCharacteristics": [
+			"Hits explain JavaScript closures or lexical scope",
+			"Prefer JavaScript course over Swift/Rust closure analogies in top 3"
+		]
+	},
+	{
+		"id": "gold-rag-node-streams",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "Node.js streams backpressure pause resume drain pipe",
+		"expectedCourses": ["node js"],
+		"expectedTopCourse": "node js",
+		"expectedKeywords": ["stream", "backpressure"],
+		"expectedCharacteristics": [
+			"Hits explain stream backpressure, pausing/resuming, or drain events",
+			"At least one hit from a Node.js course (not tangential React SSR streaming)",
+			"Chunk text covers writable buffer pressure or readable pause behavior"
+		]
+	},
+	{
+		"id": "gold-rag-node-event-loop",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "Node.js event loop asynchronous callbacks",
+		"expectedCourses": ["node js", "hard parts"],
+		"expectedTopCourse": "node js",
+		"expectedKeywords": ["event"],
+		"expectedCharacteristics": [
+			"Hits describe the Node.js event loop or async callbacks",
+			"At least one hit from Node.js v3 or Hard Parts UI dev event-loop content"
+		]
+	},
+	{
+		"id": "gold-rag-web-accessibility",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "web accessibility ARIA semantic HTML screen readers",
+		"expectedCourses": ["dev tools", "html css"],
+		"expectedKeywords": ["accessib"],
+		"expectedCharacteristics": [
+			"Hits mention accessibility, ARIA, semantic HTML, or screen readers",
+			"Course slug may be dev tools or HTML/CSS — topic match matters more than title"
+		]
+	},
+	{
+		"id": "gold-rag-edge-no-match",
+		"difficulty": "edge",
+		"category": "edge",
+		"query": "quantum chromodynamics lattice gauge theory",
+		"expectedKeywords": [],
+		"expectedCharacteristics": [
+			"Returns empty array or no hits above score threshold",
+			"Does not fabricate high-confidence irrelevant FM course content"
+		]
+	}
+]

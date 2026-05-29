@@ -43,7 +43,7 @@ export default defineConfig({
 					globals: true,
 					setupFiles: ["./test/setup.unit.ts"],
 					include: [
-						"{components,app,utils,store,constants,providers,ai}/**/*.test.{ts,tsx}"
+						"{components,app,utils,store,constants,providers,ai,evals}/**/*.test.{ts,tsx}"
 					],
 					exclude: ["worker/**", "node_modules/**", ".next/**"],
 					coverage: {

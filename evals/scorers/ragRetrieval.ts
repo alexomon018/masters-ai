@@ -1,25 +1,80 @@
 import type { EvalScorer } from "braintrust";
 import type { RagHit } from "../../worker/src/tools/rag-search";
+import {
+	anyCourseHit,
+	courseLabels,
+	courseNameMatches,
+} from "../helpers/courseMatch";
 import type { RagTestCase } from "../types";
 
 type RagScorer = EvalScorer<RagTestCase, RagHit[], RagTestCase>;
 
-export const hasResultsScorer: RagScorer = ({ output }) => ({
-	name: "HasResults",
-	score: output.length > 0 ? 1 : 0,
-	metadata: { hitCount: output.length },
-});
+export const hasResultsScorer: RagScorer = ({ output, expected }) => {
+	if (expected?.category === "edge") return null;
+
+	return {
+		name: "HasResults",
+		score: output.length > 0 ? 1 : 0,
+		metadata: { hitCount: output.length },
+	};
+};
+
+export const noResultsScorer: RagScorer = ({ output, expected }) => {
+	if (expected?.category !== "edge") return null;
+
+	return {
+		name: "NoResults",
+		score: output.length === 0 ? 1 : 0,
+		metadata: { hitCount: output.length },
+	};
+};
+
+export const topCourseHitScorer: RagScorer = ({ output, expected }) => {
+	const { top } = courseLabels(expected ?? {});
+	if (!top) return null;
+
+	if (output.length === 0) {
+		return {
+			name: "TopCourseHit",
+			score: 0,
+			metadata: { expectedTopCourse: top, topCourse: null },
+		};
+	}
+
+	const topCourse = output[0].courseName;
+	const hit = courseNameMatches(topCourse, top);
+	return {
+		name: "TopCourseHit",
+		score: hit ? 1 : 0,
+		metadata: { expectedTopCourse: top, topCourse },
+	};
+};
+
+export const top3CourseHitScorer: RagScorer = ({ output, expected }) => {
+	const { anyOf, top } = courseLabels(expected ?? {});
+	const labels = top ? [top, ...anyOf] : anyOf;
+	const unique = [...new Set(labels)];
+	if (unique.length === 0) return null;
+
+	const top3 = output.slice(0, 3).map((h) => h.courseName);
+	const hit = anyCourseHit(top3, unique);
+	return {
+		name: "Top3CourseHit",
+		score: hit ? 1 : 0,
+		metadata: { labels: unique, top3 },
+	};
+};
 
 export const courseHitScorer: RagScorer = ({ output, expected }) => {
-	const want = expected?.expectedCourse?.toLowerCase();
-	if (!want) return null;
+	const { anyOf } = courseLabels(expected ?? {});
+	if (anyOf.length === 0) return null;
 
-	const courses = output.map((h) => h.courseName.toLowerCase());
-	const hit = courses.some((c) => c.includes(want));
+	const courses = output.map((h) => h.courseName);
+	const hit = anyCourseHit(courses, anyOf);
 	return {
 		name: "CourseHit",
 		score: hit ? 1 : 0,
-		metadata: { expectedCourse: expected!.expectedCourse, retrieved: courses },
+		metadata: { expectedCourses: anyOf, retrieved: courses },
 	};
 };
 

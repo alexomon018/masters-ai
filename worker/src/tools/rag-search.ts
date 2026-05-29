@@ -69,19 +69,22 @@ export async function searchRagIndex(
 		new Map<string, (typeof filtered)[0]>()
 	);
 
-	return [...seen.values()].slice(0, MAX_RESULTS_AFTER_DEDUP).map((r) => {
-		const meta = r.metadata as ChunkMetadata | undefined;
-		return {
-			courseName: meta?.courseName
-				? formatCourseName(meta.courseName)
-				: "Unknown course",
-			fileName: meta?.fileName ?? "",
-			teacherName: meta?.teacherName || "Unknown instructor",
-			timestamp: meta?.timestamp || "",
-			score: r.score,
-			text: typeof r.data === "string" ? r.data : "",
-		};
-	});
+	return [...seen.values()]
+		.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+		.slice(0, MAX_RESULTS_AFTER_DEDUP)
+		.map((r) => {
+			const meta = r.metadata as ChunkMetadata | undefined;
+			return {
+				courseName: meta?.courseName
+					? formatCourseName(meta.courseName)
+					: "Unknown course",
+				fileName: meta?.fileName ?? "",
+				teacherName: meta?.teacherName || "Unknown instructor",
+				timestamp: meta?.timestamp || "",
+				score: r.score,
+				text: typeof r.data === "string" ? r.data : "",
+			};
+		});
 }
 
 export function formatRagHits(hits: RagHit[]): string {
@@ -108,7 +111,7 @@ export function makeRagSearch(env: ToolEnv) {
 
 	return tool({
 		description:
-			"Search the Frontend Masters course transcript database for relevant content. Use this tool for any programming, web development, or technical question to find accurate course-based answers. Rephrase the user's question as a concise, keyword-rich search query focused on the core technical concept.",
+			"Search the Frontend Masters course transcript database for relevant content. Use this tool for any programming, web development, or technical question to find accurate course-based answers. Rephrase the user's question as a concise, keyword-rich search query focused on the core technical concept and technology name (e.g. 'Node.js streams backpressure pause resume' not just 'backpressure').",
 		inputSchema: z.object({
 			query: z
 				.string()
