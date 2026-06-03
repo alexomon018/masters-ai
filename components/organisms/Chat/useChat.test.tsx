@@ -46,6 +46,11 @@ vi.mock("@clerk/clerk-react", () => ({
 	useUser: () => ({ user: null })
 }));
 
+const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
+vi.mock("@tanstack/react-router", () => ({
+	useNavigate: () => navigateMock
+}));
+
 const { upsertThreadRemote } = vi.hoisted(() => ({
 	upsertThreadRemote: vi.fn<
 		(
@@ -151,7 +156,7 @@ describe("useChat — initial messages", () => {
 
 describe("useChat — sending the first message", () => {
 	it("upserts the thread, swaps the URL, and sends on the first submit", async () => {
-		const replaceState = vi.spyOn(window.history, "replaceState");
+		navigateMock.mockClear();
 		const { result } = renderChat("first-thread", true);
 
 		act(() => {
@@ -169,23 +174,25 @@ describe("useChat — sending the first message", () => {
 			title: "New Chat",
 			pinned: false
 		});
-		expect(replaceState).toHaveBeenCalledWith(null, "", "/chat/first-thread");
-		replaceState.mockRestore();
+		expect(navigateMock).toHaveBeenCalledWith({
+			to: "/chat/$id",
+			params: { id: "first-thread" },
+			replace: true
+		});
 	});
 
-	it("does not re-upsert or replace the URL on the second submit", () => {
-		const replaceState = vi.spyOn(window.history, "replaceState");
+	it("does not re-upsert or swap the URL on the second submit", () => {
+		navigateMock.mockClear();
 		const { result } = renderChat("first-thread-2", true);
 
 		act(() => result.current.submitMessage("first"));
 		upsertThreadRemote.mockClear();
-		replaceState.mockClear();
+		navigateMock.mockClear();
 		act(() => result.current.submitMessage("second"));
 
 		expect(upsertThreadRemote).not.toHaveBeenCalled();
-		expect(replaceState).not.toHaveBeenCalled();
+		expect(navigateMock).not.toHaveBeenCalled();
 		expect(sendMessage).toHaveBeenCalledTimes(2);
-		replaceState.mockRestore();
 	});
 
 	it("does not upsert on an existing (non-new) thread", () => {

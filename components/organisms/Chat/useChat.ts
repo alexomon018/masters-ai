@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { useAuth, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
@@ -21,6 +22,7 @@ interface Args {
 
 const useChat = ({ threadId, isNewThread }: Args) => {
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const [input, setInput] = useState("");
 
 	const { getToken } = useAuth();
@@ -120,7 +122,12 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			if (!text) return;
 			setInput("");
 
-			// First send: register thread + replaceState without remounting.
+			// First send: register thread + swap the URL to /chat/<id>. The
+			// persistent <Chat> lives in the _chat layout keyed by threadId, and
+			// this navigation lands on the SAME id, so the key is unchanged and the
+			// live agent connection survives the URL change (no remount). Keeping
+			// the router in sync — vs a raw history.replaceState — is what makes a
+			// later "New Chat" (navigate to "/") a real transition again.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
 				upsertThreadRemote(tokenFn, {
@@ -133,7 +140,11 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 						queryClient.invalidateQueries({ queryKey: THREADS_QUERY_KEY });
 					})
 					.catch(() => {});
-				window.history.replaceState(null, "", `/chat/${threadId}`);
+				navigate({
+					to: "/chat/$id",
+					params: { id: threadId },
+					replace: true
+				});
 			}
 
 			sendMessage({
@@ -141,7 +152,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 				parts: [{ type: "text", text }]
 			});
 		},
-		[threadId, sendMessage, tokenFn, queryClient]
+		[threadId, sendMessage, tokenFn, queryClient, navigate]
 	);
 
 	const handleSubmit = useCallback(
