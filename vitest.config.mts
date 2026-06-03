@@ -41,6 +41,10 @@ export default defineConfig({
 					name: "unit",
 					environment: "jsdom",
 					globals: true,
+					// Worker base URL the client helpers read via
+					// import.meta.env.VITE_WORKER_URL. Vitest injects test.env into
+					// both process.env and import.meta.env.
+					env: { VITE_WORKER_URL: "http://localhost:8787" },
 					setupFiles: ["./test/setup.unit.ts"],
 					include: [
 						"{components,app,utils,store,constants,providers,ai,evals}/**/*.test.{ts,tsx}"

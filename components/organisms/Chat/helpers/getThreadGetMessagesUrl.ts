@@ -1,5 +1,5 @@
 export function getThreadGetMessagesUrl(threadId: string): URL | null {
-	const raw = process.env.NEXT_PUBLIC_WORKER_URL;
+	const raw = import.meta.env.VITE_WORKER_URL;
 	if (!raw || !threadId) return null;
 	let host = raw.replace(/^(http|https|ws|wss):\/\//, "");
 	if (host.endsWith("/")) host = host.slice(0, -1);

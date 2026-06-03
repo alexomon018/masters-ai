@@ -1,5 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@clerk/clerk-react";
+import { useCallback } from "react";
 import { queryKeys } from "@/constants";
+import {
+	buildAuthQueryParams,
+	workerHttpBase
+} from "@/components/organisms/Chat/helpers/agentAuth";
 
 interface MessageLimitInfo {
 	userId: string;
@@ -10,6 +16,12 @@ interface MessageLimitInfo {
 }
 
 export const useMessageLimit = () => {
+	const { getToken } = useAuth();
+	const tokenFn = useCallback(
+		async () => (typeof getToken === "function" ? getToken() : null),
+		[getToken]
+	);
+
 	const {
 		data: messageLimit,
 		isLoading: loading,
@@ -17,7 +29,12 @@ export const useMessageLimit = () => {
 	} = useQuery<MessageLimitInfo>({
 		queryKey: queryKeys.messageLimit(),
 		queryFn: async () => {
-			const response = await fetch("/api/user-info");
+			const base = workerHttpBase();
+			if (!base) {
+				throw new Error("Worker URL is not configured");
+			}
+			const params = await buildAuthQueryParams(tokenFn);
+			const response = await fetch(`${base}/usage?${params.toString()}`);
 
 			if (!response.ok) {
 				throw new Error("Failed to fetch message limit");

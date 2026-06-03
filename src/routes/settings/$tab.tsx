@@ -1,14 +1,34 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { SettingsNavigation } from "@molecules";
+import { AccountUpgrade, Customization, ModelsPicker } from "@organisms";
 
-// `/settings/$tab` (was app/settings/[tab]/page.tsx). Scaffold placeholder;
-// the component port restores the tab switch (account / customization /
-// models / attachments) and the SettingsNavigation.
+// `/settings/$tab` (was app/settings/[tab]/page.tsx). The QueryClientProvider
+// it used to wrap is now provided once at the root route.
+const renderTabContent = (tab: string) => {
+	switch (tab) {
+		case "account":
+			return <AccountUpgrade />;
+		case "customization":
+			return <Customization />;
+		case "models":
+			return <ModelsPicker />;
+		case "attachments":
+			return (
+				<div className="text-center text-muted-foreground">Coming Soon</div>
+			);
+		default:
+			return <AccountUpgrade />;
+	}
+};
+
 const SettingsTabPage = () => {
 	const { tab } = useParams({ from: "/settings/$tab" });
+
 	return (
-		<div className="container mx-auto max-w-8xl px-4 py-8 text-muted-foreground">
-			Settings tab (scaffold): {tab}
-		</div>
+		<>
+			<SettingsNavigation className="hidden lg:flex" />
+			{renderTabContent(tab)}
+		</>
 	);
 };
 

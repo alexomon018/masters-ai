@@ -1,7 +1,7 @@
 import {
 	buildAuthQueryParams,
 	fetchWorkerTicket,
-	readAnonCookie
+	getAnonId
 } from "@/components/organisms/Chat/helpers/agentAuth";
 
 export interface ThreadDto {
@@ -21,7 +21,7 @@ interface UpsertInput {
 }
 
 function workerBase(): string | null {
-	const base = process.env.NEXT_PUBLIC_WORKER_URL;
+	const base = import.meta.env.VITE_WORKER_URL;
 	return base ? base.replace(/\/$/, "") : null;
 }
 
@@ -75,7 +75,7 @@ export async function claimAnonThreadsRemote(
 	const base = workerBase();
 	if (!base) return 0;
 
-	const anonId = readAnonCookie();
+	const anonId = await getAnonId();
 	if (!anonId) return 0;
 
 	const jwt = await getToken();

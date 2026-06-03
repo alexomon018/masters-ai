@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/clerk-react";
 import { useCallback, useState } from "react";
 import {
 	deleteThreadRemote,
 	fetchThreads
 } from "@/components/organisms/SideBar/threadsApi";
+import {
+	fetchWorkerTicket,
+	workerHttpBase
+} from "@/components/organisms/Chat/helpers/agentAuth";
 
 interface UseDangerZoneReturn {
 	isDeletingAllData: boolean;
@@ -45,15 +49,24 @@ export const useDangerZone = ({
 	const { mutateAsync: deleteUserMutation, isPending: isDeletingUser } =
 		useMutation({
 			mutationFn: async () => {
-				const response = await fetch("/api/delete-user", { method: "DELETE" });
-				const result = await response.json();
+				// Account deletion now goes straight to the worker's /users/me,
+				// which cascades D1 + DO history, wipes Redis quota and deletes the
+				// Clerk identity. Exchange the JWT for a single-use ticket first
+				// (keeps the bearer out of the URL/access logs).
+				const base = workerHttpBase();
+				const jwt = await tokenFn();
+				const ticket = jwt ? await fetchWorkerTicket(jwt) : null;
+				if (base && ticket) {
+					await fetch(
+						`${base}/users/me?ticket=${encodeURIComponent(ticket)}`,
+						{ method: "DELETE" }
+					);
+				}
 
 				await queryClient.resetQueries();
 				queryClient.clear();
 
 				window.location.href = "/auth";
-
-				return result;
 			}
 		});
 

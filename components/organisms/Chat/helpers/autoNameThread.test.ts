@@ -1,7 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../test/msw/server";
 import autoNameThread from "./autoNameThread";
+
+const WORKER = "http://localhost:8787";
 
 const { upsertThreadRemote } = vi.hoisted(() => ({
 	upsertThreadRemote: vi.fn<
@@ -27,16 +29,23 @@ const baseInput = {
 	modelId: "claude-haiku-4-5"
 };
 
+beforeEach(() => {
+	// A stored anon id keeps buildAuthQueryParams from trying to mint one
+	// (which would be an unhandled /anon-id request under MSW's error mode).
+	localStorage.setItem("masters_anon_id", "anon.sig");
+});
+
 afterEach(() => {
 	upsertThreadRemote.mockClear();
+	localStorage.clear();
 	delete (window as unknown as { Clerk?: unknown }).Clerk;
 });
 
 describe("autoNameThread", () => {
-	it("posts the exchange and upserts the returned title", async () => {
+	it("posts the exchange to the worker and upserts the returned title", async () => {
 		server.use(
-			http.post("/api/name-thread", () =>
-				HttpResponse.json("React Server Components")
+			http.post(`${WORKER}/name-thread`, () =>
+				HttpResponse.json({ title: "React Server Components" })
 			)
 		);
 
@@ -50,9 +59,9 @@ describe("autoNameThread", () => {
 		});
 	});
 
-	it("does not upsert when /api/name-thread returns non-ok", async () => {
+	it("does not upsert when /name-thread returns non-ok", async () => {
 		server.use(
-			http.post("/api/name-thread", () =>
+			http.post(`${WORKER}/name-thread`, () =>
 				HttpResponse.json({}, { status: 429 })
 			)
 		);
@@ -66,7 +75,12 @@ describe("autoNameThread", () => {
 			session: { getToken }
 		};
 		server.use(
-			http.post("/api/name-thread", () => HttpResponse.json("A Title"))
+			http.post(`${WORKER}/ws-ticket`, () =>
+				HttpResponse.json({ ticket: "tkt" })
+			),
+			http.post(`${WORKER}/name-thread`, () =>
+				HttpResponse.json({ title: "A Title" })
+			)
 		);
 
 		await autoNameThread(baseInput);
@@ -76,9 +90,11 @@ describe("autoNameThread", () => {
 		expect(getToken).toHaveBeenCalled();
 	});
 
-	it("tolerates a JSON title that is not a string", async () => {
+	it("tolerates a title that is not a string", async () => {
 		server.use(
-			http.post("/api/name-thread", () => HttpResponse.json(123))
+			http.post(`${WORKER}/name-thread`, () =>
+				HttpResponse.json({ title: 123 })
+			)
 		);
 		await autoNameThread(baseInput);
 		expect(upsertThreadRemote).not.toHaveBeenCalled();

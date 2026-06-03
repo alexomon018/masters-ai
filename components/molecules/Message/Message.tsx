@@ -11,7 +11,7 @@ import {
 	AvatarImage
 } from "@/components/atoms/Avatar/Avatar";
 import { AvatarIcon } from "@radix-ui/react-icons";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import CodeBlock from "../CodeBlock/CodeBlock";
 import ToolStatus from "./ToolStatus";
 

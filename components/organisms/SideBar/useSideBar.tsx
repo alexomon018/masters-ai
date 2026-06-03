@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "@tanstack/react-router";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -20,7 +20,7 @@ import useClaimAnonThreads from "./useClaimAnonThreads";
 const THREADS_QUERY_KEY = ["threads"] as const;
 
 const useSideBar = () => {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const { user, isLoaded } = useUser();
 	const { getToken } = useAuth();
 	const [openSearch, setOpenSearch] = useState(false);
@@ -95,7 +95,7 @@ const useSideBar = () => {
 				THREADS_QUERY_KEY,
 				(prev) => prev?.filter((t) => t.id !== threadId) ?? []
 			);
-			router.replace("/");
+			navigate({ to: "/", replace: true });
 			return { previous };
 		},
 		onError: (_err, _threadId, ctx) => {
@@ -109,16 +109,16 @@ const useSideBar = () => {
 	});
 
 	const startNewChat = useCallback(() => {
-		// Don't pre-create rows. /chat/<id> with no id lands on the same page
-		// and the chat hook mints + persists the thread on the first message.
-		router.push("/");
-	}, [router]);
+		// Don't pre-create rows. The home route mints a fresh id and the chat
+		// hook persists the thread on the first message.
+		navigate({ to: "/" });
+	}, [navigate]);
 
 	const handleChatSelect = useCallback(
 		(chatId: string) => {
-			router.push(`/chat/${chatId}`);
+			navigate({ to: "/chat/$id", params: { id: chatId } });
 		},
-		[router]
+		[navigate]
 	);
 
 	const { mutate: togglePin } = useMutation({

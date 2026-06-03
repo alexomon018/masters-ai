@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import type { UIMessage } from "ai";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/clerk-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchThreads } from "@/components/organisms/SideBar/threadsApi";
 import { autoNameThread } from "../helpers";

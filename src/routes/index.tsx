@@ -1,13 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import Chat from "@/components/organisms/Chat/Chat";
 
-// Home (`/`). Scaffold placeholder — wired to <Chat isNewThread> in the
-// component-port phase, once its `next/*` and `@clerk/nextjs` imports are
-// swapped for TanStack Router + @clerk/clerk-react.
-const HomePage = () => (
-	<div className="flex h-full items-center justify-center text-muted-foreground">
-		Home route (scaffold)
-	</div>
-);
+// Home (`/`). Mints a fresh thread id once per mount and hands it to <Chat>
+// pre-flagged as new — the agent connection opens against this id eagerly, so
+// the first sendMessage hits the right DO with no remount. On submit, useChat
+// swaps the URL to /chat/<id> without unmounting the chat tree.
+//
+// SSR is irrelevant here (pure SPA): useAgentChat resolves its initial
+// messages on the client, which is exactly what the old `ssr: false` dynamic
+// import was working around under Next.
+const HomePage = () => {
+	const [threadId] = useState(() => crypto.randomUUID());
+	return <Chat threadId={threadId} isNewThread />;
+};
 
 export const Route = createFileRoute("/")({
 	component: HomePage

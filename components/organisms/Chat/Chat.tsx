@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MessageList, MobileHeader } from "@molecules";
 import { cn } from "@/utils";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import SideBar from "../SideBar/SideBar";
 import useChat from "./useChat";
 import ChatForm from "../ChatForm/ChatForm";

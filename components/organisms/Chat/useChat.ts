@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
@@ -81,7 +81,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	const agent = useAgent({
 		agent: "masters-chat-agent",
 		name: threadId,
-		host: process.env.NEXT_PUBLIC_WORKER_URL,
+		host: import.meta.env.VITE_WORKER_URL,
 		query: buildAuthQuery
 	});
 

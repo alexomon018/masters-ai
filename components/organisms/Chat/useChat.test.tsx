@@ -41,7 +41,7 @@ vi.mock("@cloudflare/ai-chat/react", () => ({
 	})
 }));
 
-vi.mock("@clerk/nextjs", () => ({
+vi.mock("@clerk/clerk-react", () => ({
 	useAuth: () => ({ getToken: vi.fn(async () => null) }),
 	useUser: () => ({ user: null })
 }));

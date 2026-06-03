@@ -23,7 +23,7 @@ const { autoNameThread, fetchThreads } = vi.hoisted(() => ({
 vi.mock("../helpers", () => ({ autoNameThread }));
 vi.mock("@/components/organisms/SideBar/threadsApi", () => ({ fetchThreads }));
 
-vi.mock("@clerk/nextjs", () => ({
+vi.mock("@clerk/clerk-react", () => ({
 	useAuth: () => ({ getToken: vi.fn(async () => null) })
 }));
 

@@ -47,6 +47,13 @@ const RootComponent = () => (
 	</ClerkWrapper>
 );
 
+const NotFound = () => (
+	<div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+		<p className="text-lg">Page not found</p>
+	</div>
+);
+
 export const Route = createRootRoute({
-	component: RootComponent
+	component: RootComponent,
+	notFoundComponent: NotFound
 });

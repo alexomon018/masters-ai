@@ -3,7 +3,7 @@
 import React from "react";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@atoms";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { UserResource } from "@clerk/types";
 
 interface MobileHeaderProps {
@@ -13,7 +13,7 @@ interface MobileHeaderProps {
 }
 
 const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
-	const router = useRouter();
+	const navigate = useNavigate();
 
 	return (
 		<header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-white px-4 py-3 dark:bg-[#1a1a1a] md:hidden">
@@ -33,7 +33,9 @@ const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
 			{isLoaded && user ? (
 				<button
 					type="button"
-					onClick={() => router.push("/settings/account")}
+					onClick={() =>
+						navigate({ to: "/settings/$tab", params: { tab: "account" } })
+					}
 					className="rounded-full"
 					aria-label="User settings"
 				>

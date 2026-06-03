@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage, Button, Input } from "@atoms";
 import { Settings2Icon, Search } from "lucide-react";
 import { ChatItemSection } from "@molecules";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@utils";
 import type { ThreadDto } from "./threadsApi";
 import useSideBar from "./useSideBar";
@@ -16,7 +16,7 @@ interface SideBarProps {
 }
 
 const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const [hasMounted, setHasMounted] = useState(false);
 
 	useEffect(() => {
@@ -100,7 +100,9 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 					<button
 						type="button"
 						className="rounded-full p-2 text-gray-700 hover:bg-gray-100 dark:text-[#e2e8f0] dark:hover:bg-[#2a2a2a]"
-						onClick={() => router.push("/settings/account")}
+						onClick={() =>
+							navigate({ to: "/settings/$tab", params: { tab: "account" } })
+						}
 					>
 						<Settings2Icon className="size-5" />
 					</button>
@@ -112,7 +114,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 			<button
 				type="button"
 				className="w-full rounded-md bg-gray-100 px-4 py-2 text-left font-medium text-gray-700 hover:bg-gray-200 dark:bg-[#2a2a2a] dark:text-[#e2e8f0] dark:hover:bg-[#3a3a3a]"
-				onClick={() => router.push("/auth")}
+				onClick={() => navigate({ to: "/auth" })}
 			>
 				Login
 			</button>
