@@ -1,7 +1,5 @@
-// Anon identity storage key. The Next.js middleware used to set this as an
-// HMAC-signed cookie on every request; the SPA has no middleware, so the
-// worker mints it (GET /anon-id) and we persist it in localStorage. The wire
-// format (`<rawId>.<sig>`) is unchanged — only the storage medium differs.
+// Signed anon id (`<rawId>.<sig>`), minted by the worker (GET /anon-id) and
+// persisted in localStorage.
 const ANON_STORAGE_KEY = "masters_anon_id";
 
 // HTTP base for worker REST calls: trims a trailing slash and normalises a
@@ -22,9 +20,8 @@ export function readStoredAnonId(): string {
 
 let anonIdInflight: Promise<string> | null = null;
 
-// Get-or-mint the signed anon id. Concurrent callers (e.g. the eager agent
-// connect on the home page firing alongside the threads list fetch) share a
-// single /anon-id request rather than racing to mint several identities.
+// Get-or-mint the signed anon id. Concurrent callers share one /anon-id
+// request via anonIdInflight rather than racing to mint several identities.
 export async function getAnonId(): Promise<string> {
 	const stored = readStoredAnonId();
 	if (stored) return stored;

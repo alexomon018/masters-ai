@@ -2,8 +2,6 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { SettingsNavigation } from "@molecules";
 import { AccountUpgrade, Customization, ModelsPicker } from "@organisms";
 
-// `/settings/$tab` (was app/settings/[tab]/page.tsx). The QueryClientProvider
-// it used to wrap is now provided once at the root route.
 const renderTabContent = (tab: string) => {
 	switch (tab) {
 		case "account":

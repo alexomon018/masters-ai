@@ -52,6 +52,9 @@
       "@organisms": [
         "./components/organisms"
       ],
+      "@hooks": [
+        "./hooks"
+      ],
       "@store": [
         "./store"
       ],

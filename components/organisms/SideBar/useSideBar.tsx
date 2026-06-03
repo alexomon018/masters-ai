@@ -4,14 +4,13 @@ import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@constants";
-import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
+import { useTokenFn, useThreadsQuery } from "@hooks";
 import {
 	deleteThreadRemote,
 	upsertThreadRemote,
 	type ThreadDto
 } from "./threadsApi";
 import useClaimAnonThreads from "./useClaimAnonThreads";
-import { useThreadsQuery } from "./useThreadsQuery";
 
 const THREADS_QUERY_KEY = queryKeys.threads();
 

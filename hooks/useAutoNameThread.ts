@@ -2,8 +2,8 @@ import { useEffect, useMemo } from "react";
 import type { UIMessage } from "ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@constants";
-import { useThreadsQuery } from "@/components/organisms/SideBar/useThreadsQuery";
-import { autoNameThread } from "../helpers";
+import { autoNameThread } from "@/components/organisms/Chat/helpers";
+import { useThreadsQuery } from "./useThreadsQuery";
 
 const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";

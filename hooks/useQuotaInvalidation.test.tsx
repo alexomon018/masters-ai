@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryKeys } from "@/constants";
-import { makeTestQueryClient } from "../../../../test/utils/renderWithProviders";
+import { makeTestQueryClient } from "../test/utils/renderWithProviders";
 import useQuotaInvalidation from "./useQuotaInvalidation";
 
 function setup() {

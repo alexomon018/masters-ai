@@ -68,9 +68,10 @@ vi.mock("@/components/organisms/SideBar/threadsApi", () => ({
 	upsertThreadRemote
 }));
 
-vi.mock("./hooks", () => ({
+vi.mock("@hooks", () => ({
 	useAutoNameThread: vi.fn(),
-	useQuotaInvalidation: vi.fn()
+	useQuotaInvalidation: vi.fn(),
+	useTokenFn: () => async () => null
 }));
 
 import useChat from "./useChat";

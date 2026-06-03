@@ -4,9 +4,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 
-// Single TanStack Router instance for the SPA. `defaultPreload: "intent"`
-// prefetches a route on link hover/focus — the closest analogue to Next's
-// automatic <Link> prefetching.
+// `defaultPreload: "intent"` prefetches a route on link hover/focus.
 const router = createRouter({
 	routeTree,
 	defaultPreload: "intent",

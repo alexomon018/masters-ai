@@ -2,7 +2,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { queryKeys } from "@constants";
-import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
+import { useTokenFn } from "@hooks";
 import { claimAnonThreadsRemote } from "./threadsApi";
 
 const THREADS_QUERY_KEY = queryKeys.threads();

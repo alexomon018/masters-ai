@@ -10,16 +10,13 @@ import {
 import { messageAllowed } from "@constants";
 import { useMessageLimit } from "@/components/organisms/MessageLimit/useMessageLimit";
 
-// `/settings` layout (was the async server component app/settings/layout.tsx).
-// The old version read Clerk + Redis on the server; here the guard and the
-// profile come from useUser, and usage is fetched from the worker /usage
-// endpoint via useMessageLimit instead of reading Redis directly.
+// `/settings` layout. Auth guard + profile come from useUser; usage comes from
+// the worker /usage endpoint via useMessageLimit.
 const SettingsLayout = () => {
 	const { user, isLoaded, isSignedIn } = useUser();
 	const { messageLimit } = useMessageLimit();
 
-	// Hold the shell back until Clerk resolves so we don't flash the settings
-	// layout with empty user data before redirecting an anonymous visitor.
+	// Wait for Clerk so we don't flash the shell with empty data before redirect.
 	if (!isLoaded) {
 		return null;
 	}

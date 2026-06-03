@@ -3,7 +3,7 @@ import type { UIMessage } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { makeTestQueryClient } from "../../../../test/utils/renderWithProviders";
+import { makeTestQueryClient } from "../test/utils/renderWithProviders";
 
 const { autoNameThread, fetchThreads } = vi.hoisted(() => ({
 	autoNameThread: vi.fn<
@@ -20,7 +20,7 @@ const { autoNameThread, fetchThreads } = vi.hoisted(() => ({
 		>
 	>(async () => [])
 }));
-vi.mock("../helpers", () => ({ autoNameThread }));
+vi.mock("@/components/organisms/Chat/helpers", () => ({ autoNameThread }));
 vi.mock("@/components/organisms/SideBar/threadsApi", () => ({ fetchThreads }));
 
 vi.mock("@clerk/clerk-react", () => ({

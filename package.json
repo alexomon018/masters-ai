@@ -8,7 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "vite preview",
-		"lint": "eslint components src lib",
+		"lint": "eslint components hooks src lib",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:cov": "vitest run --project unit --coverage",
@@ -172,7 +172,7 @@
 	},
 	"lint-staged": {
 		"*": "prettier -uw --cache",
-		"src/**/*.{ts,tsx}": [
+		"{components,hooks,src,lib}/**/*.{ts,tsx}": [
 			"eslint --cache --fix"
 		]
 	},

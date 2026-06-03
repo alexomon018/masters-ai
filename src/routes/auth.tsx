@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SignInButton } from "@clerk/clerk-react";
 import { Button, CustomIcon } from "@atoms";
 
-// `/auth` — sign-in (was app/auth/page.tsx). forceRedirectUrl points at the
-// home route (the old "/chat" target had no matching route).
+// `/auth` — sign-in. forceRedirectUrl returns to the home route after login.
 const AuthPage = () => (
 	<div className="flex min-h-screen items-center justify-center bg-background">
 		<div className="flex flex-col items-center gap-4">

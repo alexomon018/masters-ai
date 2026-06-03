@@ -2,20 +2,16 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
 import { lazy, ReactNode, Suspense } from "react";
-// Import providers directly (not via the @providers barrel) so the app
-// bundle never pulls in withThemeProvider → @storybook/addons.
+// Import providers directly (not via the @providers barrel) so the app bundle
+// never pulls in withThemeProvider → @storybook/addons.
 import { ThemeProvider } from "@/providers/themeProvider";
 import { ModelStoreProvider } from "@/providers/modelStoreProvider";
 import QueryClientProvider from "@/providers/queryClientProvider";
 
-// Root route — the SPA shell. Replaces the old Next `app/layout.tsx`:
-// the same provider stack (Clerk → theme → model store → query) now wraps
-// the router <Outlet> instead of `{children}`. The <html>/<body> tags and
-// the theme-color script live in index.html (static, runs before paint).
+// SPA shell: the provider stack wrapping the router <Outlet>.
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-// Dev-only router devtools. Lazy + DEV-gated so the dynamic import is dead code
-// in production and never reaches the bundle.
+// Lazy + DEV-gated so the import is dead code in production.
 const RouterDevtools = import.meta.env.DEV
 	? lazy(() =>
 			import("@tanstack/react-router-devtools").then((m) => ({
@@ -25,8 +21,7 @@ const RouterDevtools = import.meta.env.DEV
 	: () => null;
 
 const ClerkWrapper = ({ children }: { children: ReactNode }) => {
-	// Clerk is optional in local/dev when no key is configured — mirrors the
-	// old layout, which rendered the tree unwrapped so the app still boots.
+	// Clerk is optional in local/dev when no key is configured.
 	if (!clerkKey) return children;
 	return <ClerkProvider publishableKey={clerkKey}>{children}</ClerkProvider>;
 };

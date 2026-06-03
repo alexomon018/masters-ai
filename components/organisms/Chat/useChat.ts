@@ -6,14 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { queryKeys } from "@constants";
+import {
+	useAutoNameThread,
+	useQuotaInvalidation,
+	useTokenFn
+} from "@hooks";
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
-import {
-	getThreadGetMessagesUrl,
-	resolveAgentAuth,
-	useTokenFn
-} from "./helpers";
-import { useAutoNameThread, useQuotaInvalidation } from "./hooks";
+import { getThreadGetMessagesUrl, resolveAgentAuth } from "./helpers";
 
 const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";
@@ -118,12 +118,10 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			if (!text) return;
 			setInput("");
 
-			// First send: register thread + swap the URL to /chat/<id>. The
-			// persistent <Chat> lives in the _chat layout keyed by threadId, and
-			// this navigation lands on the SAME id, so the key is unchanged and the
-			// live agent connection survives the URL change (no remount). Keeping
-			// the router in sync — vs a raw history.replaceState — is what makes a
-			// later "New Chat" (navigate to "/") a real transition again.
+			// First send: register the thread and swap the URL to /chat/<id>. The
+			// nav lands on the SAME id the layout keys <Chat> by, so the live agent
+			// connection survives the URL change. Using navigate (not a raw
+			// history.replaceState) keeps a later "New Chat" a real transition.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
 				upsertThreadRemote(tokenFn, {

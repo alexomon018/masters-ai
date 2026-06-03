@@ -4,12 +4,9 @@ import react from "@vitejs/plugin-react";
 import { transform as svgrTransform } from "@svgr/core";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
-// SVG-as-React-component plugin. The old next.config used @svgr/webpack to
-// turn bare `import X from "./x.svg"` into a component. vite-plugin-svgr can't
-// do this under Vite 8 / rolldown — it hands raw JSX to the bundler, which
-// can't parse it (the same reason the Vitest config stubs SVGs). So we run
-// SVGR ourselves and compile the JSX down to plain JS with esbuild before
-// rolldown ever sees it.
+// Turns `import X from "./x.svg"` into a React component. vite-plugin-svgr
+// can't do this under Vite 8 / rolldown (it emits raw JSX the bundler can't
+// parse), so we run SVGR and compile the JSX to JS with esbuild ourselves.
 const svgrComponentPlugin = (): Plugin => ({
 	name: "svgr-component",
 	enforce: "pre",
@@ -24,9 +21,7 @@ const svgrComponentPlugin = (): Plugin => ({
 				icon: true,
 				exportType: "default",
 				jsxRuntime: "automatic",
-				// `#333` -> `props.fill` so CustomIcon can theme the icon (matches
-				// the old @svgr/webpack replaceAttrValues). viewBox is preserved
-				// because we don't run SVGO.
+				// `#333` -> `props.fill` so CustomIcon can theme the icon.
 				replaceAttrValues: { "#333": "{props.fill}" },
 				plugins: ["@svgr/plugin-jsx"]
 			},
@@ -41,15 +36,12 @@ const svgrComponentPlugin = (): Plugin => ({
 	}
 });
 
-// Vite SPA replacing the old Next.js front end. The chat engine, API routes
-// and auth all live in the Cloudflare Worker now — this build only emits
-// static assets. Security headers (CSP etc.) are served by the host
-// (vercel.json), not from here.
+// Vite SPA — emits static assets only; the chat engine, API and auth live in
+// the Cloudflare Worker. Security headers are served by the host (vercel.json).
 export default defineConfig({
 	plugins: [
 		svgrComponentPlugin(),
-		// Must run before the React plugin so generated route files are picked
-		// up by Fast Refresh. Mirrors the old Next file-based routing.
+		// Must run before the React plugin so generated route files get Fast Refresh.
 		tanstackRouter({
 			target: "react",
 			routesDirectory: "src/routes",
@@ -58,8 +50,7 @@ export default defineConfig({
 		}),
 		react()
 	],
-	// Resolves @atoms / @organisms / @utils / @/* etc. from tsconfig.json
-	// (Vite 8 native — replaces the vite-tsconfig-paths plugin).
+	// Resolves @atoms / @organisms / @hooks / @/* etc. from tsconfig.json.
 	resolve: { tsconfigPaths: true },
 	server: { port: 3000 }
 });

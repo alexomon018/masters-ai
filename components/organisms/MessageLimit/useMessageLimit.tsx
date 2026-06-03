@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/constants";
+import { useTokenFn } from "@hooks";
 import {
 	buildAuthQueryParams,
 	workerHttpBase
 } from "@/components/organisms/Chat/helpers/agentAuth";
-import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
 
 interface MessageLimitInfo {
 	userId: string;
