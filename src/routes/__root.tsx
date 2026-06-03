@@ -1,8 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
-import { ReactNode } from "react";
+import { lazy, ReactNode, Suspense } from "react";
 // Import providers directly (not via the @providers barrel) so the app
 // bundle never pulls in withThemeProvider → @storybook/addons.
 import { ThemeProvider } from "@/providers/themeProvider";
@@ -14,6 +13,16 @@ import QueryClientProvider from "@/providers/queryClientProvider";
 // the router <Outlet> instead of `{children}`. The <html>/<body> tags and
 // the theme-color script live in index.html (static, runs before paint).
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Dev-only router devtools. Lazy + DEV-gated so the dynamic import is dead code
+// in production and never reaches the bundle.
+const RouterDevtools = import.meta.env.DEV
+	? lazy(() =>
+			import("@tanstack/react-router-devtools").then((m) => ({
+				default: m.TanStackRouterDevtools
+			}))
+		)
+	: () => null;
 
 const ClerkWrapper = ({ children }: { children: ReactNode }) => {
 	// Clerk is optional in local/dev when no key is configured — mirrors the
@@ -38,9 +47,9 @@ const RootComponent = () => (
 							<Outlet />
 						</main>
 					</div>
-					{import.meta.env.DEV ? (
-						<TanStackRouterDevtools position="bottom-right" />
-					) : null}
+					<Suspense fallback={null}>
+						<RouterDevtools />
+					</Suspense>
 				</QueryClientProvider>
 			</ModelStoreProvider>
 		</ThemeProvider>

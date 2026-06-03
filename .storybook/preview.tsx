@@ -1,6 +1,9 @@
 import type { Preview } from "@storybook/react";
-import "../app/globals.css";
-import { withThemeProvider, withModelStoreProvider } from "../providers";
+import "../src/globals.css";
+import {
+	withThemeProvider,
+	withModelStoreProvider
+} from "../providers/withThemeProvider";
 import React from "react";
 
 const preview: Preview = {
