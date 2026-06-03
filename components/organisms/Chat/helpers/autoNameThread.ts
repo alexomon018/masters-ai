@@ -1,5 +1,9 @@
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
-import { buildAuthQueryParams, workerHttpBase } from "./agentAuth";
+import {
+	buildAuthQueryParams,
+	getClerkToken,
+	workerHttpBase
+} from "./agentAuth";
 
 interface AutoNameInput {
 	threadId: string;
@@ -22,18 +26,9 @@ async function autoNameThread({
 		{ role: "assistant", content: assistantMessage }
 	];
 
-	// Can't use useAuth here — read Clerk off window once loaded. The worker
-	// resolves the same ticket/anonId scheme as the chat connection.
-	const getToken = async () => {
-		const clerk = (
-			window as unknown as {
-				Clerk?: { session?: { getToken?: () => Promise<string | null> } };
-			}
-		).Clerk;
-		return clerk?.session?.getToken ? clerk.session.getToken() : null;
-	};
-
-	const params = await buildAuthQueryParams(getToken);
+	// Runs outside React (after a stream completes), so read the token off the
+	// Clerk global rather than useAuth.
+	const params = await buildAuthQueryParams(getClerkToken);
 	const response = await fetch(`${base}/name-thread?${params.toString()}`, {
 		method: "POST",
 		headers: { "content-type": "application/json" },
@@ -44,7 +39,7 @@ async function autoNameThread({
 	const { title } = (await response.json()) as { title?: string };
 	if (!title || typeof title !== "string") return;
 
-	await upsertThreadRemote(getToken, { threadId, title });
+	await upsertThreadRemote(getClerkToken, { threadId, title });
 }
 
 export default autoNameThread;

@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../test/msw/server";
 import {
+	authReadyForPrefetch,
 	buildAuthQueryParams,
 	fetchWorkerTicket,
 	getAnonId,
+	getClerkToken,
 	readStoredAnonId,
 	resolveAgentAuth
 } from "./agentAuth";
@@ -14,6 +16,7 @@ const WORKER = "http://localhost:8787";
 afterEach(() => {
 	localStorage.clear();
 	vi.unstubAllEnvs();
+	delete (window as unknown as { Clerk?: unknown }).Clerk;
 });
 
 describe("getAnonId", () => {
@@ -109,5 +112,33 @@ describe("buildAuthQueryParams", () => {
 		const params = await buildAuthQueryParams(async () => null);
 		expect(params.get("anonId")).toBe("anon.sig");
 		expect(params.toString()).toBe("anonId=anon.sig");
+	});
+});
+
+describe("getClerkToken", () => {
+	it("reads the token off the Clerk global when a session exists", async () => {
+		(window as unknown as { Clerk: unknown }).Clerk = {
+			session: { getToken: async () => "clerk-jwt" }
+		};
+		await expect(getClerkToken()).resolves.toBe("clerk-jwt");
+	});
+
+	it("returns null when there is no Clerk session", async () => {
+		await expect(getClerkToken()).resolves.toBeNull();
+	});
+});
+
+describe("authReadyForPrefetch", () => {
+	it("is true when Clerk is not configured (anon-only app)", () => {
+		vi.stubEnv("VITE_CLERK_PUBLISHABLE_KEY", "");
+		expect(authReadyForPrefetch()).toBe(true);
+	});
+
+	it("waits for Clerk to load when a publishable key is configured", () => {
+		vi.stubEnv("VITE_CLERK_PUBLISHABLE_KEY", "pk_test_123");
+		expect(authReadyForPrefetch()).toBe(false);
+
+		(window as unknown as { Clerk: unknown }).Clerk = { loaded: true };
+		expect(authReadyForPrefetch()).toBe(true);
 	});
 });

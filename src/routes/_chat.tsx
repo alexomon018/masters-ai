@@ -5,6 +5,11 @@ import {
 	useParams
 } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { threadsQueryOptions } from "@hooks";
+import {
+	authReadyForPrefetch,
+	getClerkToken
+} from "@/components/organisms/Chat/helpers/agentAuth";
 import Chat from "@/components/organisms/Chat/Chat";
 
 // Pathless layout owning the single persistent <Chat> for both `/` and
@@ -40,5 +45,16 @@ const ChatLayout = () => (
 );
 
 export const Route = createFileRoute("/_chat")({
+	// Warm the threads cache (shown in the sidebar on every _chat route) before
+	// the layout renders, and on hover via defaultPreload: "intent". Keyed by
+	// queryKeys.threads() — the same key useThreadsQuery() reads, so the two
+	// dedupe. Skipped until Clerk is ready so a signed-in user is never
+	// prefetched as anon on a cold load (the component query covers that case).
+	loader: ({ context }) => {
+		if (!authReadyForPrefetch()) return undefined;
+		return context.queryClient.ensureQueryData(
+			threadsQueryOptions(getClerkToken)
+		);
+	},
 	component: ChatLayout
 });

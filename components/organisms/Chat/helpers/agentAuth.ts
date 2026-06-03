@@ -93,3 +93,32 @@ export async function buildAuthQueryParams(
 	const auth = await resolveAgentAuth(getToken);
 	return new URLSearchParams(auth);
 }
+
+type ClerkGlobal = {
+	loaded?: boolean;
+	session?: { getToken?: () => Promise<string | null> };
+};
+
+function clerkGlobal(): ClerkGlobal | undefined {
+	if (typeof window === "undefined") return undefined;
+	return (window as unknown as { Clerk?: ClerkGlobal }).Clerk;
+}
+
+// Token reader for code that runs OUTSIDE React (route loaders), where the
+// useAuth() hook isn't available. Returns null when Clerk isn't ready or the
+// visitor is signed out — callers then fall back to the anon identity.
+export async function getClerkToken(): Promise<string | null> {
+	const clerk = clerkGlobal();
+	const getToken = clerk?.session?.getToken;
+	return getToken ? getToken() : null;
+}
+
+// Whether a route loader may prefetch authed data yet. On a Clerk-enabled app
+// we wait for Clerk to load so a signed-in user is never prefetched as anon on
+// a cold page load — the component query runs after Clerk is up and fills the
+// cache correctly. With no Clerk key the anon identity is stable, so prefetch
+// freely.
+export function authReadyForPrefetch(): boolean {
+	if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) return true;
+	return Boolean(clerkGlobal()?.loaded);
+}

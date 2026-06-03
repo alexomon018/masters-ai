@@ -1,4 +1,5 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
 import { lazy, ReactNode, Suspense } from "react";
@@ -57,7 +58,12 @@ const NotFound = () => (
 	</div>
 );
 
-export const Route = createRootRoute({
+// The shape of the context passed in main.tsx — available in every loader.
+interface RouterContext {
+	queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
 	component: RootComponent,
 	notFoundComponent: NotFound
 });
