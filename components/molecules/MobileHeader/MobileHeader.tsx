@@ -4,11 +4,16 @@ import React from "react";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@atoms";
 import { useNavigate } from "@tanstack/react-router";
-import type { UserResource } from "@clerk/types";
+import type { useUser } from "@clerk/clerk-react";
+
+// Exact user shape returned by Clerk's useUser (UserResource | null |
+// undefined). Derived from the hook so we don't depend on @clerk/types
+// directly (it isn't a runtime dep of @clerk/clerk-react).
+type ClerkUser = ReturnType<typeof useUser>["user"];
 
 interface MobileHeaderProps {
 	onOpenSidebar: () => void;
-	user: UserResource | null | undefined;
+	user: ClerkUser;
 	isLoaded: boolean;
 }
 

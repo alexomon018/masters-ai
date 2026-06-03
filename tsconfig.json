@@ -21,11 +21,6 @@
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
       "@/*": [
         "./*"
@@ -63,9 +58,6 @@
       "@types": [
         "./types"
       ],
-      "@app": [
-        "./app"
-      ],
       "@ai": [
         "./ai"
       ]
@@ -73,15 +65,14 @@
     "target": "ES2017"
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
     "**/*.cjs"
   ],
   "exclude": [
     "node_modules",
     "worker",
-    "evals"
+    "evals",
+    "dist"
   ]
 }

@@ -47,9 +47,9 @@ export default defineConfig({
 					env: { VITE_WORKER_URL: "http://localhost:8787" },
 					setupFiles: ["./test/setup.unit.ts"],
 					include: [
-						"{components,app,utils,store,constants,providers,ai,evals}/**/*.test.{ts,tsx}"
+						"{components,src,utils,store,constants,providers,ai,evals}/**/*.test.{ts,tsx}"
 					],
-					exclude: ["worker/**", "node_modules/**", ".next/**"],
+					exclude: ["worker/**", "node_modules/**", "dist/**"],
 					coverage: {
 						provider: "v8",
 						reporter: ["text", "html"],
@@ -64,8 +64,7 @@ export default defineConfig({
 							"utils/anonId.ts",
 							"utils/tryCatch.ts",
 							"constants/llmValidationSchema.ts",
-							"ai/llm.ts",
-							"app/api/**/*.ts"
+							"ai/llm.ts"
 						],
 						exclude: [
 							"**/index.ts",
