@@ -18,8 +18,14 @@ const SettingsLayout = () => {
 	const { user, isLoaded, isSignedIn } = useUser();
 	const { messageLimit } = useMessageLimit();
 
-	if (isLoaded && !isSignedIn) {
-		return <Navigate to="/" />;
+	// Hold the shell back until Clerk resolves so we don't flash the settings
+	// layout with empty user data before redirecting an anonymous visitor.
+	if (!isLoaded) {
+		return null;
+	}
+
+	if (!isSignedIn) {
+		return <Navigate to="/" replace />;
 	}
 
 	const usageData = {

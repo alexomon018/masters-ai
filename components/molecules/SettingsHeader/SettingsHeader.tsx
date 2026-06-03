@@ -1,5 +1,3 @@
-"use client";
-
 import { useClerk } from "@clerk/clerk-react";
 import { Button } from "@atoms";
 import { ArrowLeft } from "lucide-react";

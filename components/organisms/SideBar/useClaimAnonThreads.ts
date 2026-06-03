@@ -1,23 +1,18 @@
-"use client";
-
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { queryKeys } from "@constants";
+import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
 import { claimAnonThreadsRemote } from "./threadsApi";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 
 const useClaimAnonThreads = () => {
 	const { isLoaded, isSignedIn, user } = useUser();
-	const { getToken } = useAuth();
 	const queryClient = useQueryClient();
 	const claimedForUserRef = useRef<string | null>(null);
 
-	const tokenFn = useCallback(
-		async () =>
-			typeof getToken === "function" ? getToken() : null,
-		[getToken]
-	);
+	const tokenFn = useTokenFn();
 
 	useEffect(() => {
 		if (!isLoaded || !isSignedIn || !user?.id) return;

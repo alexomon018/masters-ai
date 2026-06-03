@@ -1,7 +1,8 @@
 import {
 	buildAuthQueryParams,
 	fetchWorkerTicket,
-	getAnonId
+	getAnonId,
+	workerHttpBase
 } from "@/components/organisms/Chat/helpers/agentAuth";
 
 export interface ThreadDto {
@@ -20,10 +21,9 @@ interface UpsertInput {
 	lastMessageAt?: number;
 }
 
-function workerBase(): string | null {
-	const base = import.meta.env.VITE_WORKER_URL;
-	return base ? base.replace(/\/$/, "") : null;
-}
+// `workerHttpBase()` returns "" when VITE_WORKER_URL is unset; the callers
+// below short-circuit on the falsy base.
+const workerBase = workerHttpBase;
 
 async function authParams(
 	getToken: () => Promise<string | null>

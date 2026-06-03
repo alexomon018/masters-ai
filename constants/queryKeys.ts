@@ -1,6 +1,6 @@
 const queryKeys = {
-	messageLimit: () => ["message-limit"],
-	sync: () => ["sync"]
+	threads: () => ["threads"] as const,
+	messageLimit: () => ["message-limit"] as const
 };
 
 export default queryKeys;

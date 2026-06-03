@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@atoms";
 import { cn } from "@utils";
 import { Link, useLocation } from "@tanstack/react-router";

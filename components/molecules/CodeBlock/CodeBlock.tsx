@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 

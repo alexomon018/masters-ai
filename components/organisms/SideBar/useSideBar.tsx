@@ -1,49 +1,32 @@
-"use client";
-
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "@tanstack/react-router";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-	useMutation,
-	useQuery,
-	useQueryClient
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@constants";
+import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
 import {
 	deleteThreadRemote,
-	fetchThreads,
 	upsertThreadRemote,
 	type ThreadDto
 } from "./threadsApi";
 import useClaimAnonThreads from "./useClaimAnonThreads";
+import { useThreadsQuery } from "./useThreadsQuery";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 
 const useSideBar = () => {
 	const navigate = useNavigate();
 	const { user, isLoaded } = useUser();
-	const { getToken } = useAuth();
 	const [openSearch, setOpenSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const queryClient = useQueryClient();
 
-	const tokenFn = useCallback(
-		async () =>
-			typeof getToken === "function" ? getToken() : null,
-		[getToken]
-	);
+	const tokenFn = useTokenFn();
 
 	useClaimAnonThreads();
 
-	const { data: threads = [] } = useQuery({
-		queryKey: THREADS_QUERY_KEY,
-		queryFn: () => fetchThreads(tokenFn),
-		// The list mutates from inside this app and from the auto-name
-		// background call. Refetch on window focus keeps the sidebar honest
-		// without us wiring optimistic updates on every code path.
-		refetchOnWindowFocus: true,
-		staleTime: 30_000
-	});
+	const { data: threads = [] } = useThreadsQuery();
 
 	const debouncedSetSearchQuery = useMemo(
 		() =>

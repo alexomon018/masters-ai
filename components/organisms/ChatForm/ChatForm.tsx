@@ -1,5 +1,3 @@
-"use client";
-
 import { MousePointerClick } from "lucide-react";
 import { cn } from "@utils";
 import { ChatModelSelector, InitialQuestions } from "@molecules";

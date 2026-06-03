@@ -1,5 +1,3 @@
-"use client";
-
 import React, { memo, useMemo, useState } from "react";
 import Markdown from "markdown-to-jsx";
 import type { UIMessage } from "ai";

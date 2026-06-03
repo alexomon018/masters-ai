@@ -1,18 +1,21 @@
-"use client";
-
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
+import { queryKeys } from "@constants";
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
-import { getThreadGetMessagesUrl, resolveAgentAuth } from "./helpers";
+import {
+	getThreadGetMessagesUrl,
+	resolveAgentAuth,
+	useTokenFn
+} from "./helpers";
 import { useAutoNameThread, useQuotaInvalidation } from "./hooks";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";
 
 interface Args {
@@ -25,17 +28,13 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	const navigate = useNavigate();
 	const [input, setInput] = useState("");
 
-	const { getToken } = useAuth();
 	const { user } = useUser();
 	const { selectedModel } = useModelStore((state) => state);
 
 	// Once false, stays false — no repeat replaceState or thread upsert.
 	const isFirstSendRef = useRef(isNewThread);
 
-	const tokenFn = useCallback(
-		async () => (typeof getToken === "function" ? getToken() : null),
-		[getToken]
-	);
+	const tokenFn = useTokenFn();
 
 	const userData = useMemo(() => {
 		if (!user) return undefined;
@@ -50,9 +49,6 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	const buildAuthQuery = useCallback(() => resolveAgentAuth(tokenFn), [tokenFn]);
 
 	const fetchInitialMessagesWithAuth = useCallback(async () => {
-		// Must not throw into `useAgentChat`'s `use()` — SSR can run this path.
-		if (typeof window === "undefined") return [];
-
 		const getMessagesUrl = getThreadGetMessagesUrl(threadId);
 		if (!getMessagesUrl) return [];
 

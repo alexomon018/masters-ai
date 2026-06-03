@@ -4,7 +4,7 @@ import {
 	useLocation,
 	useParams
 } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Chat from "@/components/organisms/Chat/Chat";
 
 // Pathless layout owning the single persistent <Chat> for both `/` (new chat)
@@ -13,7 +13,7 @@ import Chat from "@/components/organisms/Chat/Chat";
 // the chat tree (and tearing down the live agent WebSocket mid-stream).
 const ChatHost = () => {
 	const { pathname } = useLocation();
-	const params = useParams({ strict: false }) as { id?: string };
+	const params = useParams({ strict: false });
 
 	// Id for the home ("new chat") state. We mint a fresh one whenever we
 	// arrive at "/" from elsewhere (New Chat / sidebar / post-delete), so the
@@ -21,8 +21,10 @@ const ChatHost = () => {
 	// first-message swap "/" → "/chat/<id>": there the param id equals the
 	// minted id, so the key is unchanged and the connection is preserved.
 	// (Adjusting a ref during render off the location is intentional — it's
-	// derived state, not an effect.)
-	const homeIdRef = useRef<string>(crypto.randomUUID());
+	// derived state, not an effect.) The seed is lazily minted once via
+	// useState rather than re-rolling crypto.randomUUID() on every render.
+	const [seedHomeId] = useState(() => crypto.randomUUID());
+	const homeIdRef = useRef<string>(seedHomeId);
 	const prevPathnameRef = useRef<string>(pathname);
 	if (pathname === "/" && prevPathnameRef.current !== "/") {
 		homeIdRef.current = crypto.randomUUID();

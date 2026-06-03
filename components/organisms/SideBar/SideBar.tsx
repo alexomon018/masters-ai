@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage, Button, Input } from "@atoms";
 import { Settings2Icon, Search } from "lucide-react";

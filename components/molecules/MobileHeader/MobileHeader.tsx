@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@atoms";

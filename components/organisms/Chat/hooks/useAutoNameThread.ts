@@ -1,13 +1,11 @@
-"use client";
-
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { UIMessage } from "ai";
-import { useAuth } from "@clerk/clerk-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchThreads } from "@/components/organisms/SideBar/threadsApi";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@constants";
+import { useThreadsQuery } from "@/components/organisms/SideBar/useThreadsQuery";
 import { autoNameThread } from "../helpers";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";
 
 // Avoids redundant /api/name-thread calls when Chat remounts on tab switch.
@@ -34,18 +32,8 @@ const useAutoNameThread = ({
 	modelId
 }: Args) => {
 	const queryClient = useQueryClient();
-	const { getToken } = useAuth();
 
-	const tokenFn = useCallback(
-		async () => (typeof getToken === "function" ? getToken() : null),
-		[getToken]
-	);
-
-	const { data: threads = [], isFetched: threadsFetched } = useQuery({
-		queryKey: THREADS_QUERY_KEY,
-		queryFn: () => fetchThreads(tokenFn),
-		staleTime: 30_000
-	});
+	const { data: threads = [], isFetched: threadsFetched } = useThreadsQuery();
 
 	// Streamed chunks mutate the last message in place; length is stable.
 	const namingPair = useMemo(() => {

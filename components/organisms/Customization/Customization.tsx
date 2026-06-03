@@ -1,5 +1,3 @@
-"use client";
-
 import { Input, Textarea, Label, Button } from "@atoms";
 import { useForm } from "react-hook-form";
 import { useUser } from "@clerk/clerk-react";

@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
-import { useCallback } from "react";
 import { queryKeys } from "@/constants";
 import {
 	buildAuthQueryParams,
 	workerHttpBase
 } from "@/components/organisms/Chat/helpers/agentAuth";
+import { useTokenFn } from "@/components/organisms/Chat/helpers/useTokenFn";
 
 interface MessageLimitInfo {
 	userId: string;
@@ -16,11 +15,7 @@ interface MessageLimitInfo {
 }
 
 export const useMessageLimit = () => {
-	const { getToken } = useAuth();
-	const tokenFn = useCallback(
-		async () => (typeof getToken === "function" ? getToken() : null),
-		[getToken]
-	);
+	const tokenFn = useTokenFn();
 
 	const {
 		data: messageLimit,

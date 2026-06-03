@@ -1,5 +1,3 @@
-"use client";
-
 import React, { FC } from "react";
 import Icons from "@/assets/icons";
 import { cn } from "@/utils";

@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import cn from "@/utils/cn";
 

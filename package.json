@@ -1,5 +1,5 @@
 {
-	"name": "next-starter",
+	"name": "masters-ai",
 	"version": "0.1.0",
 	"private": true,
 	"license": "MIT",
@@ -156,7 +156,6 @@
 		"ts-node": "^10.9.2",
 		"typescript": "^5",
 		"vite": "^8.0.16",
-		"vite-tsconfig-paths": "^6.1.1",
 		"vitest": "4.1.0",
 		"wrangler": "^4.90.0"
 	},
