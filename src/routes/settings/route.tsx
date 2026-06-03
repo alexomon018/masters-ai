@@ -8,6 +8,11 @@ import {
 	UserProfile
 } from "@molecules";
 import { messageAllowed } from "@constants";
+import {
+	authReadyForPrefetch,
+	getClerkToken
+} from "@/components/organisms/Chat/helpers/agentAuth";
+import { messageLimitQueryOptions } from "@/components/organisms/MessageLimit/messageLimitQuery";
 import { useMessageLimit } from "@/components/organisms/MessageLimit/useMessageLimit";
 
 // `/settings` layout. Auth guard + profile come from useUser; usage comes from
@@ -64,5 +69,13 @@ const SettingsLayout = () => {
 };
 
 export const Route = createFileRoute("/settings")({
+	// Warm the usage cache before the layout renders (and on hover). Skipped
+	// until Clerk is ready — same reasoning as the _chat threads loader.
+	loader: ({ context }) => {
+		if (!authReadyForPrefetch()) return undefined;
+		return context.queryClient.ensureQueryData(
+			messageLimitQueryOptions(getClerkToken)
+		);
+	},
 	component: SettingsLayout
 });
