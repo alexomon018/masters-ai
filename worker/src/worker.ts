@@ -14,18 +14,10 @@ import { checkThreadAccess, extractThreadId } from "./thread-access";
 import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
 import { getUsage } from "./routes/usage";
 import { issueAnonId } from "./routes/anon-id";
+import { resolveAllowedOrigin } from "./cors";
 import type { Env } from "./env";
 
 export { MastersChatAgent };
-
-function resolveAllowedOrigin(env: Env, requestOrigin: string | null): string | null {
-	if (!requestOrigin) return null;
-	const allowed = (env.ALLOWED_ORIGINS ?? "")
-		.split(",")
-		.map((s) => s.trim())
-		.filter(Boolean);
-	return allowed.includes(requestOrigin) ? requestOrigin : null;
-}
 
 function corsHeaders(env: Env, requestOrigin: string | null): Record<string, string> {
 	const allowOrigin = resolveAllowedOrigin(env, requestOrigin);
