@@ -1,7 +1,10 @@
 import { useClerk } from "@clerk/clerk-react";
 import { Button } from "@atoms";
 import { ArrowLeft } from "lucide-react";
-import { getQueryClient } from "@/providers/getQueryClient";
+import {
+	getQueryClient,
+	clearPersistedQueryCache
+} from "@/providers/getQueryClient";
 import { Link } from "@tanstack/react-router";
 import { queryKeys } from "@/constants";
 
@@ -12,6 +15,10 @@ const SettingsHeader = () => {
 
 	const onSignOut = async () => {
 		await queryClient.invalidateQueries({ queryKey: queryKeys.messageLimit() });
+		// Drop the prior identity's threads from memory + the persisted cache so
+		// the next session doesn't hydrate them from localStorage on cold load.
+		queryClient.removeQueries({ queryKey: queryKeys.threads() });
+		clearPersistedQueryCache();
 		await signOut();
 	};
 

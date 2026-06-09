@@ -34,6 +34,17 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	// Once false, stays false — no repeat replaceState or thread upsert.
 	const isFirstSendRef = useRef(isNewThread);
 
+	// Freeze the "new thread" identity for this mount. The home→thread URL swap
+	// keeps this <Chat> instance alive (the key is unchanged so the live agent
+	// connection survives), but flips the route's `isNewThread` true→false. If we
+	// let that reach useAgentChat's getInitialMessages, it would flip null→fetcher
+	// mid-stream, suspend the tree (blank flicker) and refetch get-messages before
+	// the DO has persisted the just-sent message — clobbering the live messages
+	// with []. So we pin the value captured at mount; a real new thread only
+	// arrives via a fresh mount (new key).
+	const isNewThreadRef = useRef(isNewThread);
+	const frozenIsNewThread = isNewThreadRef.current;
+
 	const tokenFn = useTokenFn();
 
 	const userData = useMemo(() => {
@@ -72,8 +83,8 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	}, [threadId, buildAuthQuery]);
 
 	const getInitialMessages = useMemo(
-		() => (isNewThread ? null : fetchInitialMessagesWithAuth),
-		[isNewThread, fetchInitialMessagesWithAuth]
+		() => (frozenIsNewThread ? null : fetchInitialMessagesWithAuth),
+		[frozenIsNewThread, fetchInitialMessagesWithAuth]
 	);
 
 	const agent = useAgent({

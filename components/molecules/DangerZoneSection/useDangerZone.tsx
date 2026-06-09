@@ -9,6 +9,7 @@ import {
 	fetchWorkerTicket,
 	workerHttpBase
 } from "@/components/organisms/Chat/helpers/agentAuth";
+import { clearPersistedQueryCache } from "@/providers/getQueryClient";
 
 interface UseDangerZoneReturn {
 	isDeletingAllData: boolean;
@@ -65,6 +66,9 @@ export const useDangerZone = ({
 
 				await queryClient.resetQueries();
 				queryClient.clear();
+				// clear() only wipes memory — also drop the persisted localStorage
+				// copy so the deleted account's threads can't rehydrate.
+				clearPersistedQueryCache();
 
 				window.location.href = "/auth";
 			}

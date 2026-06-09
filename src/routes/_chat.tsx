@@ -4,20 +4,35 @@ import {
 	useLocation,
 	useParams
 } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { MobileHeader } from "@molecules";
 import { threadsQueryOptions } from "@hooks";
 import {
 	authReadyForPrefetch,
 	getClerkToken
 } from "@/components/organisms/Chat/helpers/agentAuth";
 import Chat from "@/components/organisms/Chat/Chat";
+import ChatPlaceholder from "@/components/organisms/Chat/ChatPlaceholder";
+import SideBar from "@/components/organisms/SideBar/SideBar";
 
-// Pathless layout owning the single persistent <Chat> for both `/` and
-// `/chat/$id`. Rendering Chat above the outlet lets the home→thread URL swap
-// happen without remounting the tree (which would drop the agent WebSocket).
+// Pathless layout owning the persistent chat shell — SideBar + MobileHeader —
+// for both `/` and `/chat/$id`. Keeping the shell here (above the keyed <Chat>)
+// means selecting another thread remounts only the conversation pane, not the
+// whole page, and the home→thread URL swap doesn't drop the agent WebSocket.
 const ChatHost = () => {
 	const { pathname } = useLocation();
 	const params = useParams({ strict: false });
+
+	const { user, isLoaded } = useUser();
+	const [sidebarOpen, setSidebarOpen] = useState(false);
+
+	useEffect(() => {
+		document.body.style.overflow = sidebarOpen ? "hidden" : "";
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [sidebarOpen]);
 
 	// Home ("new chat") id. Reminted whenever we arrive at "/" from elsewhere so
 	// the keyed <Chat> remounts clean — but NOT on the first-message swap
@@ -34,7 +49,32 @@ const ChatHost = () => {
 	const threadId = params.id ?? homeIdRef.current;
 	const isNewThread = !params.id;
 
-	return <Chat key={threadId} threadId={threadId} isNewThread={isNewThread} />;
+	return (
+		<div className="flex h-full">
+			<MobileHeader
+				onOpenSidebar={() => setSidebarOpen(true)}
+				user={user}
+				isLoaded={isLoaded}
+			/>
+			<SideBar
+				activeThreadId={threadId}
+				isOpen={sidebarOpen}
+				onClose={() => setSidebarOpen(false)}
+			/>
+			{/*
+			 * Own Suspense boundary around the keyed <Chat>. Switching threads
+			 * remounts <Chat>, and useAgentChat `use()`s the initial-messages
+			 * fetch — which suspends. Without a boundary here the suspension
+			 * bubbles to the router and blanks the whole page (sidebar included).
+			 * The fallback mirrors Chat's frame (empty message area + inert input
+			 * box) so the shell AND the input box stay put — only the message
+			 * list area is empty for the brief moment the next thread loads.
+			 */}
+			<Suspense fallback={<ChatPlaceholder />}>
+				<Chat key={threadId} threadId={threadId} isNewThread={isNewThread} />
+			</Suspense>
+		</div>
+	);
 };
 
 const ChatLayout = () => (
