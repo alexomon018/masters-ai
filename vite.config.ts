@@ -1,12 +1,12 @@
 import { promises as fs } from "node:fs";
-import { defineConfig, transformWithEsbuild, type Plugin } from "vite";
+import { defineConfig, transformWithOxc, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { transform as svgrTransform } from "@svgr/core";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
 // Turns `import X from "./x.svg"` into a React component. vite-plugin-svgr
 // can't do this under Vite 8 / rolldown (it emits raw JSX the bundler can't
-// parse), so we run SVGR and compile the JSX to JS with esbuild ourselves.
+// parse), so we run SVGR and compile the JSX to JS with Oxc ourselves.
 const svgrComponentPlugin = (): Plugin => ({
 	name: "svgr-component",
 	enforce: "pre",
@@ -28,8 +28,8 @@ const svgrComponentPlugin = (): Plugin => ({
 			{ componentName: "SvgComponent" }
 		);
 
-		const { code, map } = await transformWithEsbuild(componentJsx, filePath, {
-			loader: "jsx",
+		const { code, map } = await transformWithOxc(componentJsx, filePath, {
+			lang: "jsx",
 			jsx: "automatic"
 		});
 		return { code, map };
@@ -52,5 +52,5 @@ export default defineConfig({
 	],
 	// Resolves @atoms / @organisms / @hooks / @/* etc. from tsconfig.json.
 	resolve: { tsconfigPaths: true },
-	server: { port: 3000 }
+	server: { host: true, port: 3000 }
 });

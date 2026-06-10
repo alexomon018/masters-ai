@@ -1,10 +1,6 @@
 import { useRef } from "react";
 import ChatForm from "../ChatForm/ChatForm";
 
-// Suspense fallback for the keyed <Chat>. Mirrors Chat's outer frame so that
-// while the next thread's initial messages load, the input box (and the whole
-// layout) stays put instead of collapsing. The form is inert — the brief
-// transition is non-interactive by design (see _chat.tsx).
 const noop = () => {};
 
 const ChatPlaceholder = () => {

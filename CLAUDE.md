@@ -164,3 +164,5 @@ All server-only secrets (`CLERK_SECRET_KEY`, `ANTHROPIC_API_KEY`, `UPSTASH_*`, `
 - **Pre-commit** (Husky + lint-staged): prettier on all files, eslint --fix on `src/**/*.{ts,tsx}`, vitest on changed files.
 - **Branches**: `bugfix/B{TICKET}-{name}`, `features/U{TICKET}-{name}`.
 - **CI** (GitHub Actions): on PR to `main` — `yarn test` → `yarn lint` → `yarn build`.
+
+When generating code, please avoid comments to explain the code. If it is not obvious, please add a comment.
