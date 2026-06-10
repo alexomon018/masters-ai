@@ -3,7 +3,7 @@ import {
 	type ChatResponseResult,
 	type OnChatMessageOptions
 } from "@cloudflare/ai-chat";
-import type { Connection, ConnectionContext } from "agents";
+import type { Connection, ConnectionContext, WSMessage } from "agents";
 import {
 	convertToModelMessages,
 	type LanguageModel,
@@ -21,6 +21,7 @@ import {
 	type LLMModel
 } from "./providers";
 import { checkAndIncrementQuota } from "./quota";
+import { claimThread } from "./thread-access";
 import type { Env } from "./env";
 
 const DEFAULT_MODEL: LLMModel = "claude-haiku-4-5";
@@ -56,6 +57,11 @@ interface ChatGate {
 export class MastersChatAgent extends AIChatAgent<Env> {
 	maxPersistedMessages = 200;
 
+	// Connection that delivered the message currently being processed. A chat
+	// turn always runs in the same wakeup as the message that triggered it, so
+	// an instance field (which hibernation would wipe) is safe here.
+	private senderConnection: Connection<ConnectionIdentity> | null = null;
+
 	async onConnect(connection: Connection, ctx: ConnectionContext) {
 		const userId = ctx.request.headers.get("x-masters-user-id");
 		const isAuthenticated =
@@ -67,7 +73,17 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		await super.onConnect(connection, ctx);
 	}
 
+	async onMessage(connection: Connection, message: WSMessage) {
+		this.senderConnection = connection as Connection<ConnectionIdentity>;
+		await super.onMessage(connection, message);
+	}
+
+	// Identity of the connection that sent the message being processed. While a
+	// thread is unclaimed, connections with different identities can coexist on
+	// the DO, so "first connection wins" could bill/attribute the wrong user.
 	private getIdentity(): ConnectionIdentity | null {
+		const senderState = this.senderConnection?.state;
+		if (senderState?.userId) return senderState;
 		for (const conn of this.getConnections<ConnectionIdentity>()) {
 			const state = conn.state;
 			if (state?.userId) return state;
@@ -81,6 +97,13 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		const identity = this.getIdentity();
 		if (!identity) {
 			throw new Error("Chat message before connection authentication");
+		}
+
+		// First message claims the thread in D1; a mismatch on a claimed thread
+		// is rejected before any quota or model spend.
+		const claim = await claimThread(this.env, identity.userId, this.name);
+		if (!claim.ok) {
+			throw new Error(claim.reason);
 		}
 
 		const quota = await checkAndIncrementQuota(

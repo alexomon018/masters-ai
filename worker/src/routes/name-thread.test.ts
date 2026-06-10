@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	nameThread,
-	nameThreadBodySchema,
-	sanitizeTitle
-} from "./name-thread";
+import { nameThread, nameThreadBodySchema, sanitizeTitle } from "./name-thread";
 import type { Env } from "../env";
 
 describe("sanitizeTitle", () => {
@@ -43,15 +39,37 @@ describe("nameThreadBodySchema", () => {
 		});
 		expect(parsed.success).toBe(false);
 	});
+
+	it("rejects an empty messages array", () => {
+		expect(nameThreadBodySchema.safeParse({ messages: [] }).success).toBe(
+			false
+		);
+	});
+
+	it("rejects oversized message content", () => {
+		const parsed = nameThreadBodySchema.safeParse({
+			messages: [{ role: "user", content: "x".repeat(8001) }]
+		});
+		expect(parsed.success).toBe(false);
+	});
+
+	it("rejects more than 8 messages", () => {
+		const messages = Array.from({ length: 9 }, () => ({
+			role: "user" as const,
+			content: "hi"
+		}));
+		expect(nameThreadBodySchema.safeParse({ messages }).success).toBe(false);
+	});
 });
 
 describe("nameThread rate limiting", () => {
 	beforeEach(() => {
-		vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
-			// INCR returns 101 -> over the 100/day cap; second call is the DECR.
-			new Response(JSON.stringify([{ result: 101 }, { result: 1 }]), {
-				status: 200
-			})
+		vi.spyOn(globalThis, "fetch").mockImplementation(
+			async () =>
+				// INCR returns 101 -> over the 100/day cap; second call is the DECR.
+				new Response(JSON.stringify([{ result: 101 }, { result: 1 }]), {
+					status: 200
+				})
 		);
 	});
 

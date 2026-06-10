@@ -63,7 +63,7 @@ Two identities, resolved by `worker/src/clerk-auth.ts`:
 
 Anything else is rejected with a generic `401 Unauthorized` (details logged server-side only).
 
-**Per-thread access control** (`worker/src/thread-access.ts`): every `/agents/*` request also checks D1 for thread ownership. Unclaimed thread ids pass through (first-claim semantics — the home page's eager-connect runs before D1 has a row); claimed thread ids must match the caller's userId.
+**Per-thread access control** (`worker/src/thread-access.ts`): every `/agents/*` request also checks D1 for thread ownership. Unclaimed thread ids pass through at connect time (the home page's eager-connect runs before D1 has a row), but the DO claims the thread in D1 on the first chat message (`claimThread`), so a thread never holds history while unclaimed. Claimed thread ids must match the caller's userId; a thread id with rows under more than one user is treated as contested and denied for everyone, and `POST /threads` refuses a thread id owned by another user. `GET /anon-id` is rate-limited per IP (20 mints/day) so clearing localStorage doesn't reset the anon quota for free.
 
 ### Data flow
 

@@ -19,13 +19,16 @@ import type { Env } from "./env";
 
 export { MastersChatAgent };
 
-function corsHeaders(env: Env, requestOrigin: string | null): Record<string, string> {
+function corsHeaders(
+	env: Env,
+	requestOrigin: string | null
+): Record<string, string> {
 	const allowOrigin = resolveAllowedOrigin(env, requestOrigin);
 	const base: Record<string, string> = {
 		"access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
 		"access-control-allow-headers": "content-type,authorization",
 		"access-control-max-age": "86400",
-		vary: "Origin"
+		"vary": "Origin"
 	};
 	if (allowOrigin) {
 		base["access-control-allow-origin"] = allowOrigin;
@@ -100,7 +103,7 @@ export default {
 		// Mint a fresh signed anon id (replaces the old Next middleware cookie).
 		// Public: issuing an anon identity needs no prior credential.
 		if (url.pathname === "/anon-id" && request.method === "GET") {
-			return withCorsHeaders(await issueAnonId(env), env, origin);
+			return withCorsHeaders(await issueAnonId(env, request), env, origin);
 		}
 
 		// Daily message usage (was Next GET /api/user-info). Needs the resolved

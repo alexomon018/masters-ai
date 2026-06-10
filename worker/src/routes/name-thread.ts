@@ -30,17 +30,26 @@ function json(body: unknown, status = 200): Response {
 
 // Mirrors constants/llmValidationSchema.ts:nameThreadSchema. `model` is
 // accepted for parity with the old client but naming always uses Haiku.
+// Content/array bounds keep a caller from pushing an arbitrarily large
+// transcript into the paid Haiku call — titling only needs the opening
+// exchange anyway.
+const MAX_MESSAGE_CONTENT = 8000;
+const MAX_MESSAGES = 8;
+
 const messageSchema = z.union([
 	z.object({
 		role: z.literal("assistant"),
-		content: z.string(),
+		content: z.string().max(MAX_MESSAGE_CONTENT),
 		function_call: z.any().optional()
 	}),
-	z.object({ role: z.literal("user"), content: z.string() })
+	z.object({
+		role: z.literal("user"),
+		content: z.string().max(MAX_MESSAGE_CONTENT)
+	})
 ]);
 
 export const nameThreadBodySchema = z.object({
-	messages: z.array(messageSchema),
+	messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
 	model: z
 		.enum([
 			"claude-haiku-4-5",

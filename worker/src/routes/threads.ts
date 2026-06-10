@@ -51,6 +51,10 @@ export async function upsertThread(
 	body: UpsertBody
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
+	const owners = await repo.listOwnerIds(body.threadId);
+	if (owners.some((o) => o !== auth.userId)) {
+		return json({ error: "Thread access denied" }, 403);
+	}
 	const now = new Date();
 	const existing = await repo.get(auth.userId, body.threadId);
 	const row: NewThread = {
