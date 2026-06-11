@@ -1,19 +1,22 @@
-"use client";
-
 import React from "react";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@atoms";
-import { useRouter } from "next/navigation";
-import type { UserResource } from "@clerk/types";
+import { useNavigate } from "@tanstack/react-router";
+import type { useUser } from "@clerk/clerk-react";
+
+// Exact user shape returned by Clerk's useUser (UserResource | null |
+// undefined). Derived from the hook so we don't depend on @clerk/types
+// directly (it isn't a runtime dep of @clerk/clerk-react).
+type ClerkUser = ReturnType<typeof useUser>["user"];
 
 interface MobileHeaderProps {
 	onOpenSidebar: () => void;
-	user: UserResource | null | undefined;
+	user: ClerkUser;
 	isLoaded: boolean;
 }
 
 const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
-	const router = useRouter();
+	const navigate = useNavigate();
 
 	return (
 		<header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-white px-4 py-3 dark:bg-[#1a1a1a] md:hidden">
@@ -33,7 +36,9 @@ const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
 			{isLoaded && user ? (
 				<button
 					type="button"
-					onClick={() => router.push("/settings/account")}
+					onClick={() =>
+						navigate({ to: "/settings/$tab", params: { tab: "account" } })
+					}
 					className="rounded-full"
 					aria-label="User settings"
 				>

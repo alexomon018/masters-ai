@@ -11,26 +11,24 @@ import {
 	upsertThread
 } from "./routes/threads";
 import { checkThreadAccess, extractThreadId } from "./thread-access";
+import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
+import { getUsage } from "./routes/usage";
+import { issueAnonId } from "./routes/anon-id";
+import { resolveAllowedOrigin } from "./cors";
 import type { Env } from "./env";
 
 export { MastersChatAgent };
 
-function resolveAllowedOrigin(env: Env, requestOrigin: string | null): string | null {
-	if (!requestOrigin) return null;
-	const allowed = (env.ALLOWED_ORIGINS ?? "")
-		.split(",")
-		.map((s) => s.trim())
-		.filter(Boolean);
-	return allowed.includes(requestOrigin) ? requestOrigin : null;
-}
-
-function corsHeaders(env: Env, requestOrigin: string | null): Record<string, string> {
+function corsHeaders(
+	env: Env,
+	requestOrigin: string | null
+): Record<string, string> {
 	const allowOrigin = resolveAllowedOrigin(env, requestOrigin);
 	const base: Record<string, string> = {
 		"access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
 		"access-control-allow-headers": "content-type,authorization",
 		"access-control-max-age": "86400",
-		vary: "Origin"
+		"vary": "Origin"
 	};
 	if (allowOrigin) {
 		base["access-control-allow-origin"] = allowOrigin;
@@ -96,6 +94,60 @@ export default {
 				new Response(JSON.stringify(result), {
 					status: 200,
 					headers: { "content-type": "application/json" }
+				}),
+				env,
+				origin
+			);
+		}
+
+		// Mint a fresh signed anon id (replaces the old Next middleware cookie).
+		// Public: issuing an anon identity needs no prior credential.
+		if (url.pathname === "/anon-id" && request.method === "GET") {
+			return withCorsHeaders(await issueAnonId(env, request), env, origin);
+		}
+
+		// Daily message usage (was Next GET /api/user-info). Needs the resolved
+		// identity *and* whether it's authenticated, so it can't use the
+		// userId-only handleAuthenticated helper.
+		if (url.pathname === "/usage" && request.method === "GET") {
+			const auth = await authenticateAgentConnection(request, env);
+			if ("error" in auth) {
+				return withCorsHeaders(
+					new Response(auth.error, { status: 401 }),
+					env,
+					origin
+				);
+			}
+			return withCorsHeaders(
+				await getUsage(env, {
+					userId: auth.userId,
+					isAuthenticated: auth.isAuthenticated
+				}),
+				env,
+				origin
+			);
+		}
+
+		// Auto-name a thread (was Next POST /api/name-thread). Authed OR a valid
+		// signed anonId — both resolve through authenticateAgentConnection.
+		if (url.pathname === "/name-thread" && request.method === "POST") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = nameThreadBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error: "Invalid request body",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return nameThread(env, { userId }, parsed.data);
 				}),
 				env,
 				origin

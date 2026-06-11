@@ -1,5 +1,3 @@
-"use client";
-
 import React, { memo, useMemo, useState } from "react";
 import Markdown from "markdown-to-jsx";
 import type { UIMessage } from "ai";
@@ -11,7 +9,7 @@ import {
 	AvatarImage
 } from "@/components/atoms/Avatar/Avatar";
 import { AvatarIcon } from "@radix-ui/react-icons";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import CodeBlock from "../CodeBlock/CodeBlock";
 import ToolStatus from "./ToolStatus";
 
@@ -126,6 +124,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 
 	return (
 		<article
+			data-message-id={message.id}
+			data-role={message.role}
 			className={cn(
 				"mb-4 flex w-full items-start gap-3 rounded-2xl p-3 md:gap-4 md:p-5"
 			)}

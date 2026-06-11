@@ -1,17 +1,17 @@
-"use client";
-
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
+import { queryKeys } from "@constants";
+import { useAutoNameThread, useQuotaInvalidation, useTokenFn } from "@hooks";
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
 import { getThreadGetMessagesUrl, resolveAgentAuth } from "./helpers";
-import { useAutoNameThread, useQuotaInvalidation } from "./hooks";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";
 
 interface Args {
@@ -21,19 +21,18 @@ interface Args {
 
 const useChat = ({ threadId, isNewThread }: Args) => {
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const [input, setInput] = useState("");
 
-	const { getToken } = useAuth();
 	const { user } = useUser();
 	const { selectedModel } = useModelStore((state) => state);
 
-	// Once false, stays false — no repeat replaceState or thread upsert.
 	const isFirstSendRef = useRef(isNewThread);
 
-	const tokenFn = useCallback(
-		async () => (typeof getToken === "function" ? getToken() : null),
-		[getToken]
-	);
+	const isNewThreadRef = useRef(isNewThread);
+	const frozenIsNewThread = isNewThreadRef.current;
+
+	const tokenFn = useTokenFn();
 
 	const userData = useMemo(() => {
 		if (!user) return undefined;
@@ -45,12 +44,12 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		};
 	}, [user]);
 
-	const buildAuthQuery = useCallback(() => resolveAgentAuth(tokenFn), [tokenFn]);
+	const buildAuthQuery = useCallback(
+		() => resolveAgentAuth(tokenFn),
+		[tokenFn]
+	);
 
 	const fetchInitialMessagesWithAuth = useCallback(async () => {
-		// Must not throw into `useAgentChat`'s `use()` — SSR can run this path.
-		if (typeof window === "undefined") return [];
-
 		const getMessagesUrl = getThreadGetMessagesUrl(threadId);
 		if (!getMessagesUrl) return [];
 
@@ -74,14 +73,14 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	}, [threadId, buildAuthQuery]);
 
 	const getInitialMessages = useMemo(
-		() => (isNewThread ? null : fetchInitialMessagesWithAuth),
-		[isNewThread, fetchInitialMessagesWithAuth]
+		() => (frozenIsNewThread ? null : fetchInitialMessagesWithAuth),
+		[frozenIsNewThread, fetchInitialMessagesWithAuth]
 	);
 
 	const agent = useAgent({
 		agent: "masters-chat-agent",
 		name: threadId,
-		host: process.env.NEXT_PUBLIC_WORKER_URL,
+		host: import.meta.env.VITE_WORKER_URL,
 		query: buildAuthQuery
 	});
 
@@ -120,7 +119,10 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			if (!text) return;
 			setInput("");
 
-			// First send: register thread + replaceState without remounting.
+			// First send: register the thread and swap the URL to /chat/<id>. The
+			// nav lands on the SAME id the layout keys <Chat> by, so the live agent
+			// connection survives the URL change. Using navigate (not a raw
+			// history.replaceState) keeps a later "New Chat" a real transition.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
 				upsertThreadRemote(tokenFn, {
@@ -133,7 +135,11 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 						queryClient.invalidateQueries({ queryKey: THREADS_QUERY_KEY });
 					})
 					.catch(() => {});
-				window.history.replaceState(null, "", `/chat/${threadId}`);
+				navigate({
+					to: "/chat/$id",
+					params: { id: threadId },
+					replace: true
+				});
 			}
 
 			sendMessage({
@@ -141,7 +147,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 				parts: [{ type: "text", text }]
 			});
 		},
-		[threadId, sendMessage, tokenFn, queryClient]
+		[threadId, sendMessage, tokenFn, queryClient, navigate]
 	);
 
 	const handleSubmit = useCallback(

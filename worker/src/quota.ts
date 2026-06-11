@@ -8,8 +8,8 @@ interface QuotaResult {
 	reason?: string;
 }
 
-const AUTHENTICATED_LIMIT = 20;
-const ANONYMOUS_LIMIT = 10;
+export const AUTHENTICATED_LIMIT = 20;
+export const ANONYMOUS_LIMIT = 10;
 const ONE_DAY_S = 24 * 60 * 60;
 
 async function redisPipeline(env: QuotaEnv, commands: unknown[][]) {

@@ -7,7 +7,7 @@ import {
 } from "../../../test/utils/renderWithProviders";
 import ChatForm from "./ChatForm";
 
-vi.mock("@clerk/nextjs", () => ({
+vi.mock("@clerk/clerk-react", () => ({
 	useAuth: () => ({ getToken: vi.fn(async () => null), isSignedIn: false }),
 	useUser: () => ({ user: null, isSignedIn: false, isLoaded: true })
 }));

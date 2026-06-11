@@ -1,8 +1,10 @@
 import { getAgentByName } from "agents";
+import { createClerkClient } from "@clerk/backend";
 import { z } from "zod";
 import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
 import { makeThreadRepo } from "../repository/threads";
+import { redisPipeline } from "../redis";
 import type { NewThread } from "../../db/schema";
 import type { Env } from "../env";
 
@@ -49,6 +51,10 @@ export async function upsertThread(
 	body: UpsertBody
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
+	const owners = await repo.listOwnerIds(body.threadId);
+	if (owners.some((o) => o !== auth.userId)) {
+		return json({ error: "Thread access denied" }, 403);
+	}
 	const now = new Date();
 	const existing = await repo.get(auth.userId, body.threadId);
 	const row: NewThread = {
@@ -127,5 +133,32 @@ export async function deleteAllForUser(
 	);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
+
+	// For authed users, finish the cascade the old Next /api/delete-user route
+	// performed after hitting the worker: wipe per-user Redis quota counters,
+	// then delete the Clerk identity last (irreversible). Anon callers have
+	// neither, so the data cascade above is the whole job.
+	if (auth.userId.startsWith("user:")) {
+		const clerkId = auth.userId.slice("user:".length);
+
+		try {
+			await redisPipeline(env, [
+				["DEL", `message_count:${auth.userId}`],
+				["DEL", `name_thread_count:${auth.userId}`]
+			]);
+		} catch {
+			// Best-effort — these keys expire after 24h anyway.
+		}
+
+		try {
+			const clerk = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
+			await clerk.users.deleteUser(clerkId);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error("Error deleting Clerk user:", error);
+			return json({ error: "Error deleting user" }, 500);
+		}
+	}
+
 	return json({ ok: true, removed });
 }

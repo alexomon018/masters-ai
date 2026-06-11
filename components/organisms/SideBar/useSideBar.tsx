@@ -1,49 +1,31 @@
-"use client";
-
-import { useAuth, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "@tanstack/react-router";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-	useMutation,
-	useQuery,
-	useQueryClient
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@constants";
+import { useTokenFn, useThreadsQuery } from "@hooks";
 import {
 	deleteThreadRemote,
-	fetchThreads,
 	upsertThreadRemote,
 	type ThreadDto
 } from "./threadsApi";
 import useClaimAnonThreads from "./useClaimAnonThreads";
 
-const THREADS_QUERY_KEY = ["threads"] as const;
+const THREADS_QUERY_KEY = queryKeys.threads();
 
 const useSideBar = () => {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const { user, isLoaded } = useUser();
-	const { getToken } = useAuth();
 	const [openSearch, setOpenSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const queryClient = useQueryClient();
 
-	const tokenFn = useCallback(
-		async () =>
-			typeof getToken === "function" ? getToken() : null,
-		[getToken]
-	);
+	const tokenFn = useTokenFn();
 
 	useClaimAnonThreads();
 
-	const { data: threads = [] } = useQuery({
-		queryKey: THREADS_QUERY_KEY,
-		queryFn: () => fetchThreads(tokenFn),
-		// The list mutates from inside this app and from the auto-name
-		// background call. Refetch on window focus keeps the sidebar honest
-		// without us wiring optimistic updates on every code path.
-		refetchOnWindowFocus: true,
-		staleTime: 30_000
-	});
+	const { data: threads = [] } = useThreadsQuery();
 
 	const debouncedSetSearchQuery = useMemo(
 		() =>
@@ -95,7 +77,7 @@ const useSideBar = () => {
 				THREADS_QUERY_KEY,
 				(prev) => prev?.filter((t) => t.id !== threadId) ?? []
 			);
-			router.replace("/");
+			navigate({ to: "/", replace: true });
 			return { previous };
 		},
 		onError: (_err, _threadId, ctx) => {
@@ -109,16 +91,16 @@ const useSideBar = () => {
 	});
 
 	const startNewChat = useCallback(() => {
-		// Don't pre-create rows. /chat/<id> with no id lands on the same page
-		// and the chat hook mints + persists the thread on the first message.
-		router.push("/");
-	}, [router]);
+		// Don't pre-create rows. The home route mints a fresh id and the chat
+		// hook persists the thread on the first message.
+		navigate({ to: "/" });
+	}, [navigate]);
 
 	const handleChatSelect = useCallback(
 		(chatId: string) => {
-			router.push(`/chat/${chatId}`);
+			navigate({ to: "/chat/$id", params: { id: chatId } });
 		},
-		[router]
+		[navigate]
 	);
 
 	const { mutate: togglePin } = useMutation({

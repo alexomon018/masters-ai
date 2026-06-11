@@ -1,13 +1,9 @@
+import { workerHttpBase } from "./agentAuth";
+
+// Builds the agent's get-messages REST URL off the shared worker base
+// (trailing slash trimmed, ws(s):// normalised to http(s)://).
 export function getThreadGetMessagesUrl(threadId: string): URL | null {
-	const raw = process.env.NEXT_PUBLIC_WORKER_URL;
-	if (!raw || !threadId) return null;
-	let host = raw.replace(/^(http|https|ws|wss):\/\//, "");
-	if (host.endsWith("/")) host = host.slice(0, -1);
-	const protocol =
-		host.startsWith("localhost:") || host.startsWith("127.0.0.1:")
-			? "http"
-			: "https";
-	return new URL(
-		`${protocol}://${host}/agents/masters-chat-agent/${threadId}/get-messages`
-	);
+	const base = workerHttpBase();
+	if (!base || !threadId) return null;
+	return new URL(`${base}/agents/masters-chat-agent/${threadId}/get-messages`);
 }

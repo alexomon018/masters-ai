@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" class="h-full">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>FE Masters Chat</title>
+		<meta
+			name="description"
+			content="FE Masters Chat is an AI-powered chatbot that helps you learn and grow. Gives you access to a wide range of resources and tools to help you achieve your goals."
+		/>
+		<!-- Keep <meta theme-color> in sync with the `dark` class on <html>. -->
+		<script>
+			(function () {
+				var html = document.documentElement;
+				var meta = document.querySelector('meta[name="theme-color"]');
+				if (!meta) {
+					meta = document.createElement("meta");
+					meta.setAttribute("name", "theme-color");
+					document.head.appendChild(meta);
+				}
+				function updateThemeColor() {
+					var isDark = html.classList.contains("dark");
+					meta.setAttribute("content", isDark ? "#1a1a1a" : "#ffffff");
+				}
+				var observer = new MutationObserver(updateThemeColor);
+				observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+				updateThemeColor();
+			})();
+		</script>
+	</head>
+	<body class="h-dvh bg-background font-sans antialiased">
+		<div id="root" class="h-full"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
+</html>

@@ -1,31 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/constants";
-
-interface MessageLimitInfo {
-	userId: string;
-	used: number;
-	remaining: number;
-	total: number;
-	resetsAt: string;
-}
+import { useTokenFn } from "@hooks";
+import { messageLimitQueryOptions } from "./messageLimitQuery";
 
 export const useMessageLimit = () => {
+	const tokenFn = useTokenFn();
+
 	const {
 		data: messageLimit,
 		isLoading: loading,
 		error
-	} = useQuery<MessageLimitInfo>({
-		queryKey: queryKeys.messageLimit(),
-		queryFn: async () => {
-			const response = await fetch("/api/user-info");
-
-			if (!response.ok) {
-				throw new Error("Failed to fetch message limit");
-			}
-
-			return response.json();
-		}
-	});
+	} = useQuery(messageLimitQueryOptions(tokenFn));
 
 	return { messageLimit, loading, error };
 };

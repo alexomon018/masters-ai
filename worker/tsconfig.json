@@ -19,6 +19,6 @@
 		"noEmit": true,
 		"jsx": "preserve"
 	},
-	"include": ["src/**/*.ts", "db/**/*.ts"],
+	"include": ["src/**/*.ts", "db/**/*.ts", "test/**/*.ts"],
 	"exclude": ["node_modules", ".wrangler", "scripts"]
 }

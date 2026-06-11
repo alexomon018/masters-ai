@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { getDb, schema } from "./db";
+import { getDb } from "./db";
+import { makeThreadRepo } from "./repository/threads";
 import type { Env } from "./env";
 
 const AGENT_PATH_RE = /^\/agents\/masters-chat-agent\/([^/]+)/;
@@ -13,22 +13,48 @@ export type ThreadAccessResult =
 	| { ok: true }
 	| { ok: false; status: number; reason: string };
 
+const DENIED: ThreadAccessResult = {
+	ok: false,
+	status: 403,
+	reason: "Thread access denied"
+};
+
 // Unclaimed threads pass through (eager WS connect before first submit).
+// A thread counts as claimed by someone else if ANY row for the threadId
+// belongs to another user — the (userId, threadId) PK makes duplicate rows
+// possible, and a contested id must never resolve in favour of the intruder.
 export async function checkThreadAccess(
 	env: Env,
 	userId: string,
 	threadId: string
 ): Promise<ThreadAccessResult> {
-	const db = getDb(env);
-	const row = await db
-		.select({
-			userId: schema.threadsTable.userId
-		})
-		.from(schema.threadsTable)
-		.where(eq(schema.threadsTable.threadId, threadId))
-		.get();
+	const owners = await makeThreadRepo(getDb(env)).listOwnerIds(threadId);
+	if (owners.length === 0) return { ok: true };
+	return owners.every((o) => o === userId) ? { ok: true } : DENIED;
+}
 
-	if (!row) return { ok: true };
-	if (row.userId === userId) return { ok: true };
-	return { ok: false, status: 403, reason: "Thread access denied" };
+// Claim the thread for `userId` at the first chat message. Inserting the row
+// server-side (instead of trusting the client POST /threads that follows)
+// closes the window where a thread with history sat unclaimed in D1.
+export async function claimThread(
+	env: Env,
+	userId: string,
+	threadId: string
+): Promise<ThreadAccessResult> {
+	const repo = makeThreadRepo(getDb(env));
+	const owners = await repo.listOwnerIds(threadId);
+	if (owners.length > 0) {
+		return owners.every((o) => o === userId) ? { ok: true } : DENIED;
+	}
+	const now = new Date();
+	await repo.upsert({
+		userId,
+		threadId,
+		title: null,
+		pinned: false,
+		createdAt: now,
+		updatedAt: now,
+		lastMessageAt: now
+	});
+	return { ok: true };
 }

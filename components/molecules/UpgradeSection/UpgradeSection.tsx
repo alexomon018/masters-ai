@@ -5,10 +5,6 @@ const UpgradeSection = () => (
 	<section className="space-y-8">
 		<div className="flex items-center justify-between">
 			<h2 className="text-3xl font-semibold tracking-tight">Upgrade to Pro</h2>
-			<div className="text-right">
-				<span className="text-4xl font-bold tracking-tight">$7</span>
-				<span className="text-lg text-muted-foreground">/month</span>
-			</div>
 		</div>
 
 		<div className="grid gap-8 md:grid-cols-3">

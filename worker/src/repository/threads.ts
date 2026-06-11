@@ -5,6 +5,7 @@ import type { NewThread, Thread } from "../../db/schema";
 export interface ThreadRepo {
 	listForUser(userId: string): Promise<Thread[]>;
 	get(userId: string, threadId: string): Promise<Thread | undefined>;
+	listOwnerIds(threadId: string): Promise<string[]>;
 	upsert(input: NewThread): Promise<void>;
 	delete(userId: string, threadId: string): Promise<void>;
 	deleteAllForUser(userId: string): Promise<number>;
@@ -35,22 +36,30 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.get();
 		},
 
+		// The PK is (userId, threadId), so a threadId can in principle have rows
+		// under several users; callers use this to refuse contested ownership.
+		async listOwnerIds(threadId) {
+			const rows = await db
+				.select({ userId: schema.threadsTable.userId })
+				.from(schema.threadsTable)
+				.where(eq(schema.threadsTable.threadId, threadId))
+				.all();
+			return rows.map((r) => r.userId);
+		},
+
 		async upsert(input) {
 			await db
 				.insert(schema.threadsTable)
 				.values(input)
 				.onConflictDoUpdate({
-					target: [
-						schema.threadsTable.userId,
-						schema.threadsTable.threadId,
-					],
+					target: [schema.threadsTable.userId, schema.threadsTable.threadId],
 					set: {
 						title: input.title,
 						projectId: input.projectId,
 						pinned: input.pinned,
 						updatedAt: input.updatedAt ?? new Date(),
-						lastMessageAt: input.lastMessageAt ?? new Date(),
-					},
+						lastMessageAt: input.lastMessageAt ?? new Date()
+					}
 				})
 				.run();
 		},
@@ -72,7 +81,9 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.delete(schema.threadsTable)
 				.where(eq(schema.threadsTable.userId, userId))
 				.run();
-			return Number((result as { meta?: { changes?: number } }).meta?.changes ?? 0);
+			return Number(
+				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
+			);
 		},
 
 		async reassignUser(fromUserId, toUserId) {
@@ -81,7 +92,9 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.set({ userId: toUserId, updatedAt: new Date() })
 				.where(eq(schema.threadsTable.userId, fromUserId))
 				.run();
-			return Number((result as { meta?: { changes?: number } }).meta?.changes ?? 0);
-		},
+			return Number(
+				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
+			);
+		}
 	};
 }

@@ -1,9 +1,6 @@
-"use client";
-
 import { Button } from "@atoms";
 import { cn } from "@utils";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "@tanstack/react-router";
 import { SETTINGS_TABS } from "@constants";
 
 interface SettingsNavigationProps {
@@ -11,7 +8,7 @@ interface SettingsNavigationProps {
 }
 
 const SettingsNavigation = ({ className }: SettingsNavigationProps) => {
-	const pathname = usePathname();
+	const pathname = useLocation({ select: (location) => location.pathname });
 
 	const activeTab = SETTINGS_TABS.find((tab) => tab.href === pathname)?.name;
 
@@ -23,7 +20,12 @@ const SettingsNavigation = ({ className }: SettingsNavigationProps) => {
 			)}
 		>
 			{SETTINGS_TABS.map((tab) => (
-				<Link href={tab.href} key={tab.name} className="p-1">
+				<Link
+					to="/settings/$tab"
+					params={{ tab: tab.tab }}
+					key={tab.name}
+					className="p-1"
+				>
 					<Button
 						key={tab.name}
 						variant={activeTab === tab.name ? "outline" : "ghost"}
