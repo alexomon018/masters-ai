@@ -47,7 +47,7 @@
 		"preview": {
 			"name": "masters-ai-agent-preview",
 			"vars": {
-				"ALLOWED_ORIGINS": "http://localhost:3000,https://masters-ai.vercel.app,https://*.vercel.app",
+				"ALLOWED_ORIGINS": "http://localhost:3000,https://masters-ai.vercel.app,https://*.vercel.app,https://dev.femasters.guru",
 				"BRAINTRUST_ENV": "preview"
 			},
 			"durable_objects": {
@@ -76,7 +76,7 @@
 		"production": {
 			"name": "masters-ai-agent",
 			"vars": {
-				"ALLOWED_ORIGINS": "https://masters-ai.vercel.app,https://femasters.guru",
+				"ALLOWED_ORIGINS": "https://masters-ai.vercel.app,https://femasters.guru,https://*.femasters.guru",
 				"BRAINTRUST_ENV": "production"
 			},
 			"durable_objects": {
