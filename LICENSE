@@ -19,3 +19,20 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Disclaimer & Attribution
+
+This is an independent, personal project. It is not affiliated with,
+endorsed by, or associated with Frontend Masters in any way.
+
+The MIT license above covers the source code in this repository only. It
+does NOT cover the Frontend Masters course transcripts used for retrieval,
+which remain the property of Frontend Masters and/or their respective
+authors. The transcripts were obtained from a GitHub repository that was
+publicly available on a Frontend Masters profile at the time. They are used
+here for personal, educational, and demonstration purposes only, and are not
+redistributed as part of this repository. All rights to that content remain
+with their owners; if you are a rights holder and want it removed, please
+open an issue.

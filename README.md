@@ -22,6 +22,7 @@ A RAG chat app grounded in Frontend Masters course transcripts. A Vite single-pa
 - [Project structure](#project-structure)
 - [Scripts](#scripts)
 - [Branch conventions](#branch-conventions)
+- [Disclaimer](#disclaimer)
 - [License](#license)
 
 ## Architecture
@@ -207,6 +208,10 @@ yarn db:d1:migrate:prod:remote
 
 - Bug fixes: `bugfix/B{TICKET_ID}-{short-name}`
 - Features:  `features/U{TICKET_ID}-{short-name}`
+
+## Disclaimer
+
+This is an independent personal project — not affiliated with, endorsed by, or associated with Frontend Masters. The course transcripts used for retrieval remain the property of Frontend Masters and/or their authors; they were obtained from a GitHub repository that was publicly available on a Frontend Masters profile at the time, and are used here for personal, educational, and demonstration purposes only (not redistributed in this repo). The MIT license below covers the source code only. See [LICENSE](LICENSE) for the full notice.
 
 ## License
 
