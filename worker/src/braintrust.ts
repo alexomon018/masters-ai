@@ -1,8 +1,8 @@
 import { flush, initLogger, wrapAISDK } from "braintrust/workerd";
 import * as ai from "ai";
 
-const PROD_PROJECT = "Femasters chat";
-const DEV_PROJECT = "Femasters chat (dev)";
+const PROD_PROJECT = "Masters AI";
+const DEV_PROJECT = "Masters AI (dev)";
 
 export function resolveProjectName(environment: string | undefined): string {
 	return environment === "production" ? PROD_PROJECT : DEV_PROJECT;
