@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2026 Aleksa Mitic
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Disclaimer & Attribution
+
+This is an independent, personal project. It is not affiliated with,
+endorsed by, or associated with Frontend Masters in any way.
+
+The MIT license above covers the source code in this repository only. It
+does NOT cover the Frontend Masters course transcripts used for retrieval,
+which remain the property of Frontend Masters and/or their respective
+authors. The transcripts were obtained from a GitHub repository that was
+publicly available on a Frontend Masters profile at the time. They are used
+here for personal, educational, and demonstration purposes only, and are not
+redistributed as part of this repository. All rights to that content remain
+with their owners; if you are a rights holder and want it removed, please
+open an issue.

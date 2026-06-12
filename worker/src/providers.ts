@@ -3,18 +3,10 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
 import type { Env } from "./env";
 
-export type LLMModel =
-	| "claude-haiku-4-5"
-	| "claude-sonnet-4-6"
-	| "gpt-5.5"
-	| "gpt-5.4"
-	| "gpt-5.4-mini";
+export type LLMModel = "claude-haiku-4-5" | "gpt-5.4-mini";
 
 const VALID_MODELS: ReadonlySet<LLMModel> = new Set<LLMModel>([
 	"claude-haiku-4-5",
-	"claude-sonnet-4-6",
-	"gpt-5.5",
-	"gpt-5.4",
 	"gpt-5.4-mini"
 ]);
 
@@ -38,10 +30,7 @@ export function getModel(modelId: LLMModel, env: Env): LanguageModel {
 
 	switch (modelId) {
 		case "claude-haiku-4-5":
-		case "claude-sonnet-4-6":
 			return anthropic.languageModel(modelId);
-		case "gpt-5.5":
-		case "gpt-5.4":
 		case "gpt-5.4-mini":
 			return openai.languageModel(modelId);
 		default: {

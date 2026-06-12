@@ -5,13 +5,7 @@ import {
 	nameThreadSchema
 } from "./llmValidationSchema";
 
-const VALID_MODELS = [
-	"claude-haiku-4-5",
-	"claude-sonnet-4-6",
-	"gpt-5.5",
-	"gpt-5.4",
-	"gpt-5.4-mini"
-] as const;
+const VALID_MODELS = ["claude-haiku-4-5", "gpt-5.4-mini"] as const;
 
 describe("llmModelSchema", () => {
 	it.each(VALID_MODELS)("accepts the valid model id %s", (model) => {
@@ -77,7 +71,8 @@ describe("nameThreadSchema", () => {
 
 	it("accepts an empty messages array (shape only)", () => {
 		expect(
-			nameThreadSchema.safeParse({ messages: [], model: "gpt-5.4" }).success
+			nameThreadSchema.safeParse({ messages: [], model: "gpt-5.4-mini" })
+				.success
 		).toBe(true);
 	});
 
@@ -97,7 +92,7 @@ describe("nameThreadSchema", () => {
 		expect(
 			nameThreadSchema.safeParse({
 				messages: "nope",
-				model: "gpt-5.5"
+				model: "gpt-5.4-mini"
 			}).success
 		).toBe(false);
 	});

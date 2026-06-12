@@ -94,7 +94,7 @@ Chat history lives in the per-thread DO's SQLite (`maxPersistedMessages = 200`).
   - `hooks/useQuotaInvalidation.ts` — bumps the quota query on both streaming edges.
   - `helpers/agentAuth.ts` — `resolveAgentAuth(getToken)` (returns `{ ticket }` or `{ anonId }`), `getAnonId` (localStorage + worker mint), `workerHttpBase`.
   - `helpers/autoNameThread.ts` — POST to the worker `/name-thread`, write title via `upsertThreadRemote`.
-- `constants/models.tsx` — model lineup (Anthropic Haiku/Sonnet, OpenAI 5.4/5.4-mini/5.5).
+- `constants/models.tsx` — model lineup (Anthropic Haiku, OpenAI 5.4-mini).
 - `providers/` — theme, model store, query client. Storybook decorators live in `withThemeProvider.tsx` and are **not** re-exported from the barrel (keeps Storybook out of the app bundle).
 - `store/` — Zustand model preferences (persisted to localStorage).
 - `utils/anonId.ts` — anon-id signer/verifier (mirrored in `worker/src/anonId.ts`).

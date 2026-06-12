@@ -9,7 +9,7 @@ import {
 import ChatModelSelector from "./ChatModelSelector";
 
 const HAIKU = modelCards[0];
-const SONNET = modelCards[1];
+const SECOND_MODEL = modelCards[1];
 
 describe("ChatModelSelector", () => {
 	it("shows the selected model name on the trigger", () => {
@@ -43,10 +43,10 @@ describe("ChatModelSelector", () => {
 			screen.getByRole("button", { name: new RegExp(HAIKU.name, "i") })
 		);
 		const menu = await screen.findByRole("menu");
-		await user.click(within(menu).getByText(SONNET.name));
+		await user.click(within(menu).getByText(SECOND_MODEL.name));
 
 		expect(
-			screen.getByRole("button", { name: new RegExp(SONNET.name, "i") })
+			screen.getByRole("button", { name: new RegExp(SECOND_MODEL.name, "i") })
 		).toBeInTheDocument();
 		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 	});

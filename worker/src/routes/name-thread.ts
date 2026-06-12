@@ -50,15 +50,7 @@ const messageSchema = z.union([
 
 export const nameThreadBodySchema = z.object({
 	messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
-	model: z
-		.enum([
-			"claude-haiku-4-5",
-			"claude-sonnet-4-6",
-			"gpt-5.5",
-			"gpt-5.4",
-			"gpt-5.4-mini"
-		])
-		.optional()
+	model: z.enum(["claude-haiku-4-5", "gpt-5.4-mini"]).optional()
 });
 
 export type NameThreadBody = z.infer<typeof nameThreadBodySchema>;
