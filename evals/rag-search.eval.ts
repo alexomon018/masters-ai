@@ -19,7 +19,8 @@ const testCases = loadGoldenDataset<RagGoldenCase>("rag-search.json");
 
 const vector = vectorClient();
 
-Eval<RagTestCase, RagHit[], RagTestCase>(evalProject("Masters RAG Search"), {
+Eval<RagTestCase, RagHit[], RagTestCase>(evalProject(), {
+	experimentName: "Masters RAG Search",
 	data: () =>
 		testCases.map((tc) => ({
 			input: tc,

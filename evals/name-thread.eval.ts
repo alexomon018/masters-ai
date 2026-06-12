@@ -31,8 +31,9 @@ const transcriptOf = (messages: NameThreadMessage[]): string =>
 	messages.map((m) => `${m.role}: ${m.content}`).join("\n");
 
 Eval<NameThreadTestCase, string, NameThreadTestCase>(
-	evalProject("Masters Thread Naming"),
+	evalProject(),
 	{
+		experimentName: "Masters Thread Naming",
 		data: () =>
 			testCases.map((tc) => ({
 				input: tc,
