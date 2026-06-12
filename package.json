@@ -5,6 +5,7 @@
 	"license": "MIT",
 	"scripts": {
 		"dev": "vite",
+		"dev:all": "bash ./scripts/dev.sh",
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "vite preview",
