@@ -19,7 +19,7 @@ function required(name: string): string {
 	return value;
 }
 
-function modelEnv(): Env {
+export function modelEnv(): Env {
 	return {
 		OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
 		ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
