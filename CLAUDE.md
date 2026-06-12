@@ -87,7 +87,6 @@ Chat history lives in the per-thread DO's SQLite (`maxPersistedMessages = 200`).
 ### Key directories
 
 - `src/` — Vite SPA entry: `main.tsx` (router bootstrap), `routes/` (file-based routes), `index.css` + `globals.css`, `vite-env.d.ts`. `routeTree.gen.ts` is generated — do not edit.
-- `ai/` — `llm.ts`. **Note:** thread naming now runs in the worker (`worker/src/routes/name-thread.ts`); this copy lingers for evals. The chat agent lives in `worker/`.
 - `components/` — atomic design: `atoms/`, `molecules/`, `organisms/`, all with barrel exports.
 - `components/organisms/Chat/` — `Chat.tsx`, `useChat.ts`, plus:
   - `hooks/useAutoNameThread.ts` — auto-titles new threads via the worker `/name-thread`.
@@ -129,7 +128,7 @@ Unknown model labels from old browsers fall back to `claude-haiku-4-5` with a se
 
 ## Path aliases (tsconfig.json)
 
-`@atoms`, `@molecules`, `@organisms` → `components/*/`. Plus `@utils`, `@lib`, `@constants`, `@store`, `@providers`, `@ai`, `@types`, `@icons`, `@images`, and `@/*` → repo root. Resolved by Vite's native `resolve.tsconfigPaths` (app) and Vitest's `resolve.tsconfigPaths` (tests).
+`@atoms`, `@molecules`, `@organisms` → `components/*/`. Plus `@utils`, `@lib`, `@constants`, `@store`, `@providers`, `@types`, `@icons`, `@images`, and `@/*` → repo root. Resolved by Vite's native `resolve.tsconfigPaths` (app) and Vitest's `resolve.tsconfigPaths` (tests).
 
 ## Required environment variables
 

@@ -1,7 +1,11 @@
 import { Eval } from "braintrust";
 import { Summary } from "autoevals";
 
-import { runLLM, type NameThreadMessage } from "../ai/llm";
+import {
+	runNameThread,
+	type NameThreadMessage,
+} from "../worker/src/routes/name-thread";
+import { startBraintrustNode, generateText } from "./helpers/braintrustNode";
 import type { NameThreadGoldenCase } from "./golden";
 import {
 	canRunLlmJudge,
@@ -10,10 +14,16 @@ import {
 } from "./helpers/autoevalsInit";
 import { loadGoldenDataset } from "./helpers/loadGolden";
 import { titleFormatScorer, titleTopicScorer } from "./scorers/titleFormat";
-import { evalProject } from "./helpers/env";
+import { evalProject, modelEnv } from "./helpers/env";
 import type { NameThreadTestCase } from "./types";
 
+// Use the Node-wrapped generateText (see chat-agent.eval.ts) so Braintrust
+// captures llm_calls / token metrics. runNameThread is the live worker path.
+startBraintrustNode(process.env.BRAINTRUST_API_KEY, "preview");
+
 ensureAutoevalsInit();
+
+const env = modelEnv();
 
 const testCases = loadGoldenDataset<NameThreadGoldenCase>("name-thread.json");
 
@@ -36,7 +46,11 @@ Eval<NameThreadTestCase, string, NameThreadTestCase>(
 			})),
 
 		task: async (testCase) =>
-			runLLM(testCase.messages as NameThreadMessage[]),
+			runNameThread(
+				env,
+				testCase.messages as NameThreadMessage[],
+				generateText
+			),
 
 		scores: [
 			titleFormatScorer,
