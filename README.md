@@ -2,9 +2,19 @@
 
 A RAG chat app grounded in Frontend Masters course transcripts. A Vite single-page app (React + TanStack Router, deployed as static assets to Vercel) handles the UI; a Cloudflare Worker (one Durable Object per thread) owns the chat agent and all server logic. There is no server runtime on the front end — it builds to static assets in `dist/`.
 
+**[Live demo → femasters.guru](https://femasters.guru)**
+
+<!--
+  Add a screenshot or GIF of the app here. Drop the image at docs/screenshot.png
+  (a wide hero shot of the chat UI mid-stream, ideally showing a ragSearch pill,
+  works best) and uncomment the line below.
+-->
+<!-- ![Masters AI chat interface](docs/screenshot.png) -->
+
 ## Table of Contents
 
 - [Architecture](#architecture)
+- [Why I migrated off Next.js](#why-i-migrated-off-nextjs)
 - [Models](#models)
 - [Auth & security](#auth--security)
 - [Getting started](#getting-started)
@@ -42,6 +52,17 @@ Browser (Vite SPA)
 - **Identity** survives Durable Object hibernation: it's stashed on `connection.state` (backed by the WebSocket attachment), not on `this`.
 - **No front-end server runtime for chat.** Chat traffic is browser-to-Worker only; the Worker owns every server surface.
 
+## Why I migrated off Next.js
+
+This started as a Next.js app and moved to a **Vite SPA + Cloudflare Worker** split. The migration was deliberate, and the tradeoffs are the interesting part:
+
+- **The front end had no real need for a server runtime.** Chat already streamed browser-to-Worker over a WebSocket; the Next.js server was mostly proxying. Dropping it means the UI builds to pure static assets (`dist/`) served from Vercel's edge — no cold starts, no serverless function bill for page loads, simpler mental model.
+- **One owner for server logic.** Auth tickets, anon-id minting, quota, thread index, RAG, and the agent loop now all live in the Worker. Previously this was split between Next.js API routes and the Worker, with an HMAC secret shared across both and two places to reason about for every auth change. Consolidating removed a whole class of "which side does this?" bugs.
+- **Durable Objects fit the domain.** One DO per thread gives each conversation its own SQLite-backed history and a natural identity boundary — a cleaner home for chat state than a stateless function reaching into an external store on every turn.
+- **TanStack Router replaced the App Router.** The home→thread URL swap is the load-bearing interaction: a single persistent `<Chat>` survives the `/` → `/chat/$id` transition without remounting, keeping the live WebSocket alive. File-based routing with a typed route tree made that handoff explicit and testable.
+
+**What I gave up:** SSR / streamed HTML and SEO for app routes (fine — this is an authed, app-shell product, not content pages), and the convenience of co-located API routes (worth it for a single server owner). The anon-id cookie issued by Next.js middleware became a worker `GET /anon-id` endpoint writing to `localStorage`.
+
 ## Models
 
 The selectable lineup lives in [`constants/models.tsx`](constants/models.tsx) and is validated by [`constants/llmValidationSchema.ts`](constants/llmValidationSchema.ts):
@@ -49,9 +70,6 @@ The selectable lineup lives in [`constants/models.tsx`](constants/models.tsx) an
 | Model              | Provider  | When to use                                   |
 | ------------------ | --------- | --------------------------------------------- |
 | Claude Haiku 4.5   | Anthropic | Default — fast, cheap, near-frontier          |
-| Claude Sonnet 4.6  | Anthropic | Best speed/intelligence balance               |
-| GPT-5.5            | OpenAI    | Strongest answers, higher cost/latency        |
-| GPT-5.4            | OpenAI    | Mid-tier OpenAI                               |
 | GPT-5.4 mini       | OpenAI    | Fastest OpenAI option                         |
 
 Adding or removing a model is three files: the union in [`types/Model.ts`](types/Model.ts), the Zod enum in [`constants/llmValidationSchema.ts`](constants/llmValidationSchema.ts), and the provider switch in [`worker/src/providers.ts`](worker/src/providers.ts). The worker switch is exhaustive — TypeScript will fail compilation if a new id is added but not wired. Unknown model labels from old browsers fall back to `claude-haiku-4-5` with a server-side warning.
@@ -68,7 +86,7 @@ Adding or removing a model is three files: the union in [`types/Model.ts`](types
 ## Getting started
 
 ```bash
-git clone https://github.com/yourusername/masters-ai.git
+git clone https://github.com/alexomon018/masters-ai.git
 cd masters-ai
 yarn install
 
@@ -192,4 +210,4 @@ yarn db:d1:migrate:prod:remote
 
 ## License
 
-MIT.
+[MIT](LICENSE) © Aleksa Mitic

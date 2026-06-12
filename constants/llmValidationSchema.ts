@@ -7,17 +7,11 @@ const formSchema = z.object({
 	username: z.string().min(2).max(50)
 });
 
-// Model lineup the Next.js side accepts on inbound API calls. The worker
-// has its own copy at worker/src/providers.ts:LLMModel — they MUST stay
-// in lockstep. The Zod enum lets us reject stale model ids from
-// out-of-date browsers at the API boundary rather than at the LLM call.
-const llmModelSchema = z.enum([
-	"claude-haiku-4-5",
-	"claude-sonnet-4-6",
-	"gpt-5.5",
-	"gpt-5.4",
-	"gpt-5.4-mini"
-]);
+// Model lineup the front end accepts. The worker has its own copy at
+// worker/src/providers.ts:LLMModel — they MUST stay in lockstep. The Zod
+// enum lets us reject stale model ids from out-of-date browsers at the
+// request boundary rather than at the LLM call.
+const llmModelSchema = z.enum(["claude-haiku-4-5", "gpt-5.4-mini"]);
 
 // `/api/name-thread` body shape.
 const aiMessageSchema = z.union([
