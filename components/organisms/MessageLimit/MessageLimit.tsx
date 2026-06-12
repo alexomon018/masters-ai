@@ -1,5 +1,5 @@
 import React from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { useMessageLimit } from "./useMessageLimit";
 
 interface MessageLimitDisplayProps {

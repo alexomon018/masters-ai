@@ -14,14 +14,11 @@ describe("Checkbox component", () => {
 		render(<Checkbox />);
 		const checkboxElement = screen.getByRole("checkbox");
 
-		// Initially unchecked
 		expect(checkboxElement).not.toBeChecked();
 
-		// Check the checkbox
 		fireEvent.click(checkboxElement);
 		expect(checkboxElement).toBeChecked();
 
-		// Uncheck the checkbox
 		fireEvent.click(checkboxElement);
 		expect(checkboxElement).not.toBeChecked();
 	});
@@ -39,7 +36,7 @@ describe("Checkbox component", () => {
 	});
 
 	it("calls onChange handler when clicked", () => {
-		const handleChange = jest.fn();
+		const handleChange = vi.fn();
 		render(<Checkbox onCheckedChange={handleChange} />);
 		const checkboxElement = screen.getByRole("checkbox");
 

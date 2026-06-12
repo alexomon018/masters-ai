@@ -1,15 +1,3 @@
-// HMAC-signed anonymous identifier. The middleware issues the signed
-// cookie; the worker verifies the signature before trusting the id for
-// quota tracking and DO room access.
-//
-// Format: `<rawId>.<base64url(HMAC-SHA256(rawId))>`. The raw id stays
-// browser-readable (the client sends it back on the WS upgrade as
-// `?anonId=...`), and tampering with it invalidates the signature.
-//
-// Lives in `utils/` so it's importable from both the Next.js Edge
-// middleware and the worker package — both run on Web Crypto and share
-// the same SubtleCrypto.sign API. ANON_ID_SECRET must match on both.
-
 const RAW_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SIG_RE = /^[A-Za-z0-9_-]+$/;
 const ALPHABET =
@@ -40,9 +28,6 @@ async function hmac(secret: string, message: string): Promise<string> {
 }
 
 export function generateRawAnonId(): string {
-	// 21-char id from URL-safe alphabet. Math.random is fine — this is an
-	// identifier, not a credential; the HMAC signature is what makes it
-	// unforgeable. The raw id only needs to be hard to collide.
 	const rand = new Uint8Array(21);
 	crypto.getRandomValues(rand);
 	let out = "";
@@ -73,9 +58,6 @@ export async function verifyAnonId(
 	const sig = signed.slice(idx + 1);
 	if (!RAW_ID_RE.test(rawId) || !SIG_RE.test(sig)) return null;
 	const expected = await hmac(secret, rawId);
-	// Constant-time-ish compare — fast-fail on length mismatch is fine for
-	// non-secret-leaking identifiers, but loop the whole sig to avoid
-	// short-circuit timing tells on the common (valid-length) case.
 	if (expected.length !== sig.length) return null;
 	let diff = 0;
 	for (let i = 0; i < expected.length; i += 1) {

@@ -1,17 +1,10 @@
-// Thread index REST surface. The browser hits these to populate the
-// sidebar and to rename / pin / delete threads. All requests pass through
-// `authenticateAgentConnection` in worker.ts so by the time we land here
-// we know the caller's userId (either `user:<clerkId>` or `anon:<cookie>`).
-//
-// The actual chat history lives in each thread's Durable Object — D1 only
-// holds the lightweight metadata the sidebar needs: id, title, pin flag,
-// timestamps.
-
 import { getAgentByName } from "agents";
+import { createClerkClient } from "@clerk/backend";
 import { z } from "zod";
 import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
 import { makeThreadRepo } from "../repository/threads";
+import { redisPipeline } from "../redis";
 import type { NewThread } from "../../db/schema";
 import type { Env } from "../env";
 
@@ -19,9 +12,6 @@ interface AuthedRequest {
 	userId: string;
 }
 
-// `/threads` POST body. The sidebar uses this for both create-on-first-
-// send and rename/pin updates, so most fields are optional. Validated at
-// the route boundary in worker.ts — never trust the cast.
 const THREAD_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 export const upsertBodySchema = z.object({
 	threadId: z.string().regex(THREAD_ID_RE),
@@ -61,6 +51,10 @@ export async function upsertThread(
 	body: UpsertBody
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
+	const owners = await repo.listOwnerIds(body.threadId);
+	if (owners.some((o) => o !== auth.userId)) {
+		return json({ error: "Thread access denied" }, 403);
+	}
 	const now = new Date();
 	const existing = await repo.get(auth.userId, body.threadId);
 	const row: NewThread = {
@@ -84,26 +78,15 @@ export async function deleteThread(
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
 	await repo.delete(auth.userId, threadId);
-	// Also drop the DO's persisted history. Fire-and-forget — D1 is the
-	// source of truth for whether the row "exists" from the user's POV.
 	try {
 		const agent = await getAgentByName(env.MastersChatAgent, threadId);
 		await agent.clearHistory();
 	} catch {
-		// DO may have never been instantiated. Nothing to clear.
+		// DO may never have been instantiated.
 	}
 	return new Response(null, { status: 204 });
 }
 
-// Cascade-delete for account removal. Drops every D1 row owned by the
-// user and clears the persisted history of every per-thread DO. Called
-// from the Next.js delete-user route as part of GDPR-style account
-// deletion — without this, threads and chat history would survive the
-// Clerk user being removed.
-// Re-key every D1 thread row from the caller's former anon identity to their
-// Clerk account. Requires an authenticated ticket plus the signed anonId
-// cookie value so a random signed-in user cannot harvest someone else's anon
-// history.
 export async function claimAnonThreads(
 	env: Env,
 	auth: AuthedRequest,
@@ -138,19 +121,44 @@ export async function deleteAllForUser(
 	const repo = makeThreadRepo(getDb(env));
 	const rows = await repo.listForUser(auth.userId);
 
-	// Clear each thread's DO history in parallel. Failures are tolerated —
-	// the DO may not exist, and D1 is the source of truth either way.
 	await Promise.allSettled(
 		rows.map(async (r) => {
 			try {
 				const agent = await getAgentByName(env.MastersChatAgent, r.threadId);
 				await agent.clearHistory();
 			} catch {
-				// ignored — DO may not exist
+				// ignored
 			}
 		})
 	);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
+
+	// For authed users, finish the cascade the old Next /api/delete-user route
+	// performed after hitting the worker: wipe per-user Redis quota counters,
+	// then delete the Clerk identity last (irreversible). Anon callers have
+	// neither, so the data cascade above is the whole job.
+	if (auth.userId.startsWith("user:")) {
+		const clerkId = auth.userId.slice("user:".length);
+
+		try {
+			await redisPipeline(env, [
+				["DEL", `message_count:${auth.userId}`],
+				["DEL", `name_thread_count:${auth.userId}`]
+			]);
+		} catch {
+			// Best-effort — these keys expire after 24h anyway.
+		}
+
+		try {
+			const clerk = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
+			await clerk.users.deleteUser(clerkId);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error("Error deleting Clerk user:", error);
+			return json({ error: "Error deleting user" }, 500);
+		}
+	}
+
 	return json({ ok: true, removed });
 }

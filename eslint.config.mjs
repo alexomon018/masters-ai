@@ -1,5 +1,6 @@
 import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import reactHooks from "eslint-plugin-react-hooks";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
@@ -19,12 +20,12 @@ export default [
 			"**/*.stories.tsx",
 			"**/*.stories.js",
 			"**/*.test.tsx",
-			"**/*.test.js"
+			"**/*.test.js",
+			"src/routeTree.gen.ts"
 		]
 	},
 	...fixupConfigRules(
 		compat.extends(
-			"next/core-web-vitals",
 			"eslint:recommended",
 			"airbnb",
 			"airbnb-typescript",
@@ -38,7 +39,18 @@ export default [
 	),
 	{
 		plugins: {
-			"@typescript-eslint": fixupPluginRules(typescriptEslint)
+			"@typescript-eslint": fixupPluginRules(typescriptEslint),
+			"react-hooks": fixupPluginRules(reactHooks)
+		},
+
+		// The TypeScript import resolver (tsconfig path aliases like @atoms,
+		// @/*) used to come from next/core-web-vitals; configure it directly now
+		// that Next is gone, so eslint-plugin-import can resolve them.
+		settings: {
+			"import/resolver": {
+				typescript: { project: "./tsconfig.json" },
+				node: true
+			}
 		},
 
 		rules: {
@@ -61,7 +73,10 @@ export default [
 			],
 
 			"no-underscore-dangle": "off",
-			"linebreak-style": "off"
+			"linebreak-style": "off",
+
+			"react-hooks/rules-of-hooks": "error",
+			"react-hooks/exhaustive-deps": "warn"
 		}
 	},
 	{

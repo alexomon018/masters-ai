@@ -1,21 +1,3 @@
-// Worker entry point. Surfaces:
-//
-// 1. /threads*    — REST surface backing the sidebar (D1-backed thread index),
-//                   including POST /threads/claim-anon for anon→user migration.
-// 2. /users/me DELETE — cascade-delete every D1 thread + DO history for the
-//                   caller. Called by the Next.js account-deletion route.
-// 3. /ws-ticket POST — exchange a Clerk JWT (Authorization header) for a
-//                   short-lived single-use ticket. Used on WS upgrade and
-//                   server-to-server calls; keeps bearer tokens out of URLs.
-// 4. /agents/*    — chat protocol dispatched to MastersChatAgent via
-//                   routeAgentRequest. Auth and per-thread access control
-//                   happen in onBeforeConnect / onBeforeRequest.
-//
-// Auth resolves to one of:
-//   - `user:<clerk-id>`  via ?ticket=<single-use ticket>
-//   - `anon:<rawId>`     via ?anonId=<HMAC-signed cookie value>
-// All other identifiers are rejected.
-
 import { routeAgentRequest } from "agents";
 import { MastersChatAgent } from "./agent";
 import { authenticateAgentConnection } from "./clerk-auth";
@@ -29,32 +11,24 @@ import {
 	upsertThread
 } from "./routes/threads";
 import { checkThreadAccess, extractThreadId } from "./thread-access";
+import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
+import { getUsage } from "./routes/usage";
+import { issueAnonId } from "./routes/anon-id";
+import { resolveAllowedOrigin } from "./cors";
 import type { Env } from "./env";
 
 export { MastersChatAgent };
 
-// Reflective CORS: echo the request Origin only if it appears in the
-// configured allowlist. Browsers send credentials/cookies only when the
-// response includes a specific origin, never `*`, so this also tightens
-// what cross-site code can read from the worker.
-function resolveAllowedOrigin(env: Env, requestOrigin: string | null): string | null {
-	if (!requestOrigin) return null;
-	const allowed = (env.ALLOWED_ORIGINS ?? "")
-		.split(",")
-		.map((s) => s.trim())
-		.filter(Boolean);
-	return allowed.includes(requestOrigin) ? requestOrigin : null;
-}
-
-function corsHeaders(env: Env, requestOrigin: string | null): Record<string, string> {
+function corsHeaders(
+	env: Env,
+	requestOrigin: string | null
+): Record<string, string> {
 	const allowOrigin = resolveAllowedOrigin(env, requestOrigin);
 	const base: Record<string, string> = {
 		"access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
 		"access-control-allow-headers": "content-type,authorization",
 		"access-control-max-age": "86400",
-		// Cache key varies by Origin so a CDN-fronted worker doesn't serve
-		// one origin's CORS headers to another origin's request.
-		vary: "Origin"
+		"vary": "Origin"
 	};
 	if (allowOrigin) {
 		base["access-control-allow-origin"] = allowOrigin;
@@ -104,8 +78,6 @@ export default {
 			});
 		}
 
-		// /ws-ticket — exchange Clerk JWT (in Authorization header) for a
-		// short-lived single-use ticket. Anon users skip this entirely.
 		if (url.pathname === "/ws-ticket" && request.method === "POST") {
 			const result = await issueTicket(
 				env,
@@ -122,6 +94,60 @@ export default {
 				new Response(JSON.stringify(result), {
 					status: 200,
 					headers: { "content-type": "application/json" }
+				}),
+				env,
+				origin
+			);
+		}
+
+		// Mint a fresh signed anon id (replaces the old Next middleware cookie).
+		// Public: issuing an anon identity needs no prior credential.
+		if (url.pathname === "/anon-id" && request.method === "GET") {
+			return withCorsHeaders(await issueAnonId(env, request), env, origin);
+		}
+
+		// Daily message usage (was Next GET /api/user-info). Needs the resolved
+		// identity *and* whether it's authenticated, so it can't use the
+		// userId-only handleAuthenticated helper.
+		if (url.pathname === "/usage" && request.method === "GET") {
+			const auth = await authenticateAgentConnection(request, env);
+			if ("error" in auth) {
+				return withCorsHeaders(
+					new Response(auth.error, { status: 401 }),
+					env,
+					origin
+				);
+			}
+			return withCorsHeaders(
+				await getUsage(env, {
+					userId: auth.userId,
+					isAuthenticated: auth.isAuthenticated
+				}),
+				env,
+				origin
+			);
+		}
+
+		// Auto-name a thread (was Next POST /api/name-thread). Authed OR a valid
+		// signed anonId — both resolve through authenticateAgentConnection.
+		if (url.pathname === "/name-thread" && request.method === "POST") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = nameThreadBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error: "Invalid request body",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return nameThread(env, { userId }, parsed.data);
 				}),
 				env,
 				origin
@@ -207,9 +233,6 @@ export default {
 			);
 		}
 
-		// Cascade-delete used by the Next.js /api/delete-user route. Drops
-		// every D1 thread row for the caller and clears each thread's DO
-		// history. Called *before* Clerk removes the user.
 		if (url.pathname === "/users/me" && request.method === "DELETE") {
 			return withCorsHeaders(
 				await handleAuthenticated(request, env, (userId) =>
@@ -226,9 +249,6 @@ export default {
 				return new Response(auth.error, { status: 401 });
 			}
 
-			// Per-thread access control. Authentication identifies the user;
-			// this verifies they own the thread room (or the thread is
-			// unclaimed — first-claim semantics for the eager-connect flow).
 			const threadId = extractThreadId(new URL(req.url).pathname);
 			if (threadId) {
 				const access = await checkThreadAccess(env, auth.userId, threadId);

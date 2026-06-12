@@ -1,9 +1,3 @@
-// Thread index repository. All D1 reads/writes for the user→threads mapping
-// go through this module — the routes in src/routes/threads.ts and the user
-// deletion in src/routes/users.ts never hit drizzle directly.
-//
-// Replaces the per-user query subset of lib/queries.ts in Phase 5+.
-
 import { and, desc, eq } from "drizzle-orm";
 import { schema, type Database } from "../db";
 import type { NewThread, Thread } from "../../db/schema";
@@ -11,6 +5,7 @@ import type { NewThread, Thread } from "../../db/schema";
 export interface ThreadRepo {
 	listForUser(userId: string): Promise<Thread[]>;
 	get(userId: string, threadId: string): Promise<Thread | undefined>;
+	listOwnerIds(threadId: string): Promise<string[]>;
 	upsert(input: NewThread): Promise<void>;
 	delete(userId: string, threadId: string): Promise<void>;
 	deleteAllForUser(userId: string): Promise<number>;
@@ -41,24 +36,30 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.get();
 		},
 
+		// The PK is (userId, threadId), so a threadId can in principle have rows
+		// under several users; callers use this to refuse contested ownership.
+		async listOwnerIds(threadId) {
+			const rows = await db
+				.select({ userId: schema.threadsTable.userId })
+				.from(schema.threadsTable)
+				.where(eq(schema.threadsTable.threadId, threadId))
+				.all();
+			return rows.map((r) => r.userId);
+		},
+
 		async upsert(input) {
-			// onConflict pattern: bump updated_at + last_message_at and replace
-			// the user-editable fields. Created_at is preserved via excluded.
 			await db
 				.insert(schema.threadsTable)
 				.values(input)
 				.onConflictDoUpdate({
-					target: [
-						schema.threadsTable.userId,
-						schema.threadsTable.threadId,
-					],
+					target: [schema.threadsTable.userId, schema.threadsTable.threadId],
 					set: {
 						title: input.title,
 						projectId: input.projectId,
 						pinned: input.pinned,
 						updatedAt: input.updatedAt ?? new Date(),
-						lastMessageAt: input.lastMessageAt ?? new Date(),
-					},
+						lastMessageAt: input.lastMessageAt ?? new Date()
+					}
 				})
 				.run();
 		},
@@ -80,9 +81,9 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.delete(schema.threadsTable)
 				.where(eq(schema.threadsTable.userId, userId))
 				.run();
-			// D1's run() returns meta with `changes`. Cloudflare's types surface
-			// it on the returned object; coerce defensively.
-			return Number((result as { meta?: { changes?: number } }).meta?.changes ?? 0);
+			return Number(
+				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
+			);
 		},
 
 		async reassignUser(fromUserId, toUserId) {
@@ -91,7 +92,9 @@ export function makeThreadRepo(db: Database): ThreadRepo {
 				.set({ userId: toUserId, updatedAt: new Date() })
 				.where(eq(schema.threadsTable.userId, fromUserId))
 				.run();
-			return Number((result as { meta?: { changes?: number } }).meta?.changes ?? 0);
-		},
+			return Number(
+				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
+			);
+		}
 	};
 }

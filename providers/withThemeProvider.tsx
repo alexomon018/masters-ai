@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { makeDecorator } from "@storybook/addons";
 import type { ReactElement } from "react";

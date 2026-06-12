@@ -14,12 +14,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
+    "types": [
+      "node",
+      "vitest/globals",
+      "@testing-library/jest-dom"
     ],
     "paths": {
       "@/*": [
@@ -52,31 +52,30 @@
       "@organisms": [
         "./components/organisms"
       ],
+      "@hooks": [
+        "./hooks"
+      ],
       "@store": [
         "./store"
       ],
       "@types": [
         "./types"
       ],
-      "@app": [
-        "./app"
-      ],
       "@ai": [
         "./ai"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2020"
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
     "**/*.cjs"
   ],
   "exclude": [
     "node_modules",
     "worker",
-    "evals"
+    "evals",
+    "dist"
   ]
 }

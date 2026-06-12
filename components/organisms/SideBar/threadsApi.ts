@@ -1,11 +1,8 @@
-// Thin client for the worker's /threads REST surface. The browser uses
-// the same auth payload (Clerk token OR anonId cookie) as the WebSocket
-// upgrade — see helpers/agentAuth.ts.
-
 import {
 	buildAuthQueryParams,
 	fetchWorkerTicket,
-	readAnonCookie
+	getAnonId,
+	workerHttpBase
 } from "@/components/organisms/Chat/helpers/agentAuth";
 
 export interface ThreadDto {
@@ -24,10 +21,9 @@ interface UpsertInput {
 	lastMessageAt?: number;
 }
 
-function workerBase(): string | null {
-	const base = process.env.NEXT_PUBLIC_WORKER_URL;
-	return base ? base.replace(/\/$/, "") : null;
-}
+// `workerHttpBase()` returns "" when VITE_WORKER_URL is unset; the callers
+// below short-circuit on the falsy base.
+const workerBase = workerHttpBase;
 
 async function authParams(
 	getToken: () => Promise<string | null>
@@ -73,14 +69,13 @@ export async function deleteThreadRemote(
 	);
 }
 
-/** Re-key anon D1 rows to the signed-in Clerk user. Idempotent. */
 export async function claimAnonThreadsRemote(
 	getToken: () => Promise<string | null>
 ): Promise<number> {
 	const base = workerBase();
 	if (!base) return 0;
 
-	const anonId = readAnonCookie();
+	const anonId = await getAnonId();
 	if (!anonId) return 0;
 
 	const jwt = await getToken();

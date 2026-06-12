@@ -1,14 +1,8 @@
-// HMAC-signed anonymous identifier — worker-side verifier.
-//
-// MIRRORS `utils/anonId.ts` in the Next.js app. The two packages can't
-// share source (different tsconfig roots), so this is a deliberate copy.
-// If you change the wire format here, update the other file too — the
-// browser cookie (signed by middleware) and the worker check must agree.
-//
-// Format: `<rawId>.<base64url(HMAC-SHA256(rawId))>`.
-
+// Mirror of utils/anonId.ts — keep wire format in sync across packages.
 const RAW_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const SIG_RE = /^[A-Za-z0-9_-]+$/;
+const ALPHABET =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
 function bytesToBase64Url(bytes: Uint8Array): string {
 	let bin = "";
@@ -32,6 +26,30 @@ async function hmac(secret: string, message: string): Promise<string> {
 		encoder.encode(message)
 	);
 	return bytesToBase64Url(new Uint8Array(sig));
+}
+
+// Issue a fresh anon identity. The Vite SPA has no middleware to mint the
+// signed cookie Next used to set, so the worker mints it via GET /anon-id and
+// the browser persists the signed value in localStorage.
+export function generateRawAnonId(): string {
+	const rand = new Uint8Array(21);
+	crypto.getRandomValues(rand);
+	let out = "";
+	for (let i = 0; i < rand.length; i += 1) {
+		out += ALPHABET[rand[i] % ALPHABET.length];
+	}
+	return out;
+}
+
+export async function signAnonId(
+	rawId: string,
+	secret: string
+): Promise<string> {
+	if (!RAW_ID_RE.test(rawId)) {
+		throw new Error("Invalid raw anon id");
+	}
+	const sig = await hmac(secret, rawId);
+	return `${rawId}.${sig}`;
 }
 
 export async function verifyAnonId(

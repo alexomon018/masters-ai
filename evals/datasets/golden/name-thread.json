@@ -1,0 +1,154 @@
+[
+	{
+		"id": "gold-title-rsc",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Can you explain how React Server Components work and when they render on the server vs the client?"
+			},
+			{
+				"role": "assistant",
+				"content": "React Server Components render on the server and send a serialized tree to the client, so they never ship their JS to the browser. Client Components opt in with 'use client'."
+			}
+		],
+		"expectedTopicKeywords": ["react", "server", "component"],
+		"expectedCharacteristics": [
+			"2 to 4 words in title case",
+			"Names the React Server Components topic",
+			"No banned words (Chat, Thread, Help, etc.)"
+		]
+	},
+	{
+		"id": "gold-title-css-grid",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I create a responsive layout with CSS Grid using grid-template-areas?"
+			},
+			{
+				"role": "assistant",
+				"content": "Define named areas with grid-template-areas and remap them inside media queries to rearrange the layout per breakpoint."
+			}
+		],
+		"expectedTopicKeywords": ["css", "grid"],
+		"expectedCharacteristics": [
+			"2 to 4 words",
+			"References CSS Grid or responsive layout"
+		]
+	},
+	{
+		"id": "gold-title-typescript-generics",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "I'm confused about TypeScript generics and constraints. How do I use extends in a generic?"
+			},
+			{
+				"role": "assistant",
+				"content": "A constraint like <T extends { id: string }> restricts the type argument so you can safely access .id inside the generic function."
+			}
+		],
+		"expectedTopicKeywords": ["typescript", "generic"],
+		"expectedCharacteristics": [
+			"Mentions TypeScript or generics in the title"
+		]
+	},
+	{
+		"id": "gold-title-redux",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What's the recommended way to set up a store with Redux Toolkit and createSlice?"
+			},
+			{
+				"role": "assistant",
+				"content": "Use configureStore with your slice reducers; createSlice generates the actions and reducer for each slice automatically."
+			}
+		],
+		"expectedTopicKeywords": ["redux"],
+		"expectedCharacteristics": [
+			"Title references Redux Toolkit or store setup"
+		]
+	},
+	{
+		"id": "gold-title-node-streams",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do Node.js streams and backpressure work when piping a readable to a writable?"
+			},
+			{
+				"role": "assistant",
+				"content": "pipe() handles backpressure for you by pausing the readable when the writable's buffer is full and resuming when it drains."
+			}
+		],
+		"expectedTopicKeywords": ["node", "stream"],
+		"expectedCharacteristics": [
+			"Mentions Node streams or backpressure"
+		]
+	},
+	{
+		"id": "gold-title-web-perf",
+		"difficulty": "hard",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are the Core Web Vitals and how do I improve Largest Contentful Paint?"
+			},
+			{
+				"role": "assistant",
+				"content": "LCP, CLS and INP are the Core Web Vitals. Improve LCP by preloading the hero image, trimming render-blocking CSS, and using a fast server response."
+			}
+		],
+		"expectedTopicKeywords": ["web", "vitals"],
+		"expectedCharacteristics": [
+			"References Core Web Vitals or LCP"
+		]
+	},
+	{
+		"id": "gold-title-git-rebase",
+		"difficulty": "medium",
+		"category": "naming",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Explain the difference between git merge and git rebase and when I should use each."
+			},
+			{
+				"role": "assistant",
+				"content": "Merge preserves history with a merge commit; rebase replays your commits onto the target for a linear history. Rebase local work, merge shared branches."
+			}
+		],
+		"expectedTopicKeywords": ["git", "rebase"],
+		"expectedCharacteristics": [
+			"Mentions git merge or rebase"
+		]
+	},
+	{
+		"id": "gold-title-vague-greeting",
+		"difficulty": "edge",
+		"category": "edge",
+		"messages": [
+			{ "role": "user", "content": "hey there" },
+			{
+				"role": "assistant",
+				"content": "Hi! How can I help you with your Frontend Masters learning today?"
+			}
+		],
+		"shouldBeNewChat": true,
+		"expectedCharacteristics": [
+			"Output is exactly: New Chat"
+		]
+	}
+]

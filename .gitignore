@@ -16,6 +16,11 @@
 # production
 /build
 
+# vite
+/dist
+/dev-dist
+vite.config.ts.timestamp-*
+
 # misc
 .DS_Store
 *.pem

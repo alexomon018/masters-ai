@@ -12,12 +12,17 @@
 BRAINTRUST_API_KEY=
 
 # Anthropic — console.anthropic.com/settings/keys.
-# Used by thread naming (Haiku 4.5) and the chat-agent eval (Claude models).
+# Used by thread naming (Haiku 4.5), the chat-agent eval, and optional LLM judges.
 ANTHROPIC_API_KEY=
 
 # OpenAI — platform.openai.com/api-keys.
-# Only needed if you run the chat-agent eval against a gpt-* model.
+# Used by the worker for gpt-* chat models (also loaded from .env for local dev).
 OPENAI_API_KEY=
+
+# Optional LLM-as-judge scorers (Factuality, TopicSummary):
+# EVAL_LLM_JUDGE=1
+# EVAL_LLM_JUDGE_PROVIDER=anthropic   # anthropic | openai (default: anthropic)
+# EVAL_LLM_JUDGE_MODEL=claude-haiku-4-5
 
 # Upstash Vector — console.upstash.com. The Frontend Masters transcript index.
 # Used by the RAG retrieval eval and the chat-agent eval (ragSearch tool).

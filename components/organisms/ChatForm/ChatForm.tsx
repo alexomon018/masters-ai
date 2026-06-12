@@ -1,12 +1,10 @@
-"use client";
-
 import { MousePointerClick } from "lucide-react";
 import { cn } from "@utils";
 import { ChatModelSelector, InitialQuestions } from "@molecules";
 import MessageLimit from "../MessageLimit/MessageLimit";
 
 interface ChatFormProps {
-	formRef: React.RefObject<HTMLFormElement>;
+	formRef: React.RefObject<HTMLFormElement | null>;
 	onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 	input: string;
 	handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -15,7 +13,6 @@ interface ChatFormProps {
 	onClickQuestion?: (value: string) => void;
 }
 
-// Submit on Enter, newline on Shift+Enter. Standard chat-input behavior.
 const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 	if (e.key === "Enter" && !e.shiftKey) {
 		e.preventDefault();

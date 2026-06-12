@@ -1,17 +1,4 @@
-// Short-lived auth tickets for the WebSocket upgrade.
-//
-// Clerk session tokens are long-lived bearer JWTs. Putting them on the WS
-// URL as `?token=...` parks them in any access log (Cloudflare's, your
-// wrangler tail, browser dev-tools). That's a credential disclosure risk.
-//
-// The ticket flow keeps JWTs in headers only:
-//   1. Browser POSTs `/ws-ticket` with `Authorization: Bearer <jwt>`.
-//   2. Worker verifies the JWT, mints a random ticket, stores
-//      `ws_ticket:<ticket>` → `<userId>` in Upstash Redis with a 30s TTL.
-//   3. Browser opens the WS with `?ticket=<ticket>` instead of `?token=`.
-//   4. Worker `redeemTicket` does a single-use GETDEL — even if the URL
-//      leaks into logs, the credential is already invalidated.
-
+// Keeps Clerk JWTs out of WebSocket URLs — tickets are single-use, 30s TTL.
 import { verifyToken } from "@clerk/backend";
 import type { Env } from "./env";
 
@@ -86,11 +73,8 @@ export async function redeemTicket(
 	env: Env,
 	ticket: string
 ): Promise<RedeemedTicket | null> {
-	// Accept only the hex shape we mint. Cheap pre-filter against probes.
 	if (!/^[0-9a-f]{64}$/.test(ticket)) return null;
 	const key = `${TICKET_PREFIX}${ticket}`;
-	// GETDEL is atomic in Redis 6.2+; Upstash supports it. Single-use
-	// guarantees that even if the ticket appears in a log, replay is dead.
 	try {
 		const [res] = await redisPipeline(env, [["GETDEL", key]]);
 		const value = res?.result;
