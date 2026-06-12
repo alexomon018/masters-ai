@@ -54,8 +54,13 @@ const useAutoNameThread = ({
 		if (isStreaming) return;
 		if (!threadsFetched) return;
 
+		// A thread absent from the fetched list either isn't registered yet
+		// (first-send upsert still in flight; the effect re-runs once the
+		// refetched list includes it) or was just deleted — naming it would
+		// resurrect the deleted row, so never proceed without a match.
 		const meta = threads.find((t) => t.id === activeThreadId);
-		if (meta?.title && meta.title !== UNTITLED_THREAD_TITLE) return;
+		if (!meta) return;
+		if (meta.title && meta.title !== UNTITLED_THREAD_TITLE) return;
 
 		const { firstUser, lastAssistant } = namingPair;
 		if (!firstUser || !lastAssistant) return;

@@ -76,7 +76,7 @@ Loads `.dev.vars` (see `.dev.vars.example`). Each run is a Braintrust experiment
 | Env var | Values | Default |
 |---------|--------|---------|
 | `EVAL_LLM_JUDGE_PROVIDER` | `anthropic` \| `openai` | `anthropic` |
-| `EVAL_LLM_JUDGE_MODEL` | any model id for that provider | `claude-haiku-4-5` or `gpt-4o-mini` |
+| `EVAL_LLM_JUDGE_MODEL` | any model id for that provider | `claude-haiku-4-5` or `gpt-5.4-mini` |
 
 Requires the matching API key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`). All other scorers are deterministic and cost nothing beyond the agent/RAG calls under test.
 

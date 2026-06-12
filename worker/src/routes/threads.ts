@@ -57,6 +57,12 @@ export async function upsertThread(
 	}
 	const now = new Date();
 	const existing = await repo.get(auth.userId, body.threadId);
+	// Only the first-send registration carries lastMessageAt; metadata-only
+	// updates (auto-name title, pin toggle) must not re-create a row, or a
+	// late rename racing DELETE /threads/:id resurrects the deleted thread.
+	if (!existing && body.lastMessageAt === undefined) {
+		return json({ error: "Thread not found" }, 404);
+	}
 	const row: NewThread = {
 		userId: auth.userId,
 		threadId: body.threadId,

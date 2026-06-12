@@ -1,4 +1,4 @@
-import { EyeIcon, BrainIcon, ZapIcon } from "lucide-react";
+import { ZapIcon } from "lucide-react";
 import { LLMModel } from "@/types";
 import type Icons from "@/assets/icons";
 
@@ -36,52 +36,6 @@ const modelCards: Model[] = [
 			}
 		],
 		isDefault: true
-	},
-	{
-		id: "claude-sonnet-4-6",
-		name: "Claude Sonnet 4.6",
-		shortDescription: "The best combination of speed and intelligence.",
-		longDescription:
-			"Anthropic's best balance of speed and intelligence. A solid step up from Haiku for harder reasoning and code without paying the Opus tax.",
-		icon: "anthropic",
-		features: [
-			{
-				name: "Reasoning",
-				icon: <BrainIcon className="size-4" color="purple" />
-			}
-		]
-	},
-	{
-		id: "gpt-5.5",
-		name: "GPT-5.5",
-		shortDescription: "OpenAI's frontier model for complex reasoning and coding.",
-		longDescription:
-			"OpenAI's most capable model for coding and professional work. Best when you need the strongest answers and don't mind higher latency or cost.",
-		icon: "openai",
-		features: [
-			{
-				name: "Reasoning",
-				icon: <BrainIcon className="size-4" color="purple" />
-			},
-			{
-				name: "Vision",
-				icon: <EyeIcon className="size-4" color="blue" />
-			}
-		]
-	},
-	{
-		id: "gpt-5.4",
-		name: "GPT-5.4",
-		shortDescription: "A more affordable model for coding and professional work.",
-		longDescription:
-			"A more affordable OpenAI model for coding and professional work. Good mid-tier choice when GPT-5.5 is overkill.",
-		icon: "openai",
-		features: [
-			{
-				name: "Vision",
-				icon: <EyeIcon className="size-4" color="blue" />
-			}
-		]
 	},
 	{
 		id: "gpt-5.4-mini",

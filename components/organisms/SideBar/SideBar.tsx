@@ -25,6 +25,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 		threads,
 		startNewChat,
 		handleChatSelect,
+		prefetchThreadMessages,
 		user,
 		isLoaded,
 		pinnedThreads,
@@ -168,6 +169,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 							title="Pinned"
 							threads={pinnedThreads}
 							handleChatSelect={handleChatSelectAndClose}
+							handleChatHover={prefetchThreadMessages}
 							handlePinThread={handlePinThread}
 							deleteThread={deleteThread}
 							activeThread={activeThread}
@@ -179,6 +181,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 							title="Last 30 Days"
 							threads={recentUnpinned}
 							handleChatSelect={handleChatSelectAndClose}
+							handleChatHover={prefetchThreadMessages}
 							handlePinThread={handlePinThread}
 							deleteThread={deleteThread}
 							activeThread={activeThread}
@@ -190,6 +193,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 							title="Older"
 							threads={olderUnpinned}
 							handleChatSelect={handleChatSelectAndClose}
+							handleChatHover={prefetchThreadMessages}
 							handlePinThread={handlePinThread}
 							deleteThread={deleteThread}
 							activeThread={activeThread}

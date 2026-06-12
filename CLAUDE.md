@@ -87,14 +87,13 @@ Chat history lives in the per-thread DO's SQLite (`maxPersistedMessages = 200`).
 ### Key directories
 
 - `src/` — Vite SPA entry: `main.tsx` (router bootstrap), `routes/` (file-based routes), `index.css` + `globals.css`, `vite-env.d.ts`. `routeTree.gen.ts` is generated — do not edit.
-- `ai/` — `llm.ts`. **Note:** thread naming now runs in the worker (`worker/src/routes/name-thread.ts`); this copy lingers for evals. The chat agent lives in `worker/`.
 - `components/` — atomic design: `atoms/`, `molecules/`, `organisms/`, all with barrel exports.
 - `components/organisms/Chat/` — `Chat.tsx`, `useChat.ts`, plus:
   - `hooks/useAutoNameThread.ts` — auto-titles new threads via the worker `/name-thread`.
   - `hooks/useQuotaInvalidation.ts` — bumps the quota query on both streaming edges.
   - `helpers/agentAuth.ts` — `resolveAgentAuth(getToken)` (returns `{ ticket }` or `{ anonId }`), `getAnonId` (localStorage + worker mint), `workerHttpBase`.
   - `helpers/autoNameThread.ts` — POST to the worker `/name-thread`, write title via `upsertThreadRemote`.
-- `constants/models.tsx` — model lineup (Anthropic Haiku/Sonnet, OpenAI 5.4/5.4-mini/5.5).
+- `constants/models.tsx` — model lineup (Anthropic Haiku, OpenAI 5.4-mini).
 - `providers/` — theme, model store, query client. Storybook decorators live in `withThemeProvider.tsx` and are **not** re-exported from the barrel (keeps Storybook out of the app bundle).
 - `store/` — Zustand model preferences (persisted to localStorage).
 - `utils/anonId.ts` — anon-id signer/verifier (mirrored in `worker/src/anonId.ts`).
@@ -129,7 +128,7 @@ Unknown model labels from old browsers fall back to `claude-haiku-4-5` with a se
 
 ## Path aliases (tsconfig.json)
 
-`@atoms`, `@molecules`, `@organisms` → `components/*/`. Plus `@utils`, `@lib`, `@constants`, `@store`, `@providers`, `@ai`, `@types`, `@icons`, `@images`, and `@/*` → repo root. Resolved by Vite's native `resolve.tsconfigPaths` (app) and Vitest's `resolve.tsconfigPaths` (tests).
+`@atoms`, `@molecules`, `@organisms` → `components/*/`. Plus `@utils`, `@lib`, `@constants`, `@store`, `@providers`, `@types`, `@icons`, `@images`, and `@/*` → repo root. Resolved by Vite's native `resolve.tsconfigPaths` (app) and Vitest's `resolve.tsconfigPaths` (tests).
 
 ## Required environment variables
 

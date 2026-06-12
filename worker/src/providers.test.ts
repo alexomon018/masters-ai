@@ -7,13 +7,7 @@ import {
 	type LLMModel
 } from "./providers";
 
-const VALID: LLMModel[] = [
-	"claude-haiku-4-5",
-	"claude-sonnet-4-6",
-	"gpt-5.5",
-	"gpt-5.4",
-	"gpt-5.4-mini"
-];
+const VALID: LLMModel[] = ["claude-haiku-4-5", "gpt-5.4-mini"];
 
 describe("parseModelLabel", () => {
 	it.each(VALID)("accepts the valid label %s", (label) => {
@@ -32,7 +26,7 @@ describe("resolveWorkerModelLabel", () => {
 	afterEach(() => vi.restoreAllMocks());
 
 	it("passes through a valid label", () => {
-		expect(resolveWorkerModelLabel("gpt-5.4")).toBe("gpt-5.4");
+		expect(resolveWorkerModelLabel("gpt-5.4-mini")).toBe("gpt-5.4-mini");
 	});
 
 	it("falls back to claude-haiku-4-5 and warns on an unknown label", () => {

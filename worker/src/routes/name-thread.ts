@@ -1,8 +1,13 @@
 import { z } from "zod";
-import { generateText } from "../braintrust";
+import { generateText as defaultGenerateText } from "../braintrust";
 import { getModel } from "../providers";
 import { redisPipeline } from "../redis";
 import type { Env } from "../env";
+
+// Lets evals (running under Node) inject the Node-wrapped generateText so
+// Braintrust metrics are captured. The DO/worker entry omits it and gets the
+// workerd-wrapped default. Mirrors AiSdkOverride in agent-core.ts.
+type GenerateTextFn = typeof defaultGenerateText;
 
 // Ported from the old Next.js ai/llm.ts + app/api/name-thread/route.ts.
 // Auto-titles a freshly started thread. Authentication (ticket / anonId) is
@@ -50,15 +55,7 @@ const messageSchema = z.union([
 
 export const nameThreadBodySchema = z.object({
 	messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
-	model: z
-		.enum([
-			"claude-haiku-4-5",
-			"claude-sonnet-4-6",
-			"gpt-5.5",
-			"gpt-5.4",
-			"gpt-5.4-mini"
-		])
-		.optional()
+	model: z.enum(["claude-haiku-4-5", "gpt-5.4-mini"]).optional()
 });
 
 export type NameThreadBody = z.infer<typeof nameThreadBodySchema>;
@@ -94,7 +91,8 @@ const buildTitleRequest = (messages: NameThreadMessage[]): string => {
 
 export async function runNameThread(
 	env: Env,
-	messages: NameThreadMessage[]
+	messages: NameThreadMessage[],
+	generateText: GenerateTextFn = defaultGenerateText
 ): Promise<string> {
 	const { text } = await generateText({
 		model: getModel("claude-haiku-4-5", env),
