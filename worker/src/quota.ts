@@ -16,7 +16,7 @@ async function redisPipeline(env: QuotaEnv, commands: unknown[][]) {
 	const res = await fetch(`${env.UPSTASH_REDIS_REST_URL}/pipeline`, {
 		method: "POST",
 		headers: {
-			authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+			"authorization": `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
 			"content-type": "application/json"
 		},
 		body: JSON.stringify(commands)

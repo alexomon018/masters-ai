@@ -30,7 +30,7 @@ const svgrComponentPlugin = (): Plugin => ({
 
 		const { code, map } = await transformWithOxc(componentJsx, filePath, {
 			lang: "jsx",
-			jsx: "automatic"
+			jsx: { runtime: "automatic" }
 		});
 		return { code, map };
 	}

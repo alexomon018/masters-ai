@@ -61,7 +61,7 @@ describe("upsertThread ownership", () => {
 		const created = await upsertThread(
 			env,
 			{ userId: "user:a" },
-			{ threadId: "t-own" }
+			{ threadId: "t-own", lastMessageAt: Date.now() }
 		);
 		expect(created.status).toBe(200);
 		const updated = await upsertThread(
@@ -72,8 +72,33 @@ describe("upsertThread ownership", () => {
 		expect(updated.status).toBe(200);
 	});
 
+	it("does not create a row from a metadata-only upsert (deleted thread)", async () => {
+		const renamed = await upsertThread(
+			env,
+			{ userId: "user:a" },
+			{ threadId: "t-gone", title: "Late Rename" }
+		);
+		expect(renamed.status).toBe(404);
+		const pinned = await upsertThread(
+			env,
+			{ userId: "user:a" },
+			{ threadId: "t-gone", pinned: true }
+		);
+		expect(pinned.status).toBe(404);
+		const { results } = await env.THREAD_INDEX.prepare(
+			"SELECT user_id FROM threads WHERE thread_id = ?"
+		)
+			.bind("t-gone")
+			.all();
+		expect(results).toEqual([]);
+	});
+
 	it("refuses a threadId already owned by another user", async () => {
-		await upsertThread(env, { userId: "user:a" }, { threadId: "t-stolen" });
+		await upsertThread(
+			env,
+			{ userId: "user:a" },
+			{ threadId: "t-stolen", lastMessageAt: Date.now() }
+		);
 		const res = await upsertThread(
 			env,
 			{ userId: "user:b" },

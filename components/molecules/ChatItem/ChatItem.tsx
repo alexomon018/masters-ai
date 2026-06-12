@@ -8,6 +8,7 @@ const ChatItem = React.memo(
 		chat,
 		isActive,
 		onSelect,
+		onHover,
 		isPinned,
 		handlePinThread,
 		onDelete
@@ -15,6 +16,7 @@ const ChatItem = React.memo(
 		chat: ThreadDto;
 		isActive: boolean;
 		onSelect: (id: string) => void;
+		onHover: (id: string) => void;
 		isPinned: boolean;
 		onDelete: (id: string) => void;
 		handlePinThread: (id: string) => void;
@@ -23,6 +25,8 @@ const ChatItem = React.memo(
 			<button
 				type="button"
 				onClick={() => onSelect(chat.id)}
+				onMouseEnter={() => onHover(chat.id)}
+				onFocus={() => onHover(chat.id)}
 				className={cn(
 					"w-full cursor-pointer rounded-md px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-[#e2e8f0] dark:hover:bg-[#2a2a2a]",
 					isActive && "bg-gray-100 dark:bg-[#2a2a2a]"

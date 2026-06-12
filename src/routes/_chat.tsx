@@ -70,7 +70,7 @@ const ChatHost = () => {
 			 * box) so the shell AND the input box stay put — only the message
 			 * list area is empty for the brief moment the next thread loads.
 			 */}
-			<Suspense fallback={<ChatPlaceholder />}>
+			<Suspense fallback={<ChatPlaceholder threadId={threadId} />}>
 				<Chat key={threadId} threadId={threadId} isNewThread={isNewThread} />
 			</Suspense>
 		</div>

@@ -70,6 +70,7 @@ beforeEach(() => {
 
 describe("useAutoNameThread", () => {
 	it("fires once when a turn finishes with a user+assistant pair", async () => {
+		fetchThreads.mockResolvedValue([{ id: "thread-fires", title: "New Chat" }]);
 		const messages = [userMsg("u1", "What is RSC?"), assistantMsg("a1", "RSC…")];
 		renderHookFor("thread-fires", messages, false);
 
@@ -97,6 +98,7 @@ describe("useAutoNameThread", () => {
 	});
 
 	it("does not re-fire for the same assistant message (per-thread guard)", async () => {
+		fetchThreads.mockResolvedValue([{ id: "thread-guard", title: "New Chat" }]);
 		const messages = [userMsg("u1", "Q"), assistantMsg("same-a", "A")];
 		const { rerender } = renderHookFor("thread-guard", messages, false);
 		await waitFor(() => expect(autoNameThread).toHaveBeenCalledTimes(1));
@@ -117,6 +119,16 @@ describe("useAutoNameThread", () => {
 		]);
 		const messages = [userMsg("u1", "Q"), assistantMsg("a1", "A")];
 		renderHookFor("thread-titled", messages, false);
+		await new Promise((r) => setTimeout(r, 30));
+		expect(autoNameThread).not.toHaveBeenCalled();
+	});
+
+	it("skips when the thread is not in the fetched list (e.g. just deleted)", async () => {
+		fetchThreads.mockResolvedValue([
+			{ id: "some-other-thread", title: "New Chat" }
+		]);
+		const messages = [userMsg("u1", "Q"), assistantMsg("a1", "A")];
+		renderHookFor("thread-deleted", messages, false);
 		await new Promise((r) => setTimeout(r, 30));
 		expect(autoNameThread).not.toHaveBeenCalled();
 	});

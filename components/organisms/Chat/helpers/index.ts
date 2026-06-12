@@ -1,3 +1,12 @@
 export { default as autoNameThread } from "./autoNameThread";
-export { resolveAgentAuth } from "./agentAuth";
+export { getAnonId, readStoredAnonId, resolveAgentAuth } from "./agentAuth";
 export { getThreadGetMessagesUrl } from "./getThreadGetMessagesUrl";
+export {
+	fetchThreadMessages,
+	threadMessagesQueryOptions
+} from "./threadMessagesQuery";
+export {
+	endsWithSplitAssistant,
+	shouldApplyServerMessages,
+	totalTextLength
+} from "./messageReconciliation";
