@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit configuration — https://docs.coderabbit.ai/reference/configuration
+
+language: en-US
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  # Skip review noise on generated, lock, and snapshot files.
+  path_filters:
+    - "!**/routeTree.gen.ts"
+    - "!**/*.lock"
+    - "!yarn.lock"
+    - "!dist/**"
+    - "!**/__snapshots__/**"
+    - "!**/*.snap"
+    - "!worker/migrations/**"
+
+  # Context to steer reviews toward this repo's conventions.
+  path_instructions:
+    - path: "worker/src/**/*.ts"
+      instructions: >-
+        Cloudflare Worker (Durable Object per thread). Server logic lives here.
+        Flag any auth checks that don't go through clerk-auth.ts / thread-access.ts,
+        request bodies not validated with Zod, and try/catch where the tryCatch
+        utility should be used instead. Generic 401 externally; detailed reasons
+        logged server-side only.
+    - path: "{components,src}/**/*.{ts,tsx}"
+      instructions: >-
+        Vite SPA (React + TanStack Router). Components are arrow functions following
+        atomic design. routeTree.gen.ts is generated — never suggest edits to it.
+        The front-end has no server runtime; flag any server-only secrets used here.
+    - path: "**/*.{ts,tsx}"
+      instructions: >-
+        Prefer no explanatory comments unless the code is non-obvious.
+        Models must stay in lockstep between front-end (types/Model.ts,
+        constants) and worker (worker/src/providers.ts).
+
+  tools:
+    eslint:
+      enabled: true
+
+chat:
+  auto_reply: true
