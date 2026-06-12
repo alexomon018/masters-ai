@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@constants";
 import { useTokenFn, useThreadsQuery } from "@hooks";
+import { threadMessagesQueryOptions } from "@/components/organisms/Chat/helpers";
 import {
 	deleteThreadRemote,
 	upsertThreadRemote,
@@ -77,6 +78,9 @@ const useSideBar = () => {
 				THREADS_QUERY_KEY,
 				(prev) => prev?.filter((t) => t.id !== threadId) ?? []
 			);
+			queryClient.removeQueries({
+				queryKey: queryKeys.threadMessages(threadId)
+			});
 			navigate({ to: "/", replace: true });
 			return { previous };
 		},
@@ -101,6 +105,16 @@ const useSideBar = () => {
 			navigate({ to: "/chat/$id", params: { id: chatId } });
 		},
 		[navigate]
+	);
+
+	// Warm the per-thread message cache on hover/focus so opening the thread
+	// renders instantly. prefetchQuery dedupes in-flight requests and no-ops
+	// while the cached data is still fresh.
+	const prefetchThreadMessages = useCallback(
+		(threadId: string) => {
+			queryClient.prefetchQuery(threadMessagesQueryOptions(tokenFn, threadId));
+		},
+		[queryClient, tokenFn]
 	);
 
 	const { mutate: togglePin } = useMutation({
@@ -163,6 +177,7 @@ const useSideBar = () => {
 		deleteThread,
 		startNewChat,
 		handleChatSelect,
+		prefetchThreadMessages,
 		user,
 		isLoaded,
 		openSearch,

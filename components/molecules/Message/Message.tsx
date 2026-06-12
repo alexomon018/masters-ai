@@ -8,7 +8,6 @@ import {
 	AvatarFallback,
 	AvatarImage
 } from "@/components/atoms/Avatar/Avatar";
-import { AvatarIcon } from "@radix-ui/react-icons";
 import { useUser } from "@clerk/clerk-react";
 import CodeBlock from "../CodeBlock/CodeBlock";
 import ToolStatus from "./ToolStatus";
@@ -144,17 +143,16 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 					)}
 				</div>
 			) : (
-				<Avatar className="rounded-none">
-					<AvatarImage
-						src="https://frontendmasters.com/static-assets/core/m-transparent.webp"
-						alt="@masters"
-						width={50}
-						height={50}
-					/>
-					<AvatarFallback>
-						<AvatarIcon className="size-10" />
-					</AvatarFallback>
-				</Avatar>
+				// Plain <img> (not Radix Avatar): AvatarImage gates rendering on a
+				// JS load event, which flashes the fallback on every remount even
+				// when the logo is cached — visible as a flicker on thread switch.
+				<img
+					src="https://frontendmasters.com/static-assets/core/m-transparent.webp"
+					alt="@masters"
+					width={50}
+					height={50}
+					className="size-10 shrink-0"
+				/>
 			)}
 			<div className="flex flex-col">
 				{renderedParts}

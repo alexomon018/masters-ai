@@ -6,6 +6,7 @@ interface ChatItemSectionProps {
 	title: string;
 	threads: ThreadDto[];
 	handleChatSelect: (id: string) => void;
+	handleChatHover: (id: string) => void;
 	handlePinThread: (id: string) => void;
 	deleteThread: (id: string) => void;
 	activeThread: ThreadDto | null;
@@ -15,6 +16,7 @@ const ChatItemSection = ({
 	title,
 	threads,
 	handleChatSelect,
+	handleChatHover,
 	handlePinThread,
 	deleteThread,
 	activeThread
@@ -30,6 +32,7 @@ const ChatItemSection = ({
 					chat={chat}
 					isActive={activeThread?.id === chat.id}
 					onSelect={handleChatSelect}
+					onHover={handleChatHover}
 					isPinned={chat.pinned}
 					handlePinThread={handlePinThread}
 					onDelete={deleteThread}

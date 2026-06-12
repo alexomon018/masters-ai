@@ -35,6 +35,7 @@ vi.mock("@cloudflare/ai-chat/react", () => ({
 		return {
 			messages: agentChatState.messages,
 			sendMessage,
+			setMessages: vi.fn(),
 			status: agentChatState.status,
 			stop
 		};
@@ -71,6 +72,7 @@ vi.mock("@/components/organisms/SideBar/threadsApi", () => ({
 vi.mock("@hooks", () => ({
 	useAutoNameThread: vi.fn(),
 	useQuotaInvalidation: vi.fn(),
+	useThreadMessagesSync: vi.fn(),
 	useTokenFn: () => async () => null
 }));
 
