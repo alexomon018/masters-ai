@@ -8,7 +8,7 @@ set -euo pipefail
 
 payload="$(cat)"
 
-file_path="$(printf '%s' "$payload" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("tool_input",{}).get("file_path",""))' 2>/dev/null || true)"
+file_path="$(printf '%s' "$payload" | jq -r '.tool_input.file_path // ""' 2>/dev/null || true)"
 
 case "$file_path" in
 	*.ts | *.tsx) ;;

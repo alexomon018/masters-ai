@@ -3,6 +3,7 @@ import { z } from "zod";
 import { sql, desc, gte, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../../db/schema";
+import { tryCatch } from "../../../utils/tryCatch";
 import type { ToolEnv } from "../env";
 
 export interface RecentCourseResult {
@@ -64,7 +65,17 @@ export function makeListRecentCourses(env: ToolEnv) {
 			}
 
 			const db = drizzle(env.THREAD_INDEX, { schema });
-			const results = await listRecentCourses(db, { sinceYear, limit });
+			const { data: results, error } = await tryCatch(
+				listRecentCourses(db, { sinceYear, limit })
+			);
+
+			if (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[listRecentCourses] query failed: ${error instanceof Error ? error.message : String(error)}`
+				);
+				return "Course catalog lookup failed. Please try again.";
+			}
 
 			if (results.length === 0) {
 				return sinceYear

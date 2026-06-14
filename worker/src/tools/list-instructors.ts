@@ -3,6 +3,7 @@ import { z } from "zod";
 import { sql, asc, countDistinct } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../../db/schema";
+import { tryCatch } from "../../../utils/tryCatch";
 import type { ToolEnv } from "../env";
 
 export async function listAllInstructors(
@@ -60,7 +61,17 @@ export function makeListInstructors(env: ToolEnv) {
 			}
 
 			const db = drizzle(env.THREAD_INDEX, { schema });
-			const instructors = await listAllInstructors(db);
+			const { data: instructors, error } = await tryCatch(
+				listAllInstructors(db)
+			);
+
+			if (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[listInstructors] query failed: ${error instanceof Error ? error.message : String(error)}`
+				);
+				return "Unable to fetch instructors at this time. Please try again.";
+			}
 
 			if (instructors.length === 0) {
 				return "No instructors found in the course catalog.";
@@ -84,7 +95,15 @@ export function makeCatalogStats(env: ToolEnv) {
 			}
 
 			const db = drizzle(env.THREAD_INDEX, { schema });
-			const stats = await getCatalogStats(db);
+			const { data: stats, error } = await tryCatch(getCatalogStats(db));
+
+			if (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[catalogStats] query failed: ${error instanceof Error ? error.message : String(error)}`
+				);
+				return "Course catalog lookup failed. Please try again.";
+			}
 
 			const top = stats.topInstructors
 				.map((t) => `- ${t.instructor}: ${t.courseCount}`)

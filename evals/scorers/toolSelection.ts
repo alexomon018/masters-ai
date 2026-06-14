@@ -23,7 +23,7 @@ export const toolSelectionScorer: EvalScorer<
 
 	return {
 		name: "ToolSelection",
-		score: checks === 0 ? null : (checks - failures) / checks,
+		score: (checks - failures) / checks,
 		metadata: {
 			expectedTools,
 			disallowedTools,

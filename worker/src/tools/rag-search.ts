@@ -55,15 +55,23 @@ function toLooseGlob(value: string): string {
 	return `*${pattern}*`;
 }
 
+// Single-scope filtering only: a course already implies its instructor, so at
+// most one of courseName / teacherName is honored. If both arrive, courseName
+// wins (it is the narrower scope) and the conflict is logged.
 function buildMetadataFilter(filters?: RagFilters): string | undefined {
-	const clauses: string[] = [];
-	if (filters?.teacherName) {
-		clauses.push(`teacherName GLOB '${toLooseGlob(filters.teacherName)}'`);
+	const teacher = filters?.teacherName?.trim();
+	const course = filters?.courseName?.trim();
+
+	if (course && teacher) {
+		// eslint-disable-next-line no-console
+		console.warn(
+			"[ragSearch] both courseName and teacherName supplied; using courseName only"
+		);
 	}
-	if (filters?.courseName) {
-		clauses.push(`courseName GLOB '${toLooseGlob(filters.courseName)}'`);
-	}
-	return clauses.length > 0 ? clauses.join(" AND ") : undefined;
+
+	if (course) return `courseName GLOB '${toLooseGlob(course)}'`;
+	if (teacher) return `teacherName GLOB '${toLooseGlob(teacher)}'`;
+	return undefined;
 }
 
 export async function searchRagIndex(
@@ -175,7 +183,7 @@ export function makeRagSearch(env: ToolEnv) {
 		execute: async ({ query, teacherName, courseName }) => {
 			// eslint-disable-next-line no-console
 			console.log(
-				`[ragSearch] query=${JSON.stringify(query)} filters=${JSON.stringify({ teacherName, courseName })}`
+				`[ragSearch] queryLength=${query.length} filters=${JSON.stringify({ teacherName, courseName })}`
 			);
 
 			const hits = await searchRagIndex(query, vector, {

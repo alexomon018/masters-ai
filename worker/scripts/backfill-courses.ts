@@ -157,11 +157,13 @@ async function main(): Promise<void> {
 	);
 
 	const lines = [
+		"BEGIN TRANSACTION;",
 		"DELETE FROM courses;",
 		...rows.map(
 			(r) =>
 				`INSERT INTO courses (instructor, course_name, course_title, released_at) VALUES (${sqlString(r.teacherName)}, ${sqlString(r.courseName)}, ${sqlString(slugToTitle(r.courseName, r.teacherName))}, ${sqlString(releaseDate(r.courseName))});`
-		)
+		),
+		"COMMIT;"
 	];
 
 	process.stdout.write(`${lines.join("\n")}\n`);

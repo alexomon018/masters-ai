@@ -17,7 +17,7 @@
 			"command": "npx",
 			"args": [
 				"-y",
-				"@upstash/mcp-server@latest",
+				"@upstash/mcp-server@0.2.3",
 				"--email",
 				"${UPSTASH_MCP_EMAIL}",
 				"--api-key",

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { like, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../../db/schema";
+import { tryCatch } from "../../../utils/tryCatch";
 import type { ToolEnv } from "../env";
 
 export interface CourseListResult {
@@ -67,7 +68,17 @@ export function makeListCourses(env: ToolEnv) {
 			}
 
 			const db = drizzle(env.THREAD_INDEX, { schema });
-			const results = await listCoursesForInstructor(instructor, db);
+			const { data: results, error } = await tryCatch(
+				listCoursesForInstructor(instructor, db)
+			);
+
+			if (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[listCourses] query failed: ${error instanceof Error ? error.message : String(error)}`
+				);
+				return "Unable to fetch courses at this time. Please try again.";
+			}
 
 			if (results.length === 0) {
 				return `No Frontend Masters courses found for an instructor matching "${instructor}".`;

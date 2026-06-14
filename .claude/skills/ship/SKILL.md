@@ -21,7 +21,7 @@ Get verified work committed so it can't be lost or silently reverted. This exist
 
 4. **Commit with a root-cause message.** The body should explain *what was wrong and why this fixes it* (the root cause), not just what changed. End the message with the required trailer:
 
-   ```
+   ```text
    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
    ```
 
