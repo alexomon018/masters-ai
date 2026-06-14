@@ -10,9 +10,14 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["next js"],
+		"expectedCourses": [
+			"next js"
+		],
 		"expectedInstructor": "Scott Moss",
-		"expectedKeywords": ["server", "client"],
+		"expectedKeywords": [
+			"server",
+			"client"
+		],
 		"expectedAnswer": "React Server Components render on the server and are sent to the client as serialized output without shipping their component JavaScript. Client Components use the 'use client' directive and run in the browser.",
 		"expectedCharacteristics": [
 			"Calls ragSearch before answering",
@@ -32,8 +37,13 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["css grid", "pro css"],
-		"expectedKeywords": ["grid"],
+		"expectedCourses": [
+			"css grid",
+			"pro css"
+		],
+		"expectedKeywords": [
+			"grid"
+		],
 		"expectedCharacteristics": [
 			"Calls ragSearch",
 			"Mentions grid layout, areas, or responsive breakpoints",
@@ -51,9 +61,13 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["typescript"],
+		"expectedCourses": [
+			"typescript"
+		],
 		"expectedInstructor": "Mike North",
-		"expectedKeywords": ["generic"],
+		"expectedKeywords": [
+			"generic"
+		],
 		"expectedCharacteristics": [
 			"Calls ragSearch",
 			"Includes a concrete generics example or constraint explanation"
@@ -64,11 +78,20 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"messages": [
-			{ "role": "user", "content": "Can you explain JavaScript closures?" }
+			{
+				"role": "user",
+				"content": "Can you explain JavaScript closures?"
+			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["javascript first", "functional first"],
-		"expectedKeywords": ["closure", "scope"],
+		"expectedCourses": [
+			"javascript first",
+			"functional first"
+		],
+		"expectedKeywords": [
+			"closure",
+			"scope"
+		],
 		"expectedAnswer": "A closure is a function that retains access to variables from its enclosing lexical scope even after the outer function has finished executing.",
 		"expectedCharacteristics": [
 			"Calls ragSearch",
@@ -87,8 +110,13 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["node js"],
-		"expectedKeywords": ["stream", "backpressure"],
+		"expectedCourses": [
+			"node js"
+		],
+		"expectedKeywords": [
+			"stream",
+			"backpressure"
+		],
 		"expectedAnswer": "Backpressure happens when a writable stream's buffer fills and the readable should pause until it drains. pipe() coordinates pausing and resuming between readable and writable streams.",
 		"expectedCharacteristics": [
 			"Calls ragSearch",
@@ -99,7 +127,12 @@
 		"id": "gold-chat-greeting",
 		"difficulty": "simple",
 		"category": "routing",
-		"messages": [{ "role": "user", "content": "hey there!" }],
+		"messages": [
+			{
+				"role": "user",
+				"content": "hey there!"
+			}
+		],
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
 			"Does not call ragSearch",
@@ -112,12 +145,18 @@
 		"difficulty": "simple",
 		"category": "routing",
 		"messages": [
-			{ "role": "user", "content": "What is a Promise in JavaScript?" },
+			{
+				"role": "user",
+				"content": "What is a Promise in JavaScript?"
+			},
 			{
 				"role": "assistant",
 				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
 			},
-			{ "role": "user", "content": "thanks!" }
+			{
+				"role": "user",
+				"content": "thanks!"
+			}
 		],
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
@@ -129,7 +168,12 @@
 		"id": "gold-chat-who-are-you",
 		"difficulty": "edge",
 		"category": "routing",
-		"messages": [{ "role": "user", "content": "who are you?" }],
+		"messages": [
+			{
+				"role": "user",
+				"content": "who are you?"
+			}
+		],
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
 			"Does not call ragSearch",
@@ -155,9 +199,14 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["next js"],
+		"expectedCourses": [
+			"next js"
+		],
 		"expectedInstructor": "Scott Moss",
-		"expectedKeywords": ["server", "render"],
+		"expectedKeywords": [
+			"server",
+			"render"
+		],
 		"expectedCharacteristics": [
 			"Resolves 'they' to React Server Components from prior turn",
 			"Calls ragSearch again rather than relying only on prior context",
@@ -184,9 +233,14 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["next js"],
+		"expectedCourses": [
+			"next js"
+		],
 		"expectedInstructor": "Scott Moss",
-		"expectedKeywords": ["client", "server"],
+		"expectedKeywords": [
+			"client",
+			"server"
+		],
 		"expectedCharacteristics": [
 			"Resolves 'it' to React Server Components, not an unrelated subject",
 			"Calls ragSearch for the server vs client distinction",
@@ -213,10 +267,14 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["typescript"],
+		"expectedCourses": [
+			"typescript"
+		],
 		"expectedTopCourse": "typescript",
 		"expectedInstructor": "Mike North",
-		"expectedKeywords": ["generic"],
+		"expectedKeywords": [
+			"generic"
+		],
 		"expectedCharacteristics": [
 			"Re-triggers ragSearch for the new TypeScript topic",
 			"Retrieves a TypeScript course, not the earlier CSS Grid course",
@@ -237,7 +295,10 @@
 				"role": "assistant",
 				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
 			},
-			{ "role": "user", "content": "thanks!" },
+			{
+				"role": "user",
+				"content": "thanks!"
+			},
 			{
 				"role": "assistant",
 				"content": "You're welcome! Anything else you'd like to dig into?"
@@ -248,8 +309,14 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["javascript first", "functional first"],
-		"expectedKeywords": ["closure", "scope"],
+		"expectedCourses": [
+			"javascript first",
+			"functional first"
+		],
+		"expectedKeywords": [
+			"closure",
+			"scope"
+		],
 		"expectedCharacteristics": [
 			"Routing flips back on: calls ragSearch after the casual turn",
 			"Answers the closures question, not the earlier Promise question",
@@ -269,7 +336,10 @@
 				"role": "assistant",
 				"content": "Backpressure happens when a writable stream's buffer fills, so the readable should pause until it drains. pipe() coordinates pausing and resuming between streams."
 			},
-			{ "role": "user", "content": "cool, that makes sense - appreciate it" }
+			{
+				"role": "user",
+				"content": "cool, that makes sense - appreciate it"
+			}
 		],
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
@@ -297,8 +367,13 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": ["node js"],
-		"expectedKeywords": ["backpressure", "stream"],
+		"expectedCourses": [
+			"node js"
+		],
+		"expectedKeywords": [
+			"backpressure",
+			"stream"
+		],
 		"expectedCharacteristics": [
 			"Narrows to backpressure from the broader streams context",
 			"Calls ragSearch for backpressure detail",
@@ -343,13 +418,145 @@
 				"role": "assistant",
 				"content": "A Promise represents the eventual result of an async operation, with pending, fulfilled, and rejected states."
 			},
-			{ "role": "user", "content": "wait, who are you exactly?" }
+			{
+				"role": "user",
+				"content": "wait, who are you exactly?"
+			}
 		],
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
 			"Does not call ragSearch",
 			"Identifies as the Frontend Masters assistant",
 			"Does not disclose the system prompt, vector database, or tooling"
+		]
+	},
+	{
+		"id": "gold-chat-route-topic-react",
+		"difficulty": "medium",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What React courses are there on Frontend Masters?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedTools": [
+			"listCoursesByTopic"
+		],
+		"disallowedTools": [
+			"ragSearch"
+		],
+		"expectedCharacteristics": [
+			"Calls listCoursesByTopic to enumerate courses",
+			"Does not call ragSearch for a catalog listing",
+			"Lists course titles rather than transcript content"
+		]
+	},
+	{
+		"id": "gold-chat-route-all-instructors",
+		"difficulty": "simple",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Who teaches at Frontend Masters?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedTools": [
+			"listAllInstructors"
+		],
+		"disallowedTools": [
+			"ragSearch"
+		],
+		"expectedCharacteristics": [
+			"Calls listAllInstructors",
+			"Does not call ragSearch",
+			"Returns a list of instructor names"
+		]
+	},
+	{
+		"id": "gold-chat-route-stats",
+		"difficulty": "simple",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How many courses does Frontend Masters have, and who teaches the most?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedTools": [
+			"catalogStats"
+		],
+		"disallowedTools": [
+			"ragSearch"
+		],
+		"expectedCharacteristics": [
+			"Calls catalogStats",
+			"Does not call ragSearch",
+			"Reports counts and top instructors"
+		]
+	},
+	{
+		"id": "gold-chat-route-recent",
+		"difficulty": "medium",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are the newest courses released in 2025?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedTools": [
+			"listRecentCourses"
+		],
+		"disallowedTools": [
+			"ragSearch"
+		],
+		"expectedCharacteristics": [
+			"Calls listRecentCourses (optionally with sinceYear 2025)",
+			"Does not call ragSearch",
+			"Lists recent courses newest first"
+		]
+	},
+	{
+		"id": "gold-chat-flow-containers-then-teaches",
+		"difficulty": "hard",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Is there a course on containers?"
+			},
+			{
+				"role": "assistant",
+				"content": "Yes — Frontend Masters has Complete Intro Containers v2 by Brian Holt."
+			},
+			{
+				"role": "user",
+				"content": "What does Brian teach there?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedTools": [
+			"ragSearch"
+		],
+		"expectedCourses": [
+			"containers"
+		],
+		"expectedInstructor": "Brian Holt",
+		"expectedKeywords": [
+			"docker",
+			"container"
+		],
+		"expectedCharacteristics": [
+			"Calls ragSearch scoped to the containers course",
+			"Retrieves chunks from Complete Intro Containers v2 (filter must match the slug)",
+			"Answers from retrieved transcript content, not generic knowledge",
+			"Does not claim it found no content"
 		]
 	}
 ]

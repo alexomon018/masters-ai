@@ -32,7 +32,11 @@ Eval<RagTestCase, RagHit[], RagTestCase>(evalProject(), {
 			},
 		})),
 
-	task: async (testCase) => searchRagIndex(testCase.query, vector),
+	task: async (testCase) =>
+		searchRagIndex(testCase.query, vector, {
+			teacherName: testCase.teacherName,
+			courseName: testCase.courseName,
+		}),
 
 	scores: [
 		hasResultsScorer,

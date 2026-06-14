@@ -4,10 +4,15 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "React Server Components server rendering vs client components",
-		"expectedCourses": ["next js"],
+		"expectedCourses": [
+			"next js"
+		],
 		"expectedTopCourse": "next js",
 		"expectedInstructor": "Scott Moss",
-		"expectedKeywords": ["server", "component"],
+		"expectedKeywords": [
+			"server",
+			"component"
+		],
 		"expectedCharacteristics": [
 			"At least one hit from the Next.js course covering React Server Components",
 			"Chunk text distinguishes server components from client components or SSR",
@@ -19,9 +24,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "React useEffect hook dependency array cleanup",
-		"expectedCourses": ["complete react", "react native"],
+		"expectedCourses": [
+			"complete react",
+			"react native"
+		],
 		"expectedTopCourse": "complete react",
-		"expectedKeywords": ["effect"],
+		"expectedKeywords": [
+			"effect"
+		],
 		"expectedCharacteristics": [
 			"Hits mention useEffect, dependency array, or cleanup",
 			"Prefer a React course chunk over tangential devtools content",
@@ -33,9 +43,14 @@
 		"difficulty": "simple",
 		"category": "domain",
 		"query": "CSS flexbox align items justify content",
-		"expectedCourses": ["css foundations", "css grid"],
+		"expectedCourses": [
+			"css foundations",
+			"css grid"
+		],
 		"expectedTopCourse": "css foundations",
-		"expectedKeywords": ["flex"],
+		"expectedKeywords": [
+			"flex"
+		],
 		"expectedCharacteristics": [
 			"Chunk text discusses flexbox, align-items, or justify-content",
 			"Top hit from a CSS-focused course (foundations or grid)"
@@ -46,9 +61,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "CSS Grid layout grid-template-areas responsive",
-		"expectedCourses": ["css grid", "pro css"],
+		"expectedCourses": [
+			"css grid",
+			"pro css"
+		],
 		"expectedTopCourse": "css grid",
-		"expectedKeywords": ["grid"],
+		"expectedKeywords": [
+			"grid"
+		],
 		"expectedCharacteristics": [
 			"Hits mention CSS Grid, grid-template-areas, or responsive layout",
 			"At least one hit from Jen Kramer CSS Grid or Kevin Powell Pro CSS"
@@ -59,10 +79,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "TypeScript generics constraints extends keyword",
-		"expectedCourses": ["typescript"],
+		"expectedCourses": [
+			"typescript"
+		],
 		"expectedTopCourse": "typescript",
 		"expectedInstructor": "Mike North",
-		"expectedKeywords": ["generic"],
+		"expectedKeywords": [
+			"generic"
+		],
 		"expectedCharacteristics": [
 			"Top hit from a TypeScript course",
 			"Chunk covers generics, constraints, or extends in TypeScript"
@@ -73,9 +97,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "JavaScript closures lexical scope",
-		"expectedCourses": ["javascript first", "functional first"],
+		"expectedCourses": [
+			"javascript first",
+			"functional first"
+		],
 		"expectedTopCourse": "javascript first",
-		"expectedKeywords": ["closure"],
+		"expectedKeywords": [
+			"closure"
+		],
 		"expectedCharacteristics": [
 			"Hits explain JavaScript closures or lexical scope",
 			"Prefer JavaScript course over Swift/Rust closure analogies in top 3"
@@ -86,9 +115,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "Node.js streams backpressure pause resume drain pipe",
-		"expectedCourses": ["node js"],
+		"expectedCourses": [
+			"node js"
+		],
 		"expectedTopCourse": "node js",
-		"expectedKeywords": ["stream", "backpressure"],
+		"expectedKeywords": [
+			"stream",
+			"backpressure"
+		],
 		"expectedCharacteristics": [
 			"Hits explain stream backpressure, pausing/resuming, or drain events",
 			"At least one hit from a Node.js course (not tangential React SSR streaming)",
@@ -100,9 +134,14 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "Node.js event loop asynchronous callbacks",
-		"expectedCourses": ["node js", "hard parts"],
+		"expectedCourses": [
+			"node js",
+			"hard parts"
+		],
 		"expectedTopCourse": "node js",
-		"expectedKeywords": ["event"],
+		"expectedKeywords": [
+			"event"
+		],
 		"expectedCharacteristics": [
 			"Hits describe the Node.js event loop or async callbacks",
 			"At least one hit from Node.js v3 or Hard Parts UI dev event-loop content"
@@ -113,8 +152,13 @@
 		"difficulty": "medium",
 		"category": "domain",
 		"query": "web accessibility ARIA semantic HTML screen readers",
-		"expectedCourses": ["dev tools", "html css"],
-		"expectedKeywords": ["accessib"],
+		"expectedCourses": [
+			"dev tools",
+			"html css"
+		],
+		"expectedKeywords": [
+			"accessib"
+		],
 		"expectedCharacteristics": [
 			"Hits mention accessibility, ARIA, semantic HTML, or screen readers",
 			"Course slug may be dev tools or HTML/CSS — topic match matters more than title"
@@ -129,6 +173,55 @@
 		"expectedCharacteristics": [
 			"Returns empty array or no hits above score threshold",
 			"Does not fabricate high-confidence irrelevant FM course content"
+		]
+	},
+	{
+		"id": "gold-rag-filter-containers-pretty-title",
+		"difficulty": "hard",
+		"category": "domain",
+		"query": "containers docker images volumes",
+		"courseName": "Complete Intro Containers v2",
+		"expectedCourses": [
+			"containers"
+		],
+		"expectedTopCourse": "containers",
+		"expectedInstructor": "Brian Holt",
+		"expectedKeywords": [
+			"container"
+		],
+		"expectedCharacteristics": [
+			"courseName filter passed as the pretty title still matches the raw slug",
+			"Returns hits from the Complete Intro Containers v2 course",
+			"Regression guard: this returned zero hits before the loose-glob fix"
+		]
+	},
+	{
+		"id": "gold-rag-filter-teacher-substring",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "react application structure",
+		"teacherName": "Holt",
+		"expectedCourses": [
+			"react"
+		],
+		"expectedInstructor": "Brian Holt",
+		"expectedCharacteristics": [
+			"teacherName partial match ('Holt') scopes results to Brian Holt",
+			"Case-insensitive teacher filter works"
+		]
+	},
+	{
+		"id": "gold-rag-filter-course-slug-passthrough",
+		"difficulty": "medium",
+		"category": "domain",
+		"query": "containers",
+		"courseName": "complete-intro-containers-v2",
+		"expectedCourses": [
+			"containers"
+		],
+		"expectedInstructor": "Brian Holt",
+		"expectedCharacteristics": [
+			"Raw slug passed as courseName also matches (back-compat with old behavior)"
 		]
 	}
 ]

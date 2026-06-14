@@ -28,10 +28,50 @@ export interface RagHit {
 	text: string;
 }
 
+export interface RagFilters {
+	teacherName?: string;
+	courseName?: string;
+}
+
+// Upstash GLOB is case-sensitive and has no LOWER(), and the stored metadata
+// uses raw slugs (e.g. "2024-08-06-complete-intro-containers-v2-brian-holt")
+// while callers pass pretty titles ("Complete Intro Containers v2"). Build a
+// pattern that is case-insensitive (each cased letter -> [Aa]) and treats any
+// run of non-alphanumerics as a wildcard, so titles match slugs both ways.
+function toLooseGlob(value: string): string {
+	const tokens = value.toLowerCase().match(/[a-z0-9]+/g);
+	if (!tokens || tokens.length === 0) return "*";
+
+	const pattern = tokens
+		.map((token) =>
+			[...token]
+				.map((ch) =>
+					ch >= "a" && ch <= "z" ? `[${ch.toUpperCase()}${ch}]` : ch
+				)
+				.join("")
+		)
+		.join("*");
+
+	return `*${pattern}*`;
+}
+
+function buildMetadataFilter(filters?: RagFilters): string | undefined {
+	const clauses: string[] = [];
+	if (filters?.teacherName) {
+		clauses.push(`teacherName GLOB '${toLooseGlob(filters.teacherName)}'`);
+	}
+	if (filters?.courseName) {
+		clauses.push(`courseName GLOB '${toLooseGlob(filters.courseName)}'`);
+	}
+	return clauses.length > 0 ? clauses.join(" AND ") : undefined;
+}
+
 export async function searchRagIndex(
 	query: string,
-	vector: Index
+	vector: Index,
+	filters?: RagFilters
 ): Promise<RagHit[]> {
+	const filter = buildMetadataFilter(filters);
 	let results;
 	try {
 		results = await vector.query({
@@ -39,6 +79,7 @@ export async function searchRagIndex(
 			topK: TOP_K,
 			includeMetadata: true,
 			includeData: true,
+			...(filter ? { filter } : {}),
 		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
@@ -111,19 +152,36 @@ export function makeRagSearch(env: ToolEnv) {
 
 	return tool({
 		description:
-			"Search the Frontend Masters course transcript database for relevant content. Use this tool for any programming, web development, or technical question to find accurate course-based answers. Rephrase the user's question as a concise, keyword-rich search query focused on the core technical concept and technology name (e.g. 'Node.js streams backpressure pause resume' not just 'backpressure').",
+			"Search the Frontend Masters course transcript database for relevant content. Use this tool for any programming, web development, or technical question to find accurate course-based answers. Rephrase the user's question as a concise, keyword-rich search query focused on the core technical concept and technology name (e.g. 'Node.js streams backpressure pause resume' not just 'backpressure') — do not pad the query with a long list of loosely related technologies. When the user scopes the question to a specific course or instructor (e.g. \"in Will Sentance's Node course\"), set courseName OR teacherName to restrict results — set only one, since a course already implies its instructor. Course and instructor names may be passed as the human-readable title or partial name (e.g. 'Complete Intro Containers v2' or 'Containers'); matching is case- and punctuation-insensitive.",
 		inputSchema: z.object({
 			query: z
 				.string()
 				.describe(
 					"A concise, keyword-rich search query focused on the core technical concept"
 				),
+			teacherName: z
+				.string()
+				.optional()
+				.describe(
+					"Optional. Restrict results to a specific instructor; full or partial name, case- and punctuation-insensitive (e.g. 'Sentance'). Do not set if courseName is set."
+				),
+			courseName: z
+				.string()
+				.optional()
+				.describe(
+					"Optional. Restrict results to a specific course; the human-readable title or part of it, case- and punctuation-insensitive (e.g. 'Complete Intro Containers v2' or 'Containers')."
+				),
 		}),
-		execute: async ({ query }) => {
+		execute: async ({ query, teacherName, courseName }) => {
 			// eslint-disable-next-line no-console
-			console.log(`[ragSearch] query=${JSON.stringify(query)}`);
+			console.log(
+				`[ragSearch] query=${JSON.stringify(query)} filters=${JSON.stringify({ teacherName, courseName })}`
+			);
 
-			const hits = await searchRagIndex(query, vector);
+			const hits = await searchRagIndex(query, vector, {
+				teacherName,
+				courseName,
+			});
 
 			if (hits.length === 0) {
 				return "No relevant content found in the Frontend Masters course database.";

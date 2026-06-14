@@ -25,6 +25,7 @@ import {
 	chatTopCourseHitScorer,
 } from "./scorers/chatRetrieval";
 import { ragSearchCalledScorer } from "./scorers/ragSearchCalled";
+import { toolSelectionScorer } from "./scorers/toolSelection";
 import { citationScorer, answerKeywordScorer } from "./scorers/citation";
 import { groundedInHitsScorer } from "./scorers/groundedInHits";
 import { identityBehaviorScorer } from "./scorers/identityBehavior";
@@ -77,6 +78,7 @@ Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {
 
 	scores: [
 		ragSearchCalledScorer,
+		toolSelectionScorer,
 		casualBehaviorScorer,
 		identityBehaviorScorer,
 		citationScorer,

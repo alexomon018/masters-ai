@@ -58,7 +58,26 @@ export const projectsTable = sqliteTable(
 	(table) => [primaryKey({ columns: [table.userId, table.projectId] })]
 );
 
+// Catalog of (instructor, course) pairs, backfilled from Upstash Vector
+// metadata. Powers exact instructor->courses lookups, which dense vector
+// search cannot enumerate reliably. Not per-user.
+export const coursesTable = sqliteTable(
+	"courses",
+	{
+		instructor: text("instructor").notNull(),
+		courseName: text("course_name").notNull(),
+		courseTitle: text("course_title").notNull().default(""),
+		releasedAt: text("released_at").notNull().default(""),
+	},
+	(table) => [
+		primaryKey({ columns: [table.instructor, table.courseName] }),
+		index("courses_instructor").on(table.instructor),
+	]
+);
+
 export type Thread = typeof threadsTable.$inferSelect;
 export type NewThread = typeof threadsTable.$inferInsert;
 export type Project = typeof projectsTable.$inferSelect;
 export type NewProject = typeof projectsTable.$inferInsert;
+export type Course = typeof coursesTable.$inferSelect;
+export type NewCourse = typeof coursesTable.$inferInsert;

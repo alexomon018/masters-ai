@@ -151,7 +151,8 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			userData,
 			env: {
 				UPSTASH_VECTOR_REST_URL: this.env.UPSTASH_VECTOR_REST_URL,
-				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN
+				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN,
+				THREAD_INDEX: this.env.THREAD_INDEX
 			}
 		});
 
