@@ -156,14 +156,15 @@ async function main(): Promise<void> {
 		`[backfill-courses] ${rows.length} distinct (instructor, course) pairs`
 	);
 
+	// No explicit BEGIN/COMMIT: `wrangler d1 execute --file` runs the statements
+	// as one batch (atomic) on D1, and remote D1 (Durable Object SQLite) rejects
+	// raw BEGIN TRANSACTION / SAVEPOINT — it requires the JS transaction API.
 	const lines = [
-		"BEGIN TRANSACTION;",
 		"DELETE FROM courses;",
 		...rows.map(
 			(r) =>
 				`INSERT INTO courses (instructor, course_name, course_title, released_at) VALUES (${sqlString(r.teacherName)}, ${sqlString(r.courseName)}, ${sqlString(slugToTitle(r.courseName, r.teacherName))}, ${sqlString(releaseDate(r.courseName))});`
-		),
-		"COMMIT;"
+		)
 	];
 
 	process.stdout.write(`${lines.join("\n")}\n`);
