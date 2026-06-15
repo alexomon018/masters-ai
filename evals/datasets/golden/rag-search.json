@@ -211,17 +211,88 @@
 		]
 	},
 	{
-		"id": "gold-rag-filter-course-slug-passthrough",
+		"id": "gold-rag-ambiguous-multi-tech",
+		"difficulty": "hard",
+		"category": "domain",
+		"query": "React Node.js TypeScript Docker GraphQL full stack architecture",
+		"expectedCourses": [
+			"react",
+			"node",
+			"typescript"
+		],
+		"expectedKeywords": [
+			"react"
+		],
+		"expectedCharacteristics": [
+			"Returns hits for at least one core web technology",
+			"Top results are not completely off-topic physics or unrelated domains"
+		]
+	},
+	{
+		"id": "gold-rag-fallback-threshold",
 		"difficulty": "medium",
 		"category": "domain",
-		"query": "containers",
-		"courseName": "complete-intro-containers-v2",
+		"query": "promise microtask queue javascript event loop",
 		"expectedCourses": [
-			"containers"
+			"javascript",
+			"hard parts"
 		],
-		"expectedInstructor": "Brian Holt",
+		"expectedKeywords": [
+			"promise"
+		],
 		"expectedCharacteristics": [
-			"Raw slug passed as courseName also matches (back-compat with old behavior)"
+			"Returns at least one on-topic hit even if scores are below the primary threshold",
+			"Chunks discuss promises, microtasks, or the event loop"
+		]
+	},
+	{
+		"id": "gold-rag-messy-conversational",
+		"difficulty": "hard",
+		"category": "domain",
+		"query": "hey so i keep hearing about that thing where node streams get overwhelmed and you have to slow them down, how does that actually work?",
+		"expectedCourses": [
+			"node js"
+		],
+		"expectedKeywords": [
+			"stream"
+		],
+		"expectedCharacteristics": [
+			"Weak-model-style verbose query still retrieves Node.js stream content",
+			"Query rewrite should improve recall vs the raw conversational query",
+			"Hits discuss backpressure, pausing/resuming, or draining streams"
+		]
+	},
+	{
+		"id": "gold-rag-messy-vague-pronoun",
+		"difficulty": "hard",
+		"category": "domain",
+		"query": "can you explain how those reusable type things work in typescript that let one function work with lots of types",
+		"expectedCourses": [
+			"typescript"
+		],
+		"expectedKeywords": [
+			"generic"
+		],
+		"expectedCharacteristics": [
+			"Vague description of generics (no keyword 'generic') still maps to the TypeScript course",
+			"Query rewrite should recover the 'generics' concept the raw query never names"
+		]
+	},
+	{
+		"id": "gold-rag-messy-padded-multitech",
+		"difficulty": "hard",
+		"category": "domain",
+		"query": "i want to learn react and also redux and webpack and css and a bunch of frontend stuff but mainly how do css grid layouts work for responsive design",
+		"expectedCourses": [
+			"css grid",
+			"pro css"
+		],
+		"expectedKeywords": [
+			"grid"
+		],
+		"expectedCharacteristics": [
+			"Padded query with many technologies still focuses retrieval on CSS Grid",
+			"Query rewrite should strip the noise and keep the core CSS Grid intent"
 		]
 	}
 ]

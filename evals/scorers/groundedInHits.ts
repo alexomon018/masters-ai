@@ -1,10 +1,15 @@
 import type { EvalScorer } from "braintrust";
 
-import { overlapScore } from "../helpers/contentOverlap";
+import { groundingPrecision, overlapScore } from "../helpers/contentOverlap";
 import type { ChatTestCase } from "../types";
 import type { ChatAgentOutput } from "./chatOutput";
 
 type ChatScorer = EvalScorer<ChatTestCase, ChatAgentOutput, ChatTestCase>;
+
+// Precision this share of answer vocabulary supported by hits counts as fully
+// grounded — leaves room for connective/explanatory words while still
+// punishing answers stuffed with unsupported specifics.
+const PRECISION_TARGET = 0.5;
 
 function keywordRecallInHits(
 	hitTexts: string[],
@@ -20,6 +25,9 @@ function keywordRecallInHits(
 
 export const groundedInHitsScorer: ChatScorer = ({ output, expected }) => {
 	if (!expected?.expectsRagCall) return null;
+	// Out-of-scope ("edge") cases intentionally retrieve nothing — grounding the
+	// answer in hits is meaningless there and the abstention scorer owns them.
+	if (expected.category === "edge") return null;
 
 	const called = output.toolNames.includes("ragSearch");
 	if (!called) {
@@ -31,13 +39,14 @@ export const groundedInHitsScorer: ChatScorer = ({ output, expected }) => {
 	}
 
 	const hitTexts = output.ragHitTexts ?? [];
-	const overlap = overlapScore(output.text, hitTexts);
+	const precision = groundingPrecision(output.text, hitTexts);
+	const normalizedPrecision = Math.min(1, precision / PRECISION_TARGET);
 	const keywords = expected.expectedKeywords;
 	const keywordScore =
 		keywords && keywords.length > 0
 			? keywordRecallInHits(hitTexts, keywords)
 			: 1;
-	const score = Math.min(overlap, keywordScore);
+	const score = Math.min(normalizedPrecision, keywordScore);
 
 	return {
 		name: "GroundedInHits",
@@ -45,7 +54,10 @@ export const groundedInHitsScorer: ChatScorer = ({ output, expected }) => {
 		metadata: {
 			ragHitCount: hitTexts.length,
 			answerLength: output.text.length,
-			overlap,
+			precision,
+			normalizedPrecision,
+			// Legacy capped hit→answer recall, kept for comparison.
+			overlap: overlapScore(output.text, hitTexts),
 			keywordScore,
 		},
 	};
