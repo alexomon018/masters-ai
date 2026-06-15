@@ -79,6 +79,12 @@ const CONTEXT_FOLLOWUP_PATTERNS: RegExp[] = [
 	/\b(say|explain|put|break|spell)\s+(that|it|this)\s+(again|differently|another way|down)\b/i
 ];
 
+// A follow-up phrase ("thanks", "got it") followed by one of these signals a
+// pivot to a new substantive request — "thanks, now explain hooks". When that
+// happens the turn is NOT a pure follow-up and retrieval must not be suppressed.
+const NEW_REQUEST_AFTER_FOLLOWUP =
+	/\b(thanks|thank you|appreciate it|got it|makes sense|that helps|good to know|sounds good)\b[\s,.!-]*(now|also|but|and|then)?\s*(explain|tell|show|what|how|why|when|where|which|who|can you|could you|give|list|describe|walk)\b/i;
+
 // True when the latest user turn builds on a prior assistant answer and is a
 // pure rephrase/ack/identity turn. Used to suppress the forced first-step tool
 // call so the model can answer from context instead of over-searching.
@@ -91,6 +97,7 @@ export function isContextFollowupMessage(messages: ModelMessage[]): boolean {
 	if (!hasPriorAssistant) return false;
 	const text = modelMessageText(last.content);
 	if (!text) return false;
+	if (NEW_REQUEST_AFTER_FOLLOWUP.test(text)) return false;
 	return CONTEXT_FOLLOWUP_PATTERNS.some((re) => re.test(text));
 }
 
@@ -205,19 +212,23 @@ export function streamAgent({
 	userData,
 	maxSteps = 20,
 	env,
-	aiSdk
-}: AgentArgs) {
+	aiSdk,
+	onFinish
+}: AgentArgs & {
+	onFinish?: Parameters<typeof defaultStreamText>[0]["onFinish"];
+}) {
 	const streamTextFn = aiSdk?.streamText ?? defaultStreamText;
-	return streamTextFn(
-		buildAgentCallOptions({
+	return streamTextFn({
+		...buildAgentCallOptions({
 			model,
 			modelLabel,
 			messages,
 			userData,
 			maxSteps,
 			env
-		})
-	);
+		}),
+		onFinish
+	});
 }
 
 export async function runAgent({

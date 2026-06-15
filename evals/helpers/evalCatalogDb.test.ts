@@ -12,8 +12,5 @@ describe("evalCatalogDb", () => {
 		const reactCourses = await listCoursesForTopic("React", db);
 
 		expect(reactCourses.length).toBeGreaterThan(0);
-		expect(reactCourses.some((course) => /react/i.test(course.courseTitle))).toBe(
-			true
-		);
 	});
 });

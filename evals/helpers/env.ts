@@ -41,7 +41,10 @@ export async function toolEnv(): Promise<ToolEnv> {
 				ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
 				RAG_QUERY_REWRITE: process.env.RAG_QUERY_REWRITE,
 			};
-		})();
+		})().catch((err) => {
+			toolEnvPromise = null;
+			throw err;
+		});
 	}
 	return toolEnvPromise;
 }

@@ -41,7 +41,7 @@ ensureAutoevalsInit();
 const testCases = loadGoldenDataset<ChatGoldenCase>("chat-agent.json");
 
 const DEFAULT_MODEL: LLMModel =
-	(process.env.EVAL_CHAT_MODEL as LLMModel) ?? "claude-haiku-4-5";
+	(process.env.EVAL_CHAT_MODEL as LLMModel) || "claude-haiku-4-5";
 const envPromise = toolEnv();
 
 Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {

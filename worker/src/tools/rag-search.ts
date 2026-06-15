@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { Index } from "@upstash/vector";
 import type { ToolEnv } from "../env";
+import { tryCatch } from "../../../utils/tryCatch";
 import {
 	maybeRewriteRagQuery,
 	type RagQueryRewriteContext
@@ -62,6 +63,17 @@ function tokenize(value: string): string[] {
 	);
 }
 
+// Token-set membership, not substring: "css" must match the whole token "css",
+// never appear inside "process". Substring matching produced false positives
+// where a short query token boosted or rescued unrelated hits.
+function tokenSet(value: string): Set<string> {
+	return new Set(
+		(value.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+			(token) => token.length > 0
+		)
+	);
+}
+
 // Lexical overlap weight. Lets the rerank reorder hits inside the typical
 // cosine band (~0.7–0.95) — weak models lean hard on rank-1, so getting the
 // top hit right matters most for them.
@@ -92,10 +104,11 @@ export function rerankHits(query: string, hits: RagHit[]): RagHit[] {
 
 	return [...hits]
 		.map((hit) => {
-			const haystack =
-				`${hit.courseName} ${hit.teacherName} ${hit.text}`.toLowerCase();
+			const haystack = tokenSet(
+				`${hit.courseName} ${hit.teacherName} ${hit.text}`
+			);
 			const overlap =
-				queryTokens.filter((token) => haystack.includes(token)).length /
+				queryTokens.filter((token) => haystack.has(token)).length /
 				queryTokens.length;
 			const courseTokens = tokenize(hit.courseName);
 			const matchWeight = courseTokens
@@ -133,9 +146,10 @@ export function topHitIsRelevant(
 	const queryTokens = tokenize(query);
 	if (queryTokens.length === 0) return true;
 
-	const haystack =
-		`${top.courseName} ${top.teacherName} ${top.text}`.toLowerCase();
-	return queryTokens.some((token) => haystack.includes(token));
+	const haystack = tokenSet(
+		`${top.courseName} ${top.teacherName} ${top.text}`
+	);
+	return queryTokens.some((token) => haystack.has(token));
 }
 
 export function filterResultsByScore(
@@ -187,9 +201,16 @@ function buildMetadataFilter(filters?: RagFilters): string | undefined {
 }
 
 function dedupResults(filtered: VectorQueryResult[]): VectorQueryResult[] {
-	const seen = filtered.reduce((map, row) => {
+	const seen = filtered.reduce((map, row, index) => {
 		const meta = row.metadata;
-		const key = `${meta?.courseName}::${meta?.fileName}`;
+		// Dedup on course+file when present, but rows with missing metadata must
+		// stay distinct (collapsing them on `undefined::undefined` drops recall
+		// before the rerank). Fall back to the row content / position so each
+		// metadata-less hit keeps its own key.
+		const key =
+			meta?.courseName || meta?.fileName
+				? `${meta?.courseName ?? ""}::${meta?.fileName ?? ""}`
+				: `__row_${typeof row.data === "string" ? row.data : index}`;
 		if (!map.has(key) || row.score > (map.get(key)!.score ?? 0)) {
 			map.set(key, row);
 		}
@@ -221,20 +242,19 @@ export async function searchRagIndex(
 	filters?: RagFilters
 ): Promise<RagHit[]> {
 	const filter = buildMetadataFilter(filters);
-	let results;
-	try {
-		results = await vector.query({
+	const { data: results, error } = await tryCatch(
+		vector.query({
 			data: query,
 			topK: TOP_K,
 			includeMetadata: true,
 			includeData: true,
 			...(filter ? { filter } : {})
-		});
-	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
+		})
+	);
+	if (error) {
 		// eslint-disable-next-line no-console
-		console.error(`[ragSearch] vector.query threw: ${message}`);
-		throw new Error(`ragSearch failed: ${message}`);
+		console.error(`[ragSearch] vector.query threw: ${error.message}`);
+		throw new Error(`ragSearch failed: ${error.message}`);
 	}
 
 	// eslint-disable-next-line no-console

@@ -25,6 +25,9 @@ function keywordRecallInHits(
 
 export const groundedInHitsScorer: ChatScorer = ({ output, expected }) => {
 	if (!expected?.expectsRagCall) return null;
+	// Out-of-scope ("edge") cases intentionally retrieve nothing — grounding the
+	// answer in hits is meaningless there and the abstention scorer owns them.
+	if (expected.category === "edge") return null;
 
 	const called = output.toolNames.includes("ragSearch");
 	if (!called) {

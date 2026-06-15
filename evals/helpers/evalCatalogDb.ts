@@ -215,7 +215,10 @@ let catalogDbPromise: Promise<D1Database> | null = null;
 
 export async function getEvalCatalogDb(): Promise<D1Database> {
 	if (!catalogDbPromise) {
-		catalogDbPromise = createEvalCatalogDb();
+		catalogDbPromise = createEvalCatalogDb().catch((err) => {
+			catalogDbPromise = null;
+			throw err;
+		});
 	}
 	return catalogDbPromise;
 }

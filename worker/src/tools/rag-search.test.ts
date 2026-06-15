@@ -102,6 +102,26 @@ describe("rerankHits", () => {
 		const reranked = rerankHits("node grid", hits);
 		expect(reranked[0]?.courseName).toBe("Node");
 	});
+
+	it("does not boost a hit on a substring match (token-boundary only)", () => {
+		// "css" only appears as a substring of "process" / "success", never as a
+		// whole token. With equal cosine, the genuine token match must win.
+		const hits: RagHit[] = [
+			makeHit({
+				courseName: "Build Pipeline",
+				score: 0.8,
+				text: "The process and success of the build pipeline.",
+			}),
+			makeHit({
+				courseName: "Styling",
+				score: 0.8,
+				text: "Using css to lay out the page.",
+			}),
+		];
+
+		const reranked = rerankHits("css", hits);
+		expect(reranked[0]?.courseName).toBe("Styling");
+	});
 });
 
 describe("topHitIsRelevant", () => {
@@ -129,6 +149,18 @@ describe("topHitIsRelevant", () => {
 			text: "Readable streams pause and resume to apply backpressure.",
 		});
 		expect(topHitIsRelevant("node streams backpressure", top)).toBe(true);
+	});
+
+	it("rejects a hit that only matches the query as a substring", () => {
+		// "css" appears inside "process" but is not a whole token, so this
+		// uncertain-band hit must be treated as irrelevant.
+		const top = makeHit({
+			courseName: "Build Tooling",
+			teacherName: "Anon",
+			score: 0.8,
+			text: "The process improves over time.",
+		});
+		expect(topHitIsRelevant("css", top)).toBe(false);
 	});
 
 	it("keeps a high-confidence hit even without token overlap", () => {

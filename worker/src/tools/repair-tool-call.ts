@@ -5,6 +5,7 @@ export const repairToolCall: ToolCallRepairFunction<ToolSet> = async ({
 	error,
 }) => {
 	if (toolCall.toolName !== "ragSearch") return null;
+	if (typeof error !== "object" || error === null) return null;
 	if (!("toolInput" in error)) return null;
 
 	const raw = error.toolInput;

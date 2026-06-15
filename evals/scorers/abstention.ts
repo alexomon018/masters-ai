@@ -35,9 +35,12 @@ function isAbstaining(text: string): boolean {
 export const abstentionScorer: ChatScorer = ({ output, expected }) => {
 	if (expected?.category !== "edge") return null;
 
-	// Hits above threshold mean the question wasn't actually out-of-scope, so
-	// citing them is legitimate; only grade abstention when retrieval was empty.
-	if (output.ragHits.length > 0) return null;
+	// Only grade abstention on a genuine empty-retrieval outcome: ragSearch must
+	// have actually run and returned nothing. Hits above threshold mean the
+	// question wasn't out-of-scope (citing them is legitimate), and a skip where
+	// retrieval was never attempted isn't an abstention signal at all.
+	const calledRagSearch = output.toolNames.includes("ragSearch");
+	if (!calledRagSearch || output.ragHits.length > 0) return null;
 
 	const abstained = isAbstaining(output.text);
 

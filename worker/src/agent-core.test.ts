@@ -73,6 +73,7 @@ describe("isContextFollowupMessage", () => {
 		["cool, that makes sense - appreciate it", true],
 		["wait, who are you exactly?", true],
 		["explain that again differently", true],
+		["thanks, now explain React hooks", false],
 		["how does it differ from client components?", false],
 		["focus on just the backpressure part", false],
 		["tell me more about transform streams", false],

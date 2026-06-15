@@ -66,4 +66,11 @@ describe("abstentionScorer", () => {
 		);
 		expect((result as { score: number }).score).toBe(0);
 	});
+
+	it("returns null when ragSearch was never called", () => {
+		const result = run("Frontend Masters does not cover this.", {
+			toolNames: [],
+		});
+		expect(result).toBeNull();
+	});
 });

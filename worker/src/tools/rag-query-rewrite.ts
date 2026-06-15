@@ -1,6 +1,7 @@
 import { generateText as defaultGenerateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import type { ToolEnv } from "../env";
+import { tryCatch } from "../../../utils/tryCatch";
 
 const REWRITE_MODEL = "claude-haiku-4-5";
 
@@ -56,22 +57,29 @@ export async function maybeRewriteRagQuery(
 		? `User question: ${userMessage}\nModel's draft search query: ${trimmed || "(none)"}`
 		: trimmed;
 
-	try {
-		const result = await generateTextFn({
+	// On failure, fall back to the best available non-empty query input rather
+	// than degrading to a whitespace-only `query`.
+	const fallbackQuery = trimmed.length > 0 ? query : userMessage || query;
+
+	const { data: result, error } = await tryCatch(
+		generateTextFn({
 			model: anthropic.languageModel(REWRITE_MODEL),
 			system: REWRITE_SYSTEM_PROMPT,
 			prompt,
 			temperature: 0,
-		});
+		})
+	);
 
-		const rewritten = result.text.trim();
-		return rewritten.length > 0 ? rewritten : query;
-	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		// A rewrite failure must never fail the search — fall back to the
-		// original query so retrieval still runs.
+	if (error) {
+		// A rewrite failure must never fail the search — fall back so retrieval
+		// still runs.
 		// eslint-disable-next-line no-console
-		console.error(`[ragQueryRewrite] rewrite failed, using original query: ${message}`);
-		return query;
+		console.error(
+			`[ragQueryRewrite] rewrite failed, using fallback query: ${error.message}`
+		);
+		return fallbackQuery;
 	}
+
+	const rewritten = result.text.trim();
+	return rewritten.length > 0 ? rewritten : fallbackQuery;
 }
