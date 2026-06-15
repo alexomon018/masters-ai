@@ -57,21 +57,33 @@ RAG / chat also use **real index slugs** from experiments (not topic words):
 | `ChatTopCourseHit` | domain | Rank-1 hit matches `expectedTopCourse` |
 | `ChatInstructorHit` | domain | Retrieved hits include expected instructor |
 | `ChatKeywordRecall` | domain | Expected keywords appear in retrieved chunks |
-| `GroundedInHits` | domain | Answer vocabulary overlaps hits **and** keywords appear in hits |
+| `GroundedInHits` | domain | Answer→hits grounding **precision** (share of answer content words supported by hits) **and** keywords appear in hits |
+| `CitationGrounding` | domain | Cited FM course/instructor labels appear in retrieved hits |
+| `Abstention` | edge | When retrieval is empty, answer disclaims FM coverage and does **not** fabricate FM citations (deterministic) |
+| `SingleRagSearch` | domain | At most one `ragSearch` call when `expectsSingleRagCall` |
+| `Characteristics` | any w/ `expectedCharacteristics` | LLM judge graded against the case's characteristics rubric (opt-in; see below) |
 | `Factuality` | domain w/ `expectedAnswer` | LLM judge (opt-in; see below) |
+| `Faithfulness` | domain w/ RAG hits | LLM judge against retrieved chunks (opt-in; see below) |
 
 ## Commands
 
 ```bash
 yarn eval:rag
+yarn eval:rag:rewrite   # same set with RAG_QUERY_REWRITE=1 — A/B retrieval recall
 yarn eval:chat
+yarn eval:chat:matrix   # Haiku vs gpt-5.4-mini, tagged by model
 yarn eval:name-thread
 yarn eval
 ```
 
+The RAG eval applies the query rewrite (when `RAG_QUERY_REWRITE=1`) before
+retrieval and tags the experiment `(rewrite)`, so `eval:rag` vs `eval:rag:rewrite`
+is a direct A/B on retrieval recall — the main lever for weak models that emit
+poor search queries.
+
 Loads `.dev.vars` (see `.dev.vars.example`). Each run is a Braintrust experiment tagged with git metadata.
 
-**LLM-as-judge scorers are off by default.** `Factuality` (chat) and `TopicSummary` (name-thread) only run when you set `EVAL_LLM_JUDGE=1` in `.dev.vars`. Pick the judge provider:
+**LLM-as-judge scorers are off by default.** `Factuality` (chat), `Faithfulness` (chat answer vs retrieved hits), `Characteristics` (chat answer vs the case's `expectedCharacteristics` rubric), and `TopicSummary` (name-thread) only run when you set `EVAL_LLM_JUDGE=1` in `.dev.vars`. Pick the judge provider:
 
 | Env var | Values | Default |
 |---------|--------|---------|

@@ -44,6 +44,7 @@
 		"expectedKeywords": [
 			"grid"
 		],
+		"expectedAnswer": "Use CSS Grid with named areas and media queries so grid-template-areas can be remapped at breakpoints for responsive layouts.",
 		"expectedCharacteristics": [
 			"Calls ragSearch",
 			"Mentions grid layout, areas, or responsive breakpoints",
@@ -68,6 +69,7 @@
 		"expectedKeywords": [
 			"generic"
 		],
+		"expectedAnswer": "Generics let you write reusable functions or types that work across many types while preserving relationships between inputs and outputs.",
 		"expectedCharacteristics": [
 			"Calls ragSearch",
 			"Includes a concrete generics example or constraint explanation"
@@ -207,6 +209,7 @@
 			"server",
 			"render"
 		],
+		"expectedAnswer": "React Server Components execute on the server, where React renders them into a serialized RSC payload rather than HTML. That payload streams to the client and is reconciled into the React tree, so a Server Component's own JavaScript never ships to the browser; only Client Components hydrate and run there.",
 		"expectedCharacteristics": [
 			"Resolves 'they' to React Server Components from prior turn",
 			"Calls ragSearch again rather than relying only on prior context",
@@ -241,6 +244,7 @@
 			"client",
 			"server"
 		],
+		"expectedAnswer": "Server Components render on the server and never ship their JavaScript or run in the browser, so they can't use state, effects, or event handlers. Client Components opt in with 'use client', are sent to and hydrated in the browser, and handle interactivity.",
 		"expectedCharacteristics": [
 			"Resolves 'it' to React Server Components, not an unrelated subject",
 			"Calls ragSearch for the server vs client distinction",
@@ -275,6 +279,7 @@
 		"expectedKeywords": [
 			"generic"
 		],
+		"expectedAnswer": "Generics parameterize a function or type over a type variable, so one definition works across many types while preserving the relationship between input and output, e.g. function identity<T>(value: T): T.",
 		"expectedCharacteristics": [
 			"Re-triggers ragSearch for the new TypeScript topic",
 			"Retrieves a TypeScript course, not the earlier CSS Grid course",
@@ -317,6 +322,7 @@
 			"closure",
 			"scope"
 		],
+		"expectedAnswer": "A closure is a function bundled with references to its surrounding lexical scope, so it keeps access to those outer variables even after the outer function has returned.",
 		"expectedCharacteristics": [
 			"Routing flips back on: calls ragSearch after the casual turn",
 			"Answers the closures question, not the earlier Promise question",
@@ -374,6 +380,7 @@
 			"backpressure",
 			"stream"
 		],
+		"expectedAnswer": "Backpressure is when a writable stream can't consume data as fast as the readable produces it; write() returning false signals the producer to pause until the 'drain' event fires, and pipe() handles this pausing and resuming automatically.",
 		"expectedCharacteristics": [
 			"Narrows to backpressure from the broader streams context",
 			"Calls ragSearch for backpressure detail",
@@ -557,6 +564,115 @@
 			"Retrieves chunks from Complete Intro Containers v2 (filter must match the slug)",
 			"Answers from retrieved transcript content, not generic knowledge",
 			"Does not claim it found no content"
+		]
+	},
+	{
+		"id": "gold-chat-out-of-scope",
+		"difficulty": "edge",
+		"category": "edge",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Explain lattice gauge theory and quantum chromodynamics in detail."
+			}
+		],
+		"expectsRagCall": true,
+		"expectsSingleRagCall": true,
+		"expectedCharacteristics": [
+			"Calls ragSearch once",
+			"Says Frontend Masters does not cover the topic when search returns nothing",
+			"Does not fabricate Frontend Masters course citations"
+		]
+	},
+	{
+		"id": "gold-chat-ambiguous-multi-tech",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do React, Node.js, TypeScript, Docker, and GraphQL fit together in a modern full-stack app?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectsSingleRagCall": true,
+		"expectedCourses": [
+			"react",
+			"node",
+			"typescript"
+		],
+		"expectedAnswer": "In a typical full-stack app, React renders the UI, Node.js runs the server, TypeScript adds static types across both client and server, Docker packages and runs the services consistently, and GraphQL exposes a typed API the client queries.",
+		"expectedCharacteristics": [
+			"Calls ragSearch once with a focused query instead of padding every technology",
+			"Answer stays grounded in retrieved transcript chunks",
+			"Does not invent Frontend Masters courses for technologies not in the hits"
+		]
+	},
+	{
+		"id": "gold-chat-single-rag-search",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is CSS flexbox and when should I use it?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectsSingleRagCall": true,
+		"expectedCourses": [
+			"css foundations",
+			"css grid"
+		],
+		"expectedKeywords": [
+			"flex"
+		],
+		"expectedAnswer": "Flexbox is a one-dimensional layout system for distributing space along a single axis, useful for nav bars, toolbars, and aligning items in a row or column.",
+		"expectedCharacteristics": [
+			"Calls ragSearch exactly once",
+			"Explains flexbox from retrieved transcript chunks",
+			"Does not issue redundant ragSearch calls"
+		]
+	},
+	{
+		"id": "gold-chat-long-topic-switch",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do JavaScript closures work?"
+			},
+			{
+				"role": "assistant",
+				"content": "A closure is a function that keeps access to variables from its outer lexical scope even after that outer function has returned."
+			},
+			{
+				"role": "user",
+				"content": "Can you show me an example?"
+			},
+			{
+				"role": "assistant",
+				"content": "A classic example is a counter function created inside another function that still reads the outer count variable."
+			},
+			{
+				"role": "user",
+				"content": "switching gears - how does Node.js handle stream backpressure?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"node js"
+		],
+		"expectedKeywords": [
+			"backpressure",
+			"stream"
+		],
+		"expectedAnswer": "When a writable stream buffer fills, the readable should pause until the writable drains, and pipe coordinates pausing and resuming.",
+		"expectedCharacteristics": [
+			"Recognizes the topic switch away from closures",
+			"Calls ragSearch for Node.js stream backpressure",
+			"Does not keep answering about closures"
 		]
 	}
 ]

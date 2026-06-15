@@ -14,6 +14,7 @@ export interface Env {
 	CLERK_SECRET_KEY: string;
 	ANON_ID_SECRET: string;
 	ALLOWED_ORIGINS: string;
+	RAG_QUERY_REWRITE?: string;
 }
 
 export interface ToolEnv {
@@ -22,4 +23,6 @@ export interface ToolEnv {
 	// Optional: absent under Node-based evals, where the catalog lookup tool
 	// degrades gracefully. Present in the Worker (from Env.THREAD_INDEX).
 	THREAD_INDEX?: D1Database;
+	ANTHROPIC_API_KEY?: string;
+	RAG_QUERY_REWRITE?: string | boolean;
 }

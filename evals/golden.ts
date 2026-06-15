@@ -44,6 +44,8 @@ export interface ChatGoldenCase extends GoldenCaseBase {
 	expectedTopCourse?: string;
 	expectedInstructor?: string;
 	expectedAnswer?: string;
+	/** Domain cases should call ragSearch at most once unless a follow-up needs new retrieval. */
+	expectsSingleRagCall?: boolean;
 }
 
 export interface NameThreadGoldenCase extends GoldenCaseBase {

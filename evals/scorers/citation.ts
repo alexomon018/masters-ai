@@ -34,11 +34,11 @@ export function hasFmContext(text: string): boolean {
 	return BRAND_REGEX.test(text);
 }
 
-function containsDisclaimer(text: string): boolean {
+export function containsDisclaimer(text: string): boolean {
 	return DISCLAIMER_PATTERNS.some((re) => re.test(text));
 }
 
-function splitSentences(text: string): string[] {
+export function splitSentences(text: string): string[] {
 	return text
 		.split(/[.!?]+\s+/)
 		.map((s) => s.trim())

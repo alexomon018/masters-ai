@@ -3,6 +3,7 @@ import type { LanguageModel } from "ai";
 import { getModel, type LLMModel } from "../../worker/src/providers";
 import type { Env, ToolEnv } from "../../worker/src/env";
 import { resolveProjectName } from "../../worker/src/braintrust";
+import { getEvalCatalogDb } from "./evalCatalogDb";
 
 export function evalProject(): string {
 	return resolveProjectName(
@@ -27,11 +28,25 @@ export function modelEnv(): Env {
 	} as Env;
 }
 
-export function toolEnv(): ToolEnv {
-	return {
-		UPSTASH_VECTOR_REST_URL: required("UPSTASH_VECTOR_REST_URL"),
-		UPSTASH_VECTOR_REST_TOKEN: required("UPSTASH_VECTOR_REST_TOKEN")
-	};
+let toolEnvPromise: Promise<ToolEnv> | null = null;
+
+export async function toolEnv(): Promise<ToolEnv> {
+	if (!toolEnvPromise) {
+		toolEnvPromise = (async () => {
+			const catalog = await getEvalCatalogDb();
+			return {
+				UPSTASH_VECTOR_REST_URL: required("UPSTASH_VECTOR_REST_URL"),
+				UPSTASH_VECTOR_REST_TOKEN: required("UPSTASH_VECTOR_REST_TOKEN"),
+				THREAD_INDEX: catalog,
+				ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+				RAG_QUERY_REWRITE: process.env.RAG_QUERY_REWRITE,
+			};
+		})().catch((err) => {
+			toolEnvPromise = null;
+			throw err;
+		});
+	}
+	return toolEnvPromise;
 }
 
 export function vectorClient(): Index {

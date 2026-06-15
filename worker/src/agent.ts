@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 import { compactHistory } from "./context/compaction";
 import { streamAgent } from "./agent-core";
-import { flushBraintrust, startBraintrust } from "./braintrust";
+import { flushBraintrust, logSpanMetadata, startBraintrust } from "./braintrust";
 import {
 	getModel,
 	resolveWorkerModelLabel,
@@ -152,7 +152,24 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			env: {
 				UPSTASH_VECTOR_REST_URL: this.env.UPSTASH_VECTOR_REST_URL,
 				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN,
-				THREAD_INDEX: this.env.THREAD_INDEX
+				THREAD_INDEX: this.env.THREAD_INDEX,
+				ANTHROPIC_API_KEY: this.env.ANTHROPIC_API_KEY,
+				RAG_QUERY_REWRITE: this.env.RAG_QUERY_REWRITE,
+			},
+			onFinish: ({ steps }) => {
+				const toolCalls = steps.flatMap((step) => step.toolCalls ?? []);
+				const toolResults = steps.flatMap((step) => step.toolResults ?? []);
+				const toolNames = toolCalls.map((call) => call.toolName);
+				const ragResults = toolResults
+					.filter((r) => r.toolName === "ragSearch")
+					.map((r) =>
+						typeof r.output === "string" ? r.output : JSON.stringify(r.output)
+					);
+				logSpanMetadata({
+					toolNames,
+					ragSearchCount: toolNames.filter((n) => n === "ragSearch").length,
+					ragResultText: ragResults.join("\n\n---\n\n")
+				});
 			}
 		});
 

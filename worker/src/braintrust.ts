@@ -1,4 +1,4 @@
-import { flush, initLogger, wrapAISDK } from "braintrust/workerd";
+import { currentSpan, flush, initLogger, wrapAISDK } from "braintrust/workerd";
 import * as ai from "ai";
 
 const PROD_PROJECT = "Masters AI";
@@ -32,3 +32,15 @@ export async function flushBraintrust(): Promise<void> {
 }
 
 export const { generateText, streamText } = wrapAISDK(ai);
+
+// Attach tool/retrieval signals to the current (root) chat span so online
+// scorers — which only see the root span — can grade tool selection and
+// grounding. No-op when tracing is off.
+export function logSpanMetadata(metadata: Record<string, unknown>): void {
+	if (!logger) return;
+	try {
+		currentSpan().log({ metadata });
+	} catch {
+		// currentSpan throws when no span is active (e.g. tracing disabled).
+	}
+}
