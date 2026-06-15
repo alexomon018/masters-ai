@@ -1,0 +1,28 @@
+{
+	"mcpServers": {
+		"cloudflare-observability": {
+			"type": "http",
+			"url": "https://observability.mcp.cloudflare.com/mcp"
+		},
+		"cloudflare-bindings": {
+			"type": "http",
+			"url": "https://bindings.mcp.cloudflare.com/mcp"
+		},
+		"cloudflare-docs": {
+			"type": "http",
+			"url": "https://docs.mcp.cloudflare.com/mcp"
+		},
+		"upstash": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/mcp-server@0.2.3",
+				"--email",
+				"${UPSTASH_MCP_EMAIL}",
+				"--api-key",
+				"${UPSTASH_MCP_API_KEY}"
+			]
+		}
+	}
+}

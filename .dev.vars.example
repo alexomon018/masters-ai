@@ -29,3 +29,9 @@ OPENAI_API_KEY=
 # Same values as worker/.dev.vars.
 UPSTASH_VECTOR_REST_URL=
 UPSTASH_VECTOR_REST_TOKEN=
+
+# Upstash MCP server (.mcp.json) — required for the Cursor "upstash" MCP entry,
+# not used by eval scripts. Email: your Upstash account email. API key: create
+# at https://console.upstash.com/account/api (read-only keys disable write tools).
+UPSTASH_MCP_EMAIL=
+UPSTASH_MCP_API_KEY=
