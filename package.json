@@ -34,6 +34,10 @@
 		"db:d1:migrate:local": "wrangler d1 migrations apply masters-dev --local --config worker/wrangler.jsonc",
 		"db:d1:migrate:dev:remote": "wrangler d1 migrations apply masters-dev --remote --config worker/wrangler.jsonc --env preview",
 		"db:d1:migrate:prod:remote": "wrangler d1 migrations apply masters-prod --remote --config worker/wrangler.jsonc --env production",
+		"db:courses:backfill:gen": "dotenv -e worker/.dev.vars -- tsx worker/scripts/backfill-courses.ts > \"${TMPDIR:-/tmp}/backfill-courses.sql\"",
+		"db:courses:backfill:local": "yarn db:courses:backfill:gen && wrangler d1 execute masters-dev --local --config worker/wrangler.jsonc --file=\"${TMPDIR:-/tmp}/backfill-courses.sql\"",
+		"db:courses:backfill:dev:remote": "yarn db:courses:backfill:gen && wrangler d1 execute masters-dev --remote --config worker/wrangler.jsonc --env preview --file=\"${TMPDIR:-/tmp}/backfill-courses.sql\"",
+		"db:courses:backfill:prod:remote": "yarn db:courses:backfill:gen && wrangler d1 execute masters-prod --remote --config worker/wrangler.jsonc --env production --file=\"${TMPDIR:-/tmp}/backfill-courses.sql\"",
 		"prepare": "husky install"
 	},
 	"dependencies": {
@@ -158,6 +162,7 @@
 		"prettier-plugin-tailwindcss": "^0.6.6",
 		"tailwindcss": "^3.4.17",
 		"ts-node": "^10.9.2",
+		"tsx": "^4.22.4",
 		"typescript": "^5",
 		"vite": "^8.0.16",
 		"vitest": "4.1.0",

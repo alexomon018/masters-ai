@@ -19,4 +19,7 @@ export interface Env {
 export interface ToolEnv {
 	UPSTASH_VECTOR_REST_URL: string;
 	UPSTASH_VECTOR_REST_TOKEN: string;
+	// Optional: absent under Node-based evals, where the catalog lookup tool
+	// degrades gracefully. Present in the Worker (from Env.THREAD_INDEX).
+	THREAD_INDEX?: D1Database;
 }

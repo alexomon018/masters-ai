@@ -1,0 +1,1 @@
+ALTER TABLE `courses` ADD `released_at` text DEFAULT '' NOT NULL;

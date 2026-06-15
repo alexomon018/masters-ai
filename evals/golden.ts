@@ -21,6 +21,9 @@ export interface GoldenCaseBase {
 export interface RagGoldenCase extends GoldenCaseBase {
 	category: RagGoldenCategory;
 	query: string;
+	/** Optional metadata filters, passed to searchRagIndex like the agent would. */
+	teacherName?: string;
+	courseName?: string;
 	/** Any top-K hit whose courseName includes one of these (slug substrings). */
 	expectedCourses?: string[];
 	/** Rank-1 hit should include this substring (stricter than expectedCourses). */
@@ -33,6 +36,10 @@ export interface ChatGoldenCase extends GoldenCaseBase {
 	messages: { role: "user" | "assistant"; content: string }[];
 	model?: LLMModel;
 	expectsRagCall: boolean;
+	/** Tools that MUST be called for this case (e.g. ["listCoursesByTopic"]). */
+	expectedTools?: string[];
+	/** Tools that must NOT be called (e.g. ["ragSearch"] for a catalog lookup). */
+	disallowedTools?: string[];
 	expectedCourses?: string[];
 	expectedTopCourse?: string;
 	expectedInstructor?: string;
