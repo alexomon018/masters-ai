@@ -1,5 +1,5 @@
 import { Eval } from "braintrust";
-import { Factuality } from "autoevals";
+import { Factuality, Faithfulness } from "autoevals";
 
 import { runAgent } from "../worker/src/agent-core";
 import type { LLMModel } from "../worker/src/providers";
@@ -27,24 +27,25 @@ import {
 import { ragSearchCalledScorer } from "./scorers/ragSearchCalled";
 import { toolSelectionScorer } from "./scorers/toolSelection";
 import { citationScorer, answerKeywordScorer } from "./scorers/citation";
+import { abstentionScorer } from "./scorers/abstention";
+import { characteristicsRubricScorer } from "./scorers/characteristicsRubric";
+import { citationGroundingScorer } from "./scorers/citationGrounding";
 import { groundedInHitsScorer } from "./scorers/groundedInHits";
 import { identityBehaviorScorer } from "./scorers/identityBehavior";
+import { singleRagSearchScorer } from "./scorers/singleRagSearch";
 
-// Initialize the Node-side Braintrust logger and use Node-wrapped AI SDK
-// functions (passed into runAgent via aiSdk) so llm_calls / tool_calls /
-// token metrics are captured. The DO entry point keeps using the workerd
-// subpath wrappers untouched.
 startBraintrustNode(process.env.BRAINTRUST_API_KEY, "preview");
 
 ensureAutoevalsInit();
 
 const testCases = loadGoldenDataset<ChatGoldenCase>("chat-agent.json");
 
-const DEFAULT_MODEL: LLMModel = (process.env.EVAL_CHAT_MODEL as LLMModel) ?? "claude-haiku-4-5";
-const env = toolEnv();
+const DEFAULT_MODEL: LLMModel =
+	(process.env.EVAL_CHAT_MODEL as LLMModel) ?? "claude-haiku-4-5";
+const envPromise = toolEnv();
 
 Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {
-	experimentName: "Masters Chat Agent",
+	experimentName: `Masters Chat Agent (${DEFAULT_MODEL})`,
 	data: () =>
 		testCases.map((tc) => ({
 			input: tc,
@@ -54,11 +55,13 @@ Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {
 				difficulty: tc.difficulty,
 				category: tc.category,
 				expectsRagCall: tc.expectsRagCall,
+				model: tc.model ?? DEFAULT_MODEL,
 			},
 		})),
 
 	task: async (testCase) => {
 		const modelId = testCase.model ?? DEFAULT_MODEL;
+		const env = await envPromise;
 		const result = await runAgent({
 			model: model(modelId),
 			modelLabel: modelId,
@@ -82,12 +85,16 @@ Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {
 		casualBehaviorScorer,
 		identityBehaviorScorer,
 		citationScorer,
+		citationGroundingScorer,
+		abstentionScorer,
+		singleRagSearchScorer,
 		answerKeywordScorer,
 		chatCourseHitScorer,
 		chatTopCourseHitScorer,
 		chatInstructorHitScorer,
 		chatKeywordRecallScorer,
 		groundedInHitsScorer,
+		characteristicsRubricScorer,
 		async ({ output, input }) => {
 			if (!input.expectedAnswer || !canRunLlmJudge()) return null;
 			try {
@@ -102,6 +109,26 @@ Eval<ChatTestCase, ChatAgentOutput, ChatTestCase>(evalProject(), {
 				const message = err instanceof Error ? err.message : String(err);
 				return {
 					name: "Factuality",
+					score: null,
+					metadata: { error: message },
+				};
+			}
+		},
+		async ({ output, input }) => {
+			if (!input.expectsRagCall || !canRunLlmJudge()) return null;
+			if (!output.ragHitTexts?.length) return null;
+			try {
+				const result = await Faithfulness({
+					model: getLlmJudgeModel(),
+					input: input.messages.map((m) => m.content).join("\n"),
+					context: output.ragHitTexts.join("\n\n---\n\n"),
+					output: output.text,
+				});
+				return { name: "Faithfulness", score: result.score ?? 0 };
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err);
+				return {
+					name: "Faithfulness",
 					score: null,
 					metadata: { error: message },
 				};

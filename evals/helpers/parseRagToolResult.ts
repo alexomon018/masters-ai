@@ -4,7 +4,10 @@ export interface ParsedRagHit {
 	text: string;
 }
 
-const HIT_HEADER =
+const SOURCE_HEADER =
+	/^Source \[(\d+)\] — Course: (.+?) \| Instructor: (.+?) \| Timestamp: .+?\n/s;
+
+const LEGACY_HEADER =
 	/^\[Course: (.+?) \| Instructor: (.+?) \| Timestamp: .+? \| Score: .+?\]\n/s;
 
 function isNoResults(toolOutput: string): boolean {
@@ -14,27 +17,45 @@ function isNoResults(toolOutput: string): boolean {
 	);
 }
 
+function stripPreamble(toolOutput: string): string {
+	return toolOutput
+		.replace(
+			/^Answer using ONLY these transcript sources\..*?\n\n/s,
+			""
+		)
+		.trim();
+}
+
 function parseHitBlock(block: string): ParsedRagHit | null {
 	const trimmed = block.trim();
 	if (!trimmed) return null;
 
-	const match = trimmed.match(HIT_HEADER);
-	if (!match) {
-		return { courseName: "", teacherName: "", text: trimmed };
+	const sourceMatch = trimmed.match(SOURCE_HEADER);
+	if (sourceMatch) {
+		return {
+			courseName: sourceMatch[2].trim(),
+			teacherName: sourceMatch[3].trim(),
+			text: trimmed.slice(sourceMatch[0].length).trim(),
+		};
 	}
 
-	return {
-		courseName: match[1].trim(),
-		teacherName: match[2].trim(),
-		text: trimmed.slice(match[0].length).trim(),
-	};
+	const legacyMatch = trimmed.match(LEGACY_HEADER);
+	if (legacyMatch) {
+		return {
+			courseName: legacyMatch[1].trim(),
+			teacherName: legacyMatch[2].trim(),
+			text: trimmed.slice(legacyMatch[0].length).trim(),
+		};
+	}
+
+	return { courseName: "", teacherName: "", text: trimmed };
 }
 
 /** Structured hits from a ragSearch tool result (formatRagHits output). */
 export function parseRagHits(toolOutput: string): ParsedRagHit[] {
 	if (isNoResults(toolOutput)) return [];
 
-	return toolOutput
+	return stripPreamble(toolOutput)
 		.split(/\n\n---\n\n/)
 		.map(parseHitBlock)
 		.filter((hit): hit is ParsedRagHit => hit !== null && hit.text.length > 0);
