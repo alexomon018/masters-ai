@@ -3,6 +3,7 @@ import { createClerkClient } from "@clerk/backend";
 import { z } from "zod";
 import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
+import { makeFeedbackRepo } from "../repository/feedback";
 import { makeThreadRepo } from "../repository/threads";
 import { redisPipeline } from "../redis";
 import type { NewThread } from "../../db/schema";
@@ -137,6 +138,8 @@ export async function deleteAllForUser(
 			}
 		})
 	);
+
+	await makeFeedbackRepo(getDb(env)).deleteAllForUser(auth.userId);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
 

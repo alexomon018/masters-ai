@@ -75,8 +75,35 @@ export const coursesTable = sqliteTable(
 	]
 );
 
+// Per-message feedback (thumbs up/down). messageId is the UIMessage id from the
+// DO history, stable across reloads. Composite PK means one vote per user per
+// message; switching sentiment is an upsert, clearing it is a delete.
+export const feedbackTable = sqliteTable(
+	"feedback",
+	{
+		userId: text("user_id").notNull(),
+		threadId: text("thread_id").notNull(),
+		messageId: text("message_id").notNull(),
+		sentiment: text("sentiment", { enum: ["up", "down"] }).notNull(),
+		reason: text("reason"),
+		comment: text("comment"),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.threadId, table.messageId] }),
+		index("feedback_user_thread").on(table.userId, table.threadId),
+	]
+);
+
 export type Thread = typeof threadsTable.$inferSelect;
 export type NewThread = typeof threadsTable.$inferInsert;
+export type Feedback = typeof feedbackTable.$inferSelect;
+export type NewFeedback = typeof feedbackTable.$inferInsert;
 export type Project = typeof projectsTable.$inferSelect;
 export type NewProject = typeof projectsTable.$inferInsert;
 export type Course = typeof coursesTable.$inferSelect;

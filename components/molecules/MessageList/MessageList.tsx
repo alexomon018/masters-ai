@@ -4,15 +4,24 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDown } from "lucide-react";
 import { MessageLoader } from "@atoms";
 import cn from "@/utils/cn";
+import type { FeedbackEntry } from "@/components/organisms/Chat/helpers";
 import Message from "../Message/Message";
 
 interface MessageListProps {
 	messages: UIMessage[];
 	loading: boolean;
 	streaming: boolean;
+	threadId: string;
+	feedbackMap: Record<string, FeedbackEntry>;
 }
 
-const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
+const MessageList = ({
+	messages,
+	loading,
+	streaming,
+	threadId,
+	feedbackMap
+}: MessageListProps) => {
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [atEnd, setAtEnd] = useState(true);
 
@@ -51,7 +60,11 @@ const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
 						className="absolute left-0 top-0 w-full pb-4"
 						style={{ transform: `translateY(${item.start}px)` }}
 					>
-						<Message message={messages[item.index]} />
+						<Message
+							message={messages[item.index]}
+							threadId={threadId}
+							initialFeedback={feedbackMap[messages[item.index].id]}
+						/>
 					</div>
 				))}
 			</div>

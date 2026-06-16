@@ -10,3 +10,9 @@ export {
 	shouldApplyServerMessages,
 	totalTextLength
 } from "./messageReconciliation";
+export {
+	deleteFeedbackRemote,
+	fetchThreadFeedback,
+	sendFeedbackRemote
+} from "./feedback";
+export type { FeedbackEntry, Sentiment } from "./feedback";
