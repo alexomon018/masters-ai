@@ -78,7 +78,7 @@ export function makeFeedbackRepo(db: Database): FeedbackRepo {
 		},
 
 		async deleteAllForThread(userId, threadId) {
-			const result = await db
+			const result: D1Result = await db
 				.delete(schema.feedbackTable)
 				.where(
 					and(
@@ -87,19 +87,15 @@ export function makeFeedbackRepo(db: Database): FeedbackRepo {
 					)
 				)
 				.run();
-			return Number(
-				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
-			);
+			return result.meta.changes ?? 0;
 		},
 
 		async deleteAllForUser(userId) {
-			const result = await db
+			const result: D1Result = await db
 				.delete(schema.feedbackTable)
 				.where(eq(schema.feedbackTable.userId, userId))
 				.run();
-			return Number(
-				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
-			);
+			return result.meta.changes ?? 0;
 		}
 	};
 }

@@ -38,8 +38,8 @@ const MessageList = ({
 	});
 
 	useLayoutEffect(() => {
-		virtualizer.scrollToEnd();
-	}, [virtualizer, messages.length]);
+		if (atEnd) virtualizer.scrollToEnd();
+	}, [virtualizer, messages.length, atEnd]);
 
 	const items = virtualizer.getVirtualItems();
 
@@ -74,6 +74,7 @@ const MessageList = ({
 			{!atEnd && (
 				<button
 					type="button"
+					aria-label="Scroll to latest message"
 					onClick={() =>
 						virtualizer.scrollToIndex(messages.length - 1, {
 							align: "end",

@@ -62,14 +62,23 @@ describe("sendFeedbackRemote", () => {
 			})
 		).resolves.toBe(false);
 	});
+
+	it("resolves false when the request throws (network error)", async () => {
+		server.use(http.post(`${WORKER}/feedback`, () => HttpResponse.error()));
+		await expect(
+			sendFeedbackRemote(getToken, {
+				threadId: "thread-1",
+				messageId: "msg-1",
+				sentiment: "up"
+			})
+		).resolves.toBe(false);
+	});
 });
 
 describe("deleteFeedbackRemote", () => {
 	it("DELETEs and resolves true on ok", async () => {
 		server.use(
-			http.delete(`${WORKER}/feedback`, () =>
-				HttpResponse.json({ ok: true })
-			)
+			http.delete(`${WORKER}/feedback`, () => HttpResponse.json({ ok: true }))
 		);
 		await expect(
 			deleteFeedbackRemote(getToken, {
@@ -113,6 +122,17 @@ describe("fetchThreadFeedback", () => {
 		server.use(
 			http.get(`${WORKER}/feedback`, () =>
 				HttpResponse.json({}, { status: 500 })
+			)
+		);
+		await expect(fetchThreadFeedback(getToken, "thread-1")).resolves.toEqual(
+			{}
+		);
+	});
+
+	it("returns an empty map when the body is not an array", async () => {
+		server.use(
+			http.get(`${WORKER}/feedback`, () =>
+				HttpResponse.json({ unexpected: "shape" })
 			)
 		);
 		await expect(fetchThreadFeedback(getToken, "thread-1")).resolves.toEqual(

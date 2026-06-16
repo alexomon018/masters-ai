@@ -15,7 +15,7 @@ import {
 	integer,
 	primaryKey,
 	index,
-	check,
+	check
 } from "drizzle-orm/sqlite-core";
 
 export const threadsTable = sqliteTable(
@@ -34,11 +34,11 @@ export const threadsTable = sqliteTable(
 			.default(sql`(unixepoch() * 1000)`),
 		lastMessageAt: integer("last_message_at", { mode: "timestamp_ms" })
 			.notNull()
-			.default(sql`(unixepoch() * 1000)`),
+			.default(sql`(unixepoch() * 1000)`)
 	},
 	(table) => [
 		primaryKey({ columns: [table.userId, table.threadId] }),
-		index("threads_user_updated").on(table.userId, table.updatedAt),
+		index("threads_user_updated").on(table.userId, table.updatedAt)
 	]
 );
 
@@ -54,7 +54,7 @@ export const projectsTable = sqliteTable(
 			.default(sql`(unixepoch() * 1000)`),
 		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 			.notNull()
-			.default(sql`(unixepoch() * 1000)`),
+			.default(sql`(unixepoch() * 1000)`)
 	},
 	(table) => [primaryKey({ columns: [table.userId, table.projectId] })]
 );
@@ -68,11 +68,11 @@ export const coursesTable = sqliteTable(
 		instructor: text("instructor").notNull(),
 		courseName: text("course_name").notNull(),
 		courseTitle: text("course_title").notNull().default(""),
-		releasedAt: text("released_at").notNull().default(""),
+		releasedAt: text("released_at").notNull().default("")
 	},
 	(table) => [
 		primaryKey({ columns: [table.instructor, table.courseName] }),
-		index("courses_instructor").on(table.instructor),
+		index("courses_instructor").on(table.instructor)
 	]
 );
 
@@ -93,12 +93,12 @@ export const feedbackTable = sqliteTable(
 			.default(sql`(unixepoch() * 1000)`),
 		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 			.notNull()
-			.default(sql`(unixepoch() * 1000)`),
+			.default(sql`(unixepoch() * 1000)`)
 	},
 	(table) => [
 		primaryKey({ columns: [table.userId, table.threadId, table.messageId] }),
 		index("feedback_user_thread").on(table.userId, table.threadId),
-		check("feedback_sentiment", sql`${table.sentiment} IN ('up', 'down')`),
+		check("feedback_sentiment", sql`${table.sentiment} IN ('up', 'down')`)
 	]
 );
 

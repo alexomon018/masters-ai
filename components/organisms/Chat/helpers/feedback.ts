@@ -76,7 +76,9 @@ export async function fetchThreadFeedback(
 		params.set("threadId", threadId);
 		const res = await fetch(`${base}/feedback?${params.toString()}`);
 		if (!res.ok) return {};
-		const rows = (await res.json()) as ThreadFeedbackDto[];
+		const parsed = await res.json();
+		if (!Array.isArray(parsed)) return {};
+		const rows = parsed as ThreadFeedbackDto[];
 		return rows.reduce<Record<string, FeedbackEntry>>((acc, row) => {
 			acc[row.messageId] = {
 				sentiment: row.sentiment,

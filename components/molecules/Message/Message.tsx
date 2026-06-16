@@ -63,7 +63,10 @@ const PreBlock: React.FC<BaseProps> = ({ children }) => (
 	<div className="not-prose">{children}</div>
 );
 
-const CodeComponent: React.FC<CodeComponentProps> = ({ children, className }) => {
+const CodeComponent: React.FC<CodeComponentProps> = ({
+	children,
+	className
+}) => {
 	if (!className) {
 		return <InlineCode>{children}</InlineCode>;
 	}
@@ -133,12 +136,15 @@ const Message: React.FC<MessageProps> = ({
 
 	const handleUp = useCallback(() => {
 		if (!canPersist) return;
+		const previous = feedback;
 		setPanelOpen(false);
 		if (feedback === "up") {
 			setFeedback(null);
 			deleteFeedbackRemote(getToken, {
 				threadId,
 				messageId: message.id
+			}).then((ok) => {
+				if (!ok) setFeedback(previous);
 			});
 			return;
 		}
@@ -147,17 +153,22 @@ const Message: React.FC<MessageProps> = ({
 			threadId,
 			messageId: message.id,
 			sentiment: "up"
+		}).then((ok) => {
+			if (!ok) setFeedback(previous);
 		});
 	}, [canPersist, feedback, getToken, threadId, message.id]);
 
 	const handleDown = useCallback(() => {
 		if (!canPersist) return;
+		const previous = feedback;
 		if (feedback === "down") {
 			setFeedback(null);
 			setPanelOpen(false);
 			deleteFeedbackRemote(getToken, {
 				threadId,
 				messageId: message.id
+			}).then((ok) => {
+				if (!ok) setFeedback(previous);
 			});
 			return;
 		}
@@ -169,10 +180,16 @@ const Message: React.FC<MessageProps> = ({
 			threadId,
 			messageId: message.id,
 			sentiment: "down"
+		}).then((ok) => {
+			if (!ok) {
+				setFeedback(previous);
+				setPanelOpen(false);
+			}
 		});
 	}, [canPersist, feedback, getToken, threadId, message.id]);
 
 	const submitDownvoteDetail = useCallback(() => {
+		if (!canPersist) return;
 		setPanelOpen(false);
 		sendFeedbackRemote(getToken, {
 			threadId,
@@ -181,7 +198,7 @@ const Message: React.FC<MessageProps> = ({
 			reason: selectedReason,
 			comment: comment.trim() || null
 		});
-	}, [getToken, threadId, message.id, selectedReason, comment]);
+	}, [canPersist, getToken, threadId, message.id, selectedReason, comment]);
 
 	const markdownOptions = useMemo(
 		() => ({

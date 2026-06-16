@@ -14,8 +14,8 @@ export const feedbackBodySchema = z.object({
 	threadId: z.string().regex(THREAD_ID_RE),
 	messageId: z.string().min(1).max(256),
 	sentiment: z.enum(["up", "down"]),
-	reason: z.string().max(64).nullable().optional(),
-	comment: z.string().max(2000).nullable().optional()
+	reason: z.string().max(64).nullish(),
+	comment: z.string().max(2000).nullish()
 });
 export type FeedbackBody = z.infer<typeof feedbackBodySchema>;
 
