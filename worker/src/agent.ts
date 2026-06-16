@@ -6,6 +6,8 @@ import {
 import type { Connection, ConnectionContext, WSMessage } from "agents";
 import {
 	convertToModelMessages,
+	createUIMessageStream,
+	createUIMessageStreamResponse,
 	type LanguageModel,
 	type ModelMessage,
 	type StreamTextOnFinishCallback,
@@ -21,6 +23,11 @@ import {
 	type LLMModel
 } from "./providers";
 import { checkAndIncrementQuota } from "./quota";
+import {
+	ChatError,
+	classifyChatError,
+	encodeChatError
+} from "./chat-errors";
 import { claimThread } from "./thread-access";
 import type { Env } from "./env";
 
@@ -115,7 +122,16 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			identity.isAuthenticated
 		);
 		if (!quota.allowed) {
-			throw new Error(quota.reason ?? "Quota exceeded");
+			// Anon users get a sign-in CTA rendered client-side, so keep the message
+			// itself neutral; signed-in users just learn the limit resets tomorrow.
+			const tail =
+				quota.isAuthenticated === false
+					? ""
+					: " Your limit resets tomorrow.";
+			throw new ChatError(
+				"QUOTA_EXCEEDED",
+				`You've reached today's message limit of ${quota.limit}.${tail}`
+			);
 		}
 
 		const parsed = chatBodySchema.safeParse(options?.body ?? {});
@@ -141,8 +157,19 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 	) {
 		startBraintrust(this.env.BRAINTRUST_API_KEY, this.env.BRAINTRUST_ENV);
 
-		const { model, modelId, userData, messages } =
-			await this.gateChatTurn(options);
+		let gate: ChatGate;
+		try {
+			gate = await this.gateChatTurn(options);
+		} catch (err) {
+			// Gate failures (quota, thread access) happen before the model stream
+			// starts, so a raw throw would crash the turn with no client-visible
+			// reason. Emit an error-only UI stream instead, using the same encoded
+			// wire format the model-stream onError uses, so the SPA handles both
+			// the same way.
+			return this.errorStreamResponse(err);
+		}
+
+		const { model, modelId, userData, messages } = gate;
 
 		const result = streamAgent({
 			model,
@@ -173,7 +200,34 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			}
 		});
 
-		return result.toUIMessageStreamResponse();
+		return result.toUIMessageStreamResponse({
+			onError: (error) => {
+				const { code, message } = classifyChatError(error);
+				if (code !== "QUOTA_EXCEEDED") {
+					console.error("[chat] stream error:", error);
+				}
+				return encodeChatError(code, message);
+			}
+		});
+	}
+
+	// Surfaces a pre-stream gate failure as an error-only UI message stream so
+	// the client receives it through its normal error channel rather than as a
+	// crashed turn. The error part text is the same encoded `CODE:message` the
+	// SPA parses for model-stream errors.
+	private errorStreamResponse(err: unknown): Response {
+		const { code, message } = classifyChatError(err);
+		if (code !== "QUOTA_EXCEEDED") {
+			console.error("[chat] gate error:", err);
+		}
+		const stream = createUIMessageStream({
+			execute: () => {
+				throw new Error(encodeChatError(code, message));
+			},
+			onError: (error) =>
+				error instanceof Error ? error.message : encodeChatError(code, message)
+		});
+		return createUIMessageStreamResponse({ stream });
 	}
 
 	// Flush after persistence — safer than awaiting in onChatMessage on Workers.

@@ -1,5 +1,6 @@
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import cn from "@/utils/cn";
+import { toolStatusLabel } from "./toolLabels";
 
 interface ToolStatusProps {
 	name: string;
@@ -9,7 +10,7 @@ interface ToolStatusProps {
 const ToolStatus = ({ name, status }: ToolStatusProps) => (
 	<div
 		className={cn(
-			"my-1 inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-mono",
+			"my-1 inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
 			status === "running" &&
 				"border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300",
 			status === "complete" &&
@@ -25,7 +26,7 @@ const ToolStatus = ({ name, status }: ToolStatusProps) => (
 			<CheckCircle2 className="size-3.5" aria-hidden />
 		)}
 		{status === "error" && <XCircle className="size-3.5" aria-hidden />}
-		<span>{name}</span>
+		<span>{toolStatusLabel(name, status)}</span>
 	</div>
 );
 

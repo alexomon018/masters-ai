@@ -24,6 +24,7 @@ import ChatItem from "./ChatItem/ChatItem";
 import ChatItemSection from "./ChatItemSection/ChatItemSection";
 import MobileHeader from "./MobileHeader/MobileHeader";
 import Tooltip from "./Tooltip/Tooltip";
+import ChatErrorBanner from "./ChatErrorBanner/ChatErrorBanner";
 
 export {
 	Message,
@@ -49,5 +50,6 @@ export {
 	ChatItem,
 	ChatItemSection,
 	MobileHeader,
-	Tooltip
+	Tooltip,
+	ChatErrorBanner
 };

@@ -21,7 +21,7 @@ const ChatItem = React.memo(
 		onDelete: (id: string) => void;
 		handlePinThread: (id: string) => void;
 	}) => (
-		<div className="group relative px-2">
+		<div className="group relative px-2 py-0.5">
 			<button
 				type="button"
 				onClick={() => onSelect(chat.id)}

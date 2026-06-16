@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from "react";
-import { MessageList } from "@molecules";
+import { ChatErrorBanner, MessageList } from "@molecules";
 import useChat from "./useChat";
 import ChatForm from "../ChatForm/ChatForm";
 
@@ -24,7 +24,10 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 		submitMessage,
 		streaming,
 		loading,
-		feedbackMap
+		feedbackMap,
+		chatError,
+		isAnon,
+		dismissError
 	} = useChat({ threadId, isNewThread });
 
 	const onClickQuestion = useCallback(
@@ -62,6 +65,13 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 					streaming={streaming}
 					threadId={threadId}
 					feedbackMap={feedbackMap}
+				/>
+			)}
+			{chatError && (
+				<ChatErrorBanner
+					error={chatError}
+					isAnon={isAnon}
+					onDismiss={dismissError}
 				/>
 			)}
 			<ChatForm

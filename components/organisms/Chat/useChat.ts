@@ -18,6 +18,7 @@ import {
 	authSubject,
 	fetchThreadFeedback,
 	getAnonId,
+	parseChatError,
 	readStoredAnonId,
 	resolveAgentAuth,
 	threadMessagesQueryOptions
@@ -123,7 +124,8 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		sendMessage,
 		setMessages,
 		status,
-		stop
+		stop,
+		error
 	} = useAgentChat({
 		agent,
 		getInitialMessages,
@@ -140,6 +142,24 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	});
 
 	const isStreaming = status === "submitted" || status === "streaming";
+
+	// status flips to "error" and `error` is populated when the worker emits an
+	// encoded ChatError (quota, provider down). Parsed here so <Chat> can show a
+	// banner; cleared automatically because the next send resets status/error.
+	const parsedError = useMemo(
+		() => (status === "error" ? parseChatError(error) : null),
+		[status, error]
+	);
+
+	// Track the error instance the user dismissed so the banner stays hidden for
+	// it but reappears for a fresh error. A new send resets `error`, so a later
+	// failure produces a different object and the banner shows again.
+	const [dismissedError, setDismissedError] = useState<Error | null>(null);
+	const dismissError = useCallback(() => setDismissedError(error ?? null), [
+		error
+	]);
+	const chatError =
+		dismissedError === error && dismissedError !== null ? null : parsedError;
 
 	useThreadMessagesSync({
 		threadId,
@@ -245,6 +265,9 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		loading,
 		threadId,
 		feedbackMap,
+		chatError,
+		isAnon,
+		dismissError,
 		stop
 	};
 };
