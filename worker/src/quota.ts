@@ -6,6 +6,8 @@ interface QuotaEnv {
 interface QuotaResult {
 	allowed: boolean;
 	reason?: string;
+	limit?: number;
+	isAuthenticated?: boolean;
 }
 
 export const AUTHENTICATED_LIMIT = 20;
@@ -45,7 +47,9 @@ export async function checkAndIncrementQuota(
 		await redisPipeline(env, [["DECR", key]]);
 		return {
 			allowed: false,
-			reason: `Daily message limit of ${limit} reached.`
+			reason: `Daily message limit of ${limit} reached.`,
+			limit,
+			isAuthenticated
 		};
 	}
 	return { allowed: true };
