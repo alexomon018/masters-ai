@@ -48,7 +48,7 @@ const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
 						key={item.key}
 						ref={virtualizer.measureElement}
 						data-index={item.index}
-						className="absolute left-0 top-0 w-full"
+						className="absolute left-0 top-0 w-full pb-4"
 						style={{ transform: `translateY(${item.start}px)` }}
 					>
 						<Message message={messages[item.index]} />
@@ -61,7 +61,12 @@ const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
 			{!atEnd && (
 				<button
 					type="button"
-					onClick={() => virtualizer.scrollToEnd({ behavior: "smooth" })}
+					onClick={() =>
+						virtualizer.scrollToIndex(messages.length - 1, {
+							align: "end",
+							behavior: "smooth"
+						})
+					}
 					className={cn(
 						"sticky bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5",
 						"rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-md",

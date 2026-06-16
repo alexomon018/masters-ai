@@ -126,7 +126,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 			data-message-id={message.id}
 			data-role={message.role}
 			className={cn(
-				"mb-4 flex w-full items-start gap-3 rounded-2xl p-3 md:gap-4 md:p-5"
+				"flex w-full items-start gap-3 rounded-2xl p-3 md:gap-4 md:p-5"
 			)}
 		>
 			{isUser ? (
