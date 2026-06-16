@@ -10182,11 +10182,6 @@ vary@^1, vary@^1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-virtua@^0.39.3:
-  version "0.39.3"
-  resolved "https://registry.npmjs.org/virtua/-/virtua-0.39.3.tgz"
-  integrity sha512-Ep3aiJXSGPm1UUniThr5mGDfG0upAleP7pqQs5mvvCgM1wPhII1ZKa7eNCWAJRLkC+InpXKokKozyaaj/aMYOQ==
-
 "vite@^6.0.0 || ^7.0.0 || ^8.0.0-0":
   version "8.0.14"
   resolved "https://registry.yarnpkg.com/vite/-/vite-8.0.14.tgz#da5d8d1f63dbd106385cbe9c211acbc7a7a5b192"

@@ -30,7 +30,7 @@ const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
 
 	useLayoutEffect(() => {
 		virtualizer.scrollToEnd();
-	}, [virtualizer]);
+	}, [virtualizer, messages.length]);
 
 	const items = virtualizer.getVirtualItems();
 
