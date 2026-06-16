@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getDb } from "../db";
 import { makeFeedbackRepo } from "../repository/feedback";
-import { makeThreadRepo } from "../repository/threads";
+import { checkThreadAccess } from "../thread-access";
 import type { Env } from "../env";
 
 interface AuthedRequest {
@@ -35,14 +35,15 @@ function json(body: unknown, status = 200): Response {
 // do not 404 on a missing row: feedback is keyed by userId and only readable or
 // deletable by that same user, so allowing it on an unclaimed thread is
 // harmless and avoids blocking a legitimate rater during a claim-timing race.
+// Delegates to the canonical thread-access policy so this never drifts from it.
 async function denyIfForeignThread(
 	env: Env,
 	userId: string,
 	threadId: string
 ): Promise<Response | null> {
-	const owners = await makeThreadRepo(getDb(env)).listOwnerIds(threadId);
-	if (owners.some((o) => o !== userId)) {
-		return json({ error: "Thread access denied" }, 403);
+	const access = await checkThreadAccess(env, userId, threadId);
+	if (!access.ok) {
+		return json({ error: access.reason }, access.status);
 	}
 	return null;
 }

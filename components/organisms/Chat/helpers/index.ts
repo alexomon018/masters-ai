@@ -1,5 +1,10 @@
 export { default as autoNameThread } from "./autoNameThread";
-export { getAnonId, readStoredAnonId, resolveAgentAuth } from "./agentAuth";
+export {
+	authSubject,
+	getAnonId,
+	readStoredAnonId,
+	resolveAgentAuth
+} from "./agentAuth";
 export { getThreadGetMessagesUrl } from "./getThreadGetMessagesUrl";
 export {
 	fetchThreadMessages,

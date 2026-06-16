@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import type { UIMessage } from "ai";
+import { useUser } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageList } from "@molecules";
 import { queryKeys } from "@constants";
-import type { FeedbackEntry } from "./helpers";
+import { authSubject, type FeedbackEntry } from "./helpers";
 import ChatForm from "../ChatForm/ChatForm";
 
 const noop = () => {};
@@ -15,6 +16,7 @@ const noop = () => {};
 const ChatPlaceholder = ({ threadId }: { threadId?: string }) => {
 	const formRef = useRef<HTMLFormElement>(null);
 	const queryClient = useQueryClient();
+	const { user } = useUser();
 	const cachedMessages = threadId
 		? queryClient.getQueryData<UIMessage[]>(
 				queryKeys.threadMessages(threadId)
@@ -23,7 +25,7 @@ const ChatPlaceholder = ({ threadId }: { threadId?: string }) => {
 	const cachedFeedback =
 		(threadId
 			? queryClient.getQueryData<Record<string, FeedbackEntry>>(
-					queryKeys.threadFeedback(threadId)
+					queryKeys.threadFeedback(authSubject(user?.id), threadId)
 				)
 			: undefined) ?? {};
 

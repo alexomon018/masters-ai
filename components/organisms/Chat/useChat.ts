@@ -15,6 +15,7 @@ import {
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
 import {
+	authSubject,
 	fetchThreadFeedback,
 	getAnonId,
 	readStoredAnonId,
@@ -220,10 +221,14 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 
 	const isEmpty = agentMessages.length === 0;
 
+	// Scope the feedback cache to the current identity so a previous user's
+	// cached feedback can't be reused after an auth change on the same client.
+	const subject = authSubject(user?.id);
+
 	// One fetch per thread builds a { messageId -> feedback } map used to hydrate
 	// the thumbs state in each Message. A new thread has no persisted feedback.
 	const { data: feedbackMap = {} } = useQuery({
-		queryKey: queryKeys.threadFeedback(threadId),
+		queryKey: queryKeys.threadFeedback(subject, threadId),
 		queryFn: () => fetchThreadFeedback(tokenFn, threadId),
 		enabled: userLoaded && !frozenIsNewThread
 	});

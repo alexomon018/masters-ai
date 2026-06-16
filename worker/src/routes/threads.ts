@@ -84,6 +84,7 @@ export async function deleteThread(
 	threadId: string
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
+	await makeFeedbackRepo(getDb(env)).deleteAllForThread(auth.userId, threadId);
 	await repo.delete(auth.userId, threadId);
 	try {
 		const agent = await getAgentByName(env.MastersChatAgent, threadId);

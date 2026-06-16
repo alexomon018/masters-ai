@@ -8,7 +8,7 @@ import {
 
 interface TooltipProps {
 	label: React.ReactNode;
-	children: React.ReactNode;
+	children: React.ReactElement;
 	side?: "top" | "right" | "bottom" | "left";
 	delayDuration?: number;
 }

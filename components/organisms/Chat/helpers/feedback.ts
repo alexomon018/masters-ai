@@ -33,13 +33,17 @@ export async function sendFeedbackRemote(
 ): Promise<boolean> {
 	const base = workerHttpBase();
 	if (!base) return false;
-	const params = await buildAuthQueryParams(getToken);
-	const res = await fetch(`${base}/feedback?${params.toString()}`, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(input)
-	});
-	return res.ok;
+	try {
+		const params = await buildAuthQueryParams(getToken);
+		const res = await fetch(`${base}/feedback?${params.toString()}`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(input)
+		});
+		return res.ok;
+	} catch {
+		return false;
+	}
 }
 
 export async function deleteFeedbackRemote(
@@ -48,13 +52,17 @@ export async function deleteFeedbackRemote(
 ): Promise<boolean> {
 	const base = workerHttpBase();
 	if (!base) return false;
-	const params = await buildAuthQueryParams(getToken);
-	const res = await fetch(`${base}/feedback?${params.toString()}`, {
-		method: "DELETE",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(input)
-	});
-	return res.ok;
+	try {
+		const params = await buildAuthQueryParams(getToken);
+		const res = await fetch(`${base}/feedback?${params.toString()}`, {
+			method: "DELETE",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(input)
+		});
+		return res.ok;
+	} catch {
+		return false;
+	}
 }
 
 export async function fetchThreadFeedback(
@@ -63,17 +71,21 @@ export async function fetchThreadFeedback(
 ): Promise<Record<string, FeedbackEntry>> {
 	const base = workerHttpBase();
 	if (!base) return {};
-	const params = await buildAuthQueryParams(getToken);
-	params.set("threadId", threadId);
-	const res = await fetch(`${base}/feedback?${params.toString()}`);
-	if (!res.ok) return {};
-	const rows = (await res.json()) as ThreadFeedbackDto[];
-	return rows.reduce<Record<string, FeedbackEntry>>((acc, row) => {
-		acc[row.messageId] = {
-			sentiment: row.sentiment,
-			reason: row.reason,
-			comment: row.comment
-		};
-		return acc;
-	}, {});
+	try {
+		const params = await buildAuthQueryParams(getToken);
+		params.set("threadId", threadId);
+		const res = await fetch(`${base}/feedback?${params.toString()}`);
+		if (!res.ok) return {};
+		const rows = (await res.json()) as ThreadFeedbackDto[];
+		return rows.reduce<Record<string, FeedbackEntry>>((acc, row) => {
+			acc[row.messageId] = {
+				sentiment: row.sentiment,
+				reason: row.reason,
+				comment: row.comment
+			};
+			return acc;
+		}, {});
+	} catch {
+		return {};
+	}
 }

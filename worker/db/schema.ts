@@ -15,6 +15,7 @@ import {
 	integer,
 	primaryKey,
 	index,
+	check,
 } from "drizzle-orm/sqlite-core";
 
 export const threadsTable = sqliteTable(
@@ -97,6 +98,7 @@ export const feedbackTable = sqliteTable(
 	(table) => [
 		primaryKey({ columns: [table.userId, table.threadId, table.messageId] }),
 		index("feedback_user_thread").on(table.userId, table.threadId),
+		check("feedback_sentiment", sql`${table.sentiment} IN ('up', 'down')`),
 	]
 );
 

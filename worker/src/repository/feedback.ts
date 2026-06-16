@@ -11,6 +11,7 @@ export interface FeedbackRepo {
 	): Promise<Feedback | undefined>;
 	listForThread(userId: string, threadId: string): Promise<Feedback[]>;
 	delete(userId: string, threadId: string, messageId: string): Promise<void>;
+	deleteAllForThread(userId: string, threadId: string): Promise<number>;
 	deleteAllForUser(userId: string): Promise<number>;
 }
 
@@ -74,6 +75,21 @@ export function makeFeedbackRepo(db: Database): FeedbackRepo {
 					)
 				)
 				.run();
+		},
+
+		async deleteAllForThread(userId, threadId) {
+			const result = await db
+				.delete(schema.feedbackTable)
+				.where(
+					and(
+						eq(schema.feedbackTable.userId, userId),
+						eq(schema.feedbackTable.threadId, threadId)
+					)
+				)
+				.run();
+			return Number(
+				(result as { meta?: { changes?: number } }).meta?.changes ?? 0
+			);
 		},
 
 		async deleteAllForUser(userId) {

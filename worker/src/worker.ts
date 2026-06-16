@@ -68,7 +68,11 @@ async function handleAuthenticated(
 ): Promise<Response> {
 	const auth = await authenticateAgentConnection(request, env);
 	if ("error" in auth) {
-		return new Response(auth.error, { status: 401 });
+		// authenticateAgentConnection already logs the specific reason
+		// server-side; keep the external body generic so 401s never leak it.
+		// eslint-disable-next-line no-console
+		console.warn(`[auth] 401 on ${request.method} ${new URL(request.url).pathname}`);
+		return new Response("Unauthorized", { status: 401 });
 	}
 	return handler(auth.userId);
 }
