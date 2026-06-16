@@ -1,8 +1,10 @@
 import { useRef } from "react";
 import type { UIMessage } from "ai";
+import { useUser } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageList } from "@molecules";
 import { queryKeys } from "@constants";
+import { authSubject, type FeedbackEntry } from "./helpers";
 import ChatForm from "../ChatForm/ChatForm";
 
 const noop = () => {};
@@ -14,23 +16,32 @@ const noop = () => {};
 const ChatPlaceholder = ({ threadId }: { threadId?: string }) => {
 	const formRef = useRef<HTMLFormElement>(null);
 	const queryClient = useQueryClient();
+	const { user } = useUser();
 	const cachedMessages = threadId
 		? queryClient.getQueryData<UIMessage[]>(
 				queryKeys.threadMessages(threadId)
 			)
 		: undefined;
+	const cachedFeedback =
+		(threadId
+			? queryClient.getQueryData<Record<string, FeedbackEntry>>(
+					queryKeys.threadFeedback(authSubject(user?.id), threadId)
+				)
+			: undefined) ?? {};
 
 	return (
 		<main className="relative mx-auto flex max-w-screen-md flex-1 flex-col overflow-hidden px-4 pt-16 md:px-6 md:pt-6">
-			<div className="scrollbar-hide flex-1 overflow-y-auto overflow-x-hidden">
-				{cachedMessages && cachedMessages.length > 0 && (
-					<MessageList
-						messages={cachedMessages}
-						loading={false}
-						streaming={false}
-					/>
-				)}
-			</div>
+			{cachedMessages && cachedMessages.length > 0 ? (
+				<MessageList
+					messages={cachedMessages}
+					loading={false}
+					streaming={false}
+					threadId={threadId ?? ""}
+					feedbackMap={cachedFeedback}
+				/>
+			) : (
+				<div className="flex-1" />
+			)}
 			<ChatForm
 				formRef={formRef}
 				onSubmit={noop}

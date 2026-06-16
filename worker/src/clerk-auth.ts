@@ -19,7 +19,11 @@ export async function authenticateAgentConnection(
 
 	if (ticket) {
 		const redeemed = await redeemTicket(env, ticket);
-		if (!redeemed) return { error: UNAUTHORIZED };
+		if (!redeemed) {
+			// eslint-disable-next-line no-console
+			console.warn("[auth] ticket redemption failed (expired or reused)");
+			return { error: UNAUTHORIZED };
+		}
 		return { userId: redeemed.userId, isAuthenticated: true };
 	}
 

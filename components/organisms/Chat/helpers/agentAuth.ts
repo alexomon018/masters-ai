@@ -18,6 +18,11 @@ export function readStoredAnonId(): string {
 	}
 }
 
+export function authSubject(userId: string | null | undefined): string {
+	if (userId) return `user:${userId}`;
+	return `anon:${readStoredAnonId()}`;
+}
+
 let anonIdInflight: Promise<string> | null = null;
 
 // Get-or-mint the signed anon id. Concurrent callers share one /anon-id

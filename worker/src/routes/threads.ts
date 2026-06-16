@@ -3,6 +3,7 @@ import { createClerkClient } from "@clerk/backend";
 import { z } from "zod";
 import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
+import { makeFeedbackRepo } from "../repository/feedback";
 import { makeThreadRepo } from "../repository/threads";
 import { redisPipeline } from "../redis";
 import type { NewThread } from "../../db/schema";
@@ -83,6 +84,7 @@ export async function deleteThread(
 	threadId: string
 ): Promise<Response> {
 	const repo = makeThreadRepo(getDb(env));
+	await makeFeedbackRepo(getDb(env)).deleteAllForThread(auth.userId, threadId);
 	await repo.delete(auth.userId, threadId);
 	try {
 		const agent = await getAgentByName(env.MastersChatAgent, threadId);
@@ -137,6 +139,8 @@ export async function deleteAllForUser(
 			}
 		})
 	);
+
+	await makeFeedbackRepo(getDb(env)).deleteAllForUser(auth.userId);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
 

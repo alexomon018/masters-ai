@@ -14,6 +14,12 @@ import {
 	CardTitle
 } from "./Card/Card";
 import { Avatar, AvatarImage, AvatarFallback } from "./Avatar/Avatar";
+import {
+	Tooltip,
+	TooltipTrigger,
+	TooltipContent,
+	TooltipProvider
+} from "./Tooltip/Tooltip";
 import Progress from "./Progress/Progress";
 import Textarea from "./TextArea/TextArea";
 import {
@@ -61,6 +67,10 @@ export {
 	Avatar,
 	AvatarImage,
 	AvatarFallback,
+	Tooltip,
+	TooltipTrigger,
+	TooltipContent,
+	TooltipProvider,
 	Progress,
 	Textarea,
 	AlertDialog,
