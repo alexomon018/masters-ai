@@ -22,12 +22,14 @@ const ChatPlaceholder = ({ threadId }: { threadId?: string }) => {
 
 	return (
 		<main className="relative mx-auto flex max-w-screen-md flex-1 flex-col overflow-hidden px-4 pt-16 md:px-6 md:pt-6">
-			{cachedMessages && cachedMessages.length > 0 && (
+			{cachedMessages && cachedMessages.length > 0 ? (
 				<MessageList
 					messages={cachedMessages}
 					loading={false}
 					streaming={false}
 				/>
+			) : (
+				<div className="flex-1" />
 			)}
 			<ChatForm
 				formRef={formRef}
