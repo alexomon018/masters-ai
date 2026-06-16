@@ -1,5 +1,9 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { ArrowDown } from "lucide-react";
 import { MessageLoader } from "@atoms";
+import cn from "@/utils/cn";
 import Message from "../Message/Message";
 
 interface MessageListProps {
@@ -8,21 +12,68 @@ interface MessageListProps {
 	streaming: boolean;
 }
 
-const MessageList = ({ messages, loading, streaming }: MessageListProps) => (
-	<div className="flex w-full flex-col">
-		{messages.map((message) => (
-			<Message key={message.id} message={message} />
-		))}
-		{loading && <MessageLoader />}
-		{/*
-		 * Spacer reserving a viewport's worth of room below the last turn so a
-		 * freshly-sent user message can be scrolled to the top (see useChatScroll)
-		 * even when the reply is short. Only present WHILE streaming — once the
-		 * reply completes it collapses, so a finished conversation doesn't leave a
-		 * permanent block of empty space at the bottom.
-		 */}
-		{streaming && <div aria-hidden className="min-h-[60vh] shrink-0" />}
-	</div>
-);
+const MessageList = ({ messages, loading, streaming }: MessageListProps) => {
+	const scrollRef = useRef<HTMLDivElement>(null);
+	const [atEnd, setAtEnd] = useState(true);
+
+	const virtualizer = useVirtualizer({
+		count: messages.length,
+		getScrollElement: () => scrollRef.current,
+		estimateSize: () => 120,
+		getItemKey: (index) => messages[index].id,
+		anchorTo: "end",
+		followOnAppend: streaming ? "smooth" : true,
+		scrollEndThreshold: 80,
+		overscan: 6,
+		onChange: (instance) => setAtEnd(instance.isAtEnd())
+	});
+
+	useLayoutEffect(() => {
+		virtualizer.scrollToEnd();
+	}, [virtualizer, messages.length]);
+
+	const items = virtualizer.getVirtualItems();
+
+	return (
+		<div
+			ref={scrollRef}
+			className="scrollbar-hide relative flex-1 overflow-y-auto overflow-x-hidden"
+		>
+			<div
+				className="relative w-full"
+				style={{ height: `${virtualizer.getTotalSize()}px` }}
+			>
+				{items.map((item) => (
+					<div
+						key={item.key}
+						ref={virtualizer.measureElement}
+						data-index={item.index}
+						className="absolute left-0 top-0 w-full"
+						style={{ transform: `translateY(${item.start}px)` }}
+					>
+						<Message message={messages[item.index]} />
+					</div>
+				))}
+			</div>
+
+			{loading && <MessageLoader />}
+
+			{!atEnd && (
+				<button
+					type="button"
+					onClick={() => virtualizer.scrollToEnd({ behavior: "smooth" })}
+					className={cn(
+						"sticky bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5",
+						"rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-md",
+						"dark:border-gray-700 dark:bg-gray-900"
+					)}
+				>
+					<ArrowDown className="size-4" />
+					Latest
+				</button>
+			)}
+		</div>
+	);
+};
 
 export default MessageList;
