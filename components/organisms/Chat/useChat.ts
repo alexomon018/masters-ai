@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { queryKeys } from "@constants";
@@ -15,6 +15,8 @@ import {
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
 import {
+	authSubject,
+	fetchThreadFeedback,
 	getAnonId,
 	readStoredAnonId,
 	resolveAgentAuth,
@@ -219,6 +221,18 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 
 	const isEmpty = agentMessages.length === 0;
 
+	// Scope the feedback cache to the current identity so a previous user's
+	// cached feedback can't be reused after an auth change on the same client.
+	const subject = authSubject(user?.id);
+
+	// One fetch per thread builds a { messageId -> feedback } map used to hydrate
+	// the thumbs state in each Message. A new thread has no persisted feedback.
+	const { data: feedbackMap = {} } = useQuery({
+		queryKey: queryKeys.threadFeedback(subject, threadId),
+		queryFn: () => fetchThreadFeedback(tokenFn, threadId),
+		enabled: userLoaded && !frozenIsNewThread
+	});
+
 	return {
 		messages: agentMessages,
 		isEmpty,
@@ -230,6 +244,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		streaming: isStreaming,
 		loading,
 		threadId,
+		feedbackMap,
 		stop
 	};
 };

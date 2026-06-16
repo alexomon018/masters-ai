@@ -23,6 +23,7 @@ import {
 import ChatItem from "./ChatItem/ChatItem";
 import ChatItemSection from "./ChatItemSection/ChatItemSection";
 import MobileHeader from "./MobileHeader/MobileHeader";
+import Tooltip from "./Tooltip/Tooltip";
 
 export {
 	Message,
@@ -47,5 +48,6 @@ export {
 	CommandSeparator,
 	ChatItem,
 	ChatItemSection,
-	MobileHeader
+	MobileHeader,
+	Tooltip
 };

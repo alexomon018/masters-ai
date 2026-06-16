@@ -23,7 +23,8 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 		handleSubmit,
 		submitMessage,
 		streaming,
-		loading
+		loading,
+		feedbackMap
 	} = useChat({ threadId, isNewThread });
 
 	const onClickQuestion = useCallback(
@@ -59,6 +60,8 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 					messages={messages}
 					loading={loading}
 					streaming={streaming}
+					threadId={threadId}
+					feedbackMap={feedbackMap}
 				/>
 			)}
 			<ChatForm

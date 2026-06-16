@@ -11,6 +11,13 @@ import {
 	upsertThread
 } from "./routes/threads";
 import { checkThreadAccess, extractThreadId } from "./thread-access";
+import {
+	deleteFeedback,
+	deleteFeedbackBodySchema,
+	feedbackBodySchema,
+	getThreadFeedback,
+	postFeedback
+} from "./routes/feedback";
 import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
 import { getUsage } from "./routes/usage";
 import { issueAnonId } from "./routes/anon-id";
@@ -61,7 +68,11 @@ async function handleAuthenticated(
 ): Promise<Response> {
 	const auth = await authenticateAgentConnection(request, env);
 	if ("error" in auth) {
-		return new Response(auth.error, { status: 401 });
+		// authenticateAgentConnection already logs the specific reason
+		// server-side; keep the external body generic so 401s never leak it.
+		// eslint-disable-next-line no-console
+		console.warn(`[auth] 401 on ${request.method} ${new URL(request.url).pathname}`);
+		return new Response("Unauthorized", { status: 401 });
 	}
 	return handler(auth.userId);
 }
@@ -182,6 +193,73 @@ export default {
 						);
 					}
 					return upsertThread(env, { userId }, parsed.data);
+				}),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/feedback" && request.method === "GET") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, (userId) => {
+					const threadId = url.searchParams.get("threadId");
+					if (!threadId) {
+						return Promise.resolve(
+							new Response(JSON.stringify({ error: "threadId required" }), {
+								status: 400,
+								headers: { "content-type": "application/json" }
+							})
+						);
+					}
+					return getThreadFeedback(env, { userId }, threadId);
+				}),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/feedback" && request.method === "POST") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = feedbackBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error: "invalid body",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return postFeedback(env, { userId }, parsed.data);
+				}),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/feedback" && request.method === "DELETE") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = deleteFeedbackBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error: "invalid body",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return deleteFeedback(env, { userId }, parsed.data);
 				}),
 				env,
 				origin
