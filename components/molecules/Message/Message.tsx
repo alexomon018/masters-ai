@@ -16,6 +16,7 @@ import {
 	AvatarImage
 } from "@/components/atoms/Avatar/Avatar";
 import { useUser } from "@clerk/clerk-react";
+import { usePostHog } from "@posthog/react";
 import { useTokenFn } from "@hooks";
 import {
 	deleteFeedbackRemote,
@@ -97,6 +98,7 @@ const Message: React.FC<MessageProps> = ({
 	const { user } = useUser();
 	const isAnonymous = !user;
 	const getToken = useTokenFn();
+	const posthog = usePostHog();
 
 	const [feedback, setFeedback] = useState<"up" | "down" | null>(
 		initialFeedback?.sentiment ?? null
@@ -149,6 +151,11 @@ const Message: React.FC<MessageProps> = ({
 			return;
 		}
 		setFeedback("up");
+		posthog.capture("response_feedback_given", {
+			sentiment: "up",
+			thread_id: threadId,
+			message_id: message.id
+		});
 		sendFeedbackRemote(getToken, {
 			threadId,
 			messageId: message.id,
@@ -156,7 +163,7 @@ const Message: React.FC<MessageProps> = ({
 		}).then((ok) => {
 			if (!ok) setFeedback(previous);
 		});
-	}, [canPersist, feedback, getToken, threadId, message.id]);
+	}, [canPersist, feedback, getToken, threadId, message.id, posthog]);
 
 	const handleDown = useCallback(() => {
 		if (!canPersist) return;
@@ -176,6 +183,11 @@ const Message: React.FC<MessageProps> = ({
 		// never fills in the follow-up; the panel collects optional detail.
 		setFeedback("down");
 		setPanelOpen(true);
+		posthog.capture("response_feedback_given", {
+			sentiment: "down",
+			thread_id: threadId,
+			message_id: message.id
+		});
 		sendFeedbackRemote(getToken, {
 			threadId,
 			messageId: message.id,
@@ -186,11 +198,17 @@ const Message: React.FC<MessageProps> = ({
 				setPanelOpen(false);
 			}
 		});
-	}, [canPersist, feedback, getToken, threadId, message.id]);
+	}, [canPersist, feedback, getToken, threadId, message.id, posthog]);
 
 	const submitDownvoteDetail = useCallback(() => {
 		if (!canPersist) return;
 		setPanelOpen(false);
+		posthog.capture("response_downvote_detail_submitted", {
+			thread_id: threadId,
+			message_id: message.id,
+			reason: selectedReason,
+			has_comment: comment.trim().length > 0
+		});
 		sendFeedbackRemote(getToken, {
 			threadId,
 			messageId: message.id,
@@ -198,7 +216,15 @@ const Message: React.FC<MessageProps> = ({
 			reason: selectedReason,
 			comment: comment.trim() || null
 		});
-	}, [canPersist, getToken, threadId, message.id, selectedReason, comment]);
+	}, [
+		canPersist,
+		getToken,
+		threadId,
+		message.id,
+		selectedReason,
+		comment,
+		posthog
+	]);
 
 	const markdownOptions = useMemo(
 		() => ({
