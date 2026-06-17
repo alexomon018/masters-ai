@@ -35,8 +35,8 @@ const DangerZoneSection = ({
 
 	return (
 		<section className={cn(className)}>
-			<h2 className="mb-2 text-2xl font-semibold">{title}</h2>
-			<p className="mb-4 text-muted-foreground">{description}</p>
+			<h3 className="mb-1 text-base font-medium text-destructive">{title}</h3>
+			<p className="mb-4 text-sm text-muted-foreground">{description}</p>
 			<Button
 				onClick={() => setIsAlertOpen(true)}
 				disabled={isDeletingUser || isDeletingAllData}

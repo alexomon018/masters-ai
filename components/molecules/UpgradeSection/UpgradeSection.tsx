@@ -1,42 +1,42 @@
-import { Button } from "@atoms";
+import { Button, Card } from "@atoms";
 import { Sparkles, Rocket, Zap } from "lucide-react";
 
+const benefits = [
+	{
+		icon: Sparkles,
+		title: "Generous Message Limits",
+		description: "Send over 1,400 messages per month*"
+	},
+	{
+		icon: Rocket,
+		title: "All AI Models",
+		description:
+			"Get access to our full suite of models from Anthropic and OpenAI, and more!"
+	},
+	{
+		icon: Zap,
+		title: "Priority Support",
+		description: "Get faster responses and dedicated assistance"
+	}
+];
+
 const UpgradeSection = () => (
-	<section className="space-y-8">
-		<div className="flex items-center justify-between">
-			<h2 className="text-3xl font-semibold tracking-tight">Upgrade to Pro</h2>
+	<section className="space-y-4">
+		<h3 className="text-base font-medium">Upgrade to Pro</h3>
+
+		<div className="grid gap-4 sm:grid-cols-3">
+			{benefits.map(({ icon: Icon, title, description }) => (
+				<Card key={title} className="flex flex-col gap-2 p-5">
+					<Icon className="size-5 text-primary" />
+					<h4 className="text-sm font-medium">{title}</h4>
+					<p className="text-xs text-muted-foreground">{description}</p>
+				</Card>
+			))}
 		</div>
 
-		<div className="grid gap-8 md:grid-cols-3">
-			<div className="flex flex-col gap-2">
-				<Sparkles className="size-6 text-primary" />
-				<h3 className="text-lg font-semibold">Generous Message Limits</h3>
-				<p className="text-muted-foreground">
-					Send over 1,400 messages per month*
-				</p>
-			</div>
+		<Button>Coming Soon</Button>
 
-			<div className="flex flex-col gap-2">
-				<Rocket className="size-6 text-primary" />
-				<h3 className="text-lg font-semibold">All AI Models</h3>
-				<p className="text-muted-foreground">
-					Get access to our full suite of models from Anthropic and OpenAI,
-					and more!
-				</p>
-			</div>
-
-			<div className="flex flex-col gap-2">
-				<Zap className="size-6 text-primary" />
-				<h3 className="text-lg font-semibold">Priority Support</h3>
-				<p className="text-muted-foreground">
-					Get faster responses and dedicated assistance
-				</p>
-			</div>
-		</div>
-
-		<Button className="rounded-xl bg-primary font-medium">Coming Soon</Button>
-
-		<p className="text-sm text-muted-foreground">
+		<p className="text-xs text-muted-foreground">
 			*Claude usage is limited to 100 messages per month. Premium credits can be
 			purchased separately.
 		</p>

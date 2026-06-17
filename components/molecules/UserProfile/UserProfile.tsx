@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@atoms";
+import { Avatar, AvatarFallback, AvatarImage, Card } from "@atoms";
 
 interface UserProfileProps {
 	name: string;
@@ -8,22 +8,22 @@ interface UserProfileProps {
 }
 
 const UserProfile = ({ name, email, plan, avatarUrl }: UserProfileProps) => (
-	<div className="flex flex-row items-center gap-4 sm:flex-col sm:text-center">
-		<Avatar className="size-20 sm:size-32">
+	<Card className="flex items-center gap-4 p-5">
+		<Avatar className="size-14 shrink-0">
 			{avatarUrl ? (
 				<AvatarImage src={avatarUrl} alt={name} />
 			) : (
 				<AvatarFallback>{name.charAt(0)}</AvatarFallback>
 			)}
 		</Avatar>
-		<div className="sm:mt-4">
-			<h2 className="text-lg font-semibold sm:text-xl">{name}</h2>
-			<p className="text-sm text-muted-foreground">{email}</p>
-			<span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs">
-				{plan}
-			</span>
+		<div className="min-w-0 flex-1">
+			<h3 className="truncate text-base font-semibold">{name}</h3>
+			<p className="truncate text-sm text-muted-foreground">{email}</p>
 		</div>
-	</div>
+		<span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+			{plan}
+		</span>
+	</Card>
 );
 
 export default UserProfile;

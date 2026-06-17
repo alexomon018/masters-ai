@@ -84,10 +84,12 @@ const ModelSelector = () => {
 	};
 
 	return (
-		<div className="mx-auto w-full max-w-4xl p-6">
+		<div className="w-full">
 			<div className="space-y-4">
-				<h1 className="text-2xl font-bold">Available Models</h1>
-				<p className="text-muted-foreground">
+				<h1 className="text-xl font-semibold tracking-tight">
+					Available Models
+				</h1>
+				<p className="text-sm text-muted-foreground">
 					{`Choose which models appear in your model selector. This won't affect
 					existing conversations.`}
 				</p>
@@ -102,7 +104,7 @@ const ModelSelector = () => {
 								>
 									<span>Filter by features</span>
 									{selectedFeatures.size > 0 && (
-										<span className="ml-2 rounded-full bg-teal-400 px-2 py-0.5 text-xs font-medium">
+										<span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
 											{selectedFeatures.size}
 										</span>
 									)}
@@ -202,7 +204,7 @@ const ModelSelector = () => {
 											<Link
 												to="/settings/$tab"
 												params={{ tab: "api-keys" }}
-												className="text-sm font-medium text-teal-500 hover:underline"
+												className="text-sm font-medium text-primary underline-offset-4 hover:underline"
 											>
 												Connect a key
 											</Link>
