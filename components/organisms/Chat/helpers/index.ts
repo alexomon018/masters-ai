@@ -21,3 +21,5 @@ export {
 	sendFeedbackRemote
 } from "./feedback";
 export type { FeedbackEntry, Sentiment } from "./feedback";
+export { parseChatError } from "./chatError";
+export type { ChatErrorCode, ParsedChatError } from "./chatError";
