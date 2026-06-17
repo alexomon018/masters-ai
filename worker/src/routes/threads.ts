@@ -5,6 +5,7 @@ import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
 import { makeFeedbackRepo } from "../repository/feedback";
 import { makeThreadRepo } from "../repository/threads";
+import { makeUserApiKeyRepo } from "../repository/userApiKeys";
 import { redisPipeline } from "../redis";
 import type { NewThread } from "../../db/schema";
 import type { Env } from "../env";
@@ -141,6 +142,7 @@ export async function deleteAllForUser(
 	);
 
 	await makeFeedbackRepo(getDb(env)).deleteAllForUser(auth.userId);
+	await makeUserApiKeyRepo(getDb(env)).deleteAllForUser(auth.userId);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
 

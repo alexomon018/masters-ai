@@ -68,11 +68,13 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 				/>
 			)}
 			{chatError && (
-				<ChatErrorBanner
-					error={chatError}
-					isAnon={isAnon}
-					onDismiss={dismissError}
-				/>
+				<div className="px-4 md:px-5">
+					<ChatErrorBanner
+						error={chatError}
+						isAnon={isAnon}
+						onDismiss={dismissError}
+					/>
+				</div>
 			)}
 			<ChatForm
 				formRef={formRef as React.RefObject<HTMLFormElement>}

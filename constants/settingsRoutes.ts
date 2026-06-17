@@ -4,6 +4,7 @@ const SETTINGS_TABS = [
 	{ name: "Account", tab: "account", href: "/settings/account" },
 	{ name: "Customization", tab: "customization", href: "/settings/customization" },
 	{ name: "Models", tab: "models", href: "/settings/models" },
+	{ name: "API Keys", tab: "api-keys", href: "/settings/api-keys" },
 	{ name: "Attachments", tab: "attachments", href: "/settings/attachments" }
 ];
 

@@ -11,6 +11,7 @@ import Chat from "./Chat/Chat";
 import AccountUpgrade from "./AccountUpgrade/AccountUpgrade";
 import Customization from "./Customization/Customization";
 import ModelsPicker from "./ModelsPicker/ModelsPicker";
+import ApiKeysManager from "./ApiKeysManager/ApiKeysManager";
 
 export {
 	Form,
@@ -23,5 +24,6 @@ export {
 	Chat,
 	AccountUpgrade,
 	Customization,
-	ModelsPicker
+	ModelsPicker,
+	ApiKeysManager
 };

@@ -20,6 +20,12 @@ const MODEL_AGENT_CONFIG: Record<LLMModel, ModelAgentConfig> = {
 		forceFirstStepToolChoice: "required",
 		repairToolCalls: true,
 	},
+	"claude-opus-4-8": {
+		repairToolCalls: false,
+	},
+	"gpt-5.4": {
+		repairToolCalls: true,
+	},
 };
 
 export function getModelAgentConfig(modelId: LLMModel): ModelAgentConfig {

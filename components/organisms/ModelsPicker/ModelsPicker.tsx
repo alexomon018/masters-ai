@@ -16,8 +16,10 @@ import {
 	ZapIcon
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { modelCards } from "@constants";
 import { useModelStore } from "@providers";
+import { useApiKeysManager } from "@/components/organisms/ApiKeysManager/useApiKeysManager";
 
 type Feature = {
 	name: string;
@@ -53,6 +55,11 @@ const ModelSelector = () => {
 		enableAllModels,
 		disableAllModels
 	} = useModelStore((state) => state);
+
+	const { providers } = useApiKeysManager();
+	const connectedProviders = new Set(
+		providers.filter((p) => p.connected).map((p) => p.provider)
+	);
 
 	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
 
@@ -148,7 +155,11 @@ const ModelSelector = () => {
 									selectedFeatures.has(feature.name)
 								)
 						)
-						.map((model) => (
+						.map((model) => {
+							const locked =
+								model.byok === true &&
+								!connectedProviders.has(model.provider);
+							return (
 							<Card key={model.id} className="p-6">
 								<div className="flex items-start justify-between">
 									<div className="flex gap-4">
@@ -187,15 +198,28 @@ const ModelSelector = () => {
 										</div>
 									</div>
 									<div className="flex items-center gap-4">
-										<CopyIcon className="size-5 text-muted-foreground" />
-										<Switch
-											checked={enabledModels.has(model.id)}
-											onCheckedChange={() => toggleModelEnabled(model.id)}
-										/>
+										{locked ? (
+											<Link
+												to="/settings/$tab"
+												params={{ tab: "api-keys" }}
+												className="text-sm font-medium text-teal-500 hover:underline"
+											>
+												Connect a key
+											</Link>
+										) : (
+											<>
+												<CopyIcon className="size-5 text-muted-foreground" />
+												<Switch
+													checked={enabledModels.has(model.id)}
+													onCheckedChange={() => toggleModelEnabled(model.id)}
+												/>
+											</>
+										)}
 									</div>
 								</div>
 							</Card>
-						))}
+							);
+						})}
 				</div>
 			</div>
 		</div>
