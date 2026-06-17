@@ -59,10 +59,18 @@ export const useDangerZone = ({
 				const jwt = await tokenFn();
 				const ticket = jwt ? await fetchWorkerTicket(jwt) : null;
 				if (base && ticket) {
-					await fetch(`${base}/users/me?ticket=${encodeURIComponent(ticket)}`, {
-						method: "DELETE"
-					});
+					const res = await fetch(
+						`${base}/users/me?ticket=${encodeURIComponent(ticket)}`,
+						{
+							method: "DELETE"
+						}
+					);
+					if (!res.ok) {
+						throw new Error("Account deletion failed");
+					}
 				}
+
+				posthog.capture("account_deleted");
 
 				await queryClient.resetQueries();
 				queryClient.clear();
@@ -79,7 +87,6 @@ export const useDangerZone = ({
 			if (isAccountDeletion) {
 				await deleteAllDataMutation();
 				posthog.capture("all_messages_deleted");
-				posthog.capture("account_deleted");
 				await deleteUserMutation();
 			} else {
 				await deleteAllDataMutation();

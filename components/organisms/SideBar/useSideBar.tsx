@@ -70,6 +70,9 @@ const useSideBar = () => {
 	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
 			await deleteThreadRemote(tokenFn, threadId);
+			return threadId;
+		},
+		onSuccess: (threadId) => {
 			posthog.capture("thread_deleted", { thread_id: threadId });
 		},
 		onMutate: async (threadId) => {
@@ -125,7 +128,13 @@ const useSideBar = () => {
 		}: {
 			threadId: string;
 			pinned: boolean;
-		}) => upsertThreadRemote(tokenFn, { threadId, pinned }),
+		}) => {
+			await upsertThreadRemote(tokenFn, { threadId, pinned });
+			return { threadId, pinned };
+		},
+		onSuccess: ({ threadId, pinned }) => {
+			posthog.capture("thread_pinned", { thread_id: threadId, pinned });
+		},
 		onMutate: async ({ threadId, pinned }) => {
 			await queryClient.cancelQueries({ queryKey: THREADS_QUERY_KEY });
 			const previous = queryClient.getQueryData<ThreadDto[]>(THREADS_QUERY_KEY);
@@ -151,13 +160,9 @@ const useSideBar = () => {
 			const thread = threads.find((t) => t.id === threadId);
 			if (!thread) return;
 			const newPinned = !thread.pinned;
-			posthog.capture("thread_pinned", {
-				thread_id: threadId,
-				pinned: newPinned
-			});
 			togglePin({ threadId, pinned: newPinned });
 		},
-		[threads, togglePin, posthog]
+		[threads, togglePin]
 	);
 
 	useEffect(() => {

@@ -12,6 +12,7 @@ import QueryClientProvider from "@/providers/queryClientProvider";
 
 // SPA shell: the provider stack wrapping the router <Outlet>.
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const posthogApiKey = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN;
 
 // Lazy + DEV-gated so the import is dead code in production.
 const RouterDevtools = import.meta.env.DEV
@@ -31,10 +32,7 @@ const PostHogUserIdentifier = () => {
 	useEffect(() => {
 		if (!isLoaded) return;
 		if (user) {
-			posthog.identify(user.id, {
-				email: user.primaryEmailAddress?.emailAddress,
-				name: user.fullName
-			});
+			posthog.identify(user.id);
 		} else {
 			posthog.reset();
 		}
@@ -54,18 +52,8 @@ const ClerkWrapper = ({ children }: { children: ReactNode }) => {
 	);
 };
 
-const RootComponent = () => (
-	<PostHogProvider
-		apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
-		options={{
-			api_host: "/ingest",
-			ui_host:
-				import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://eu.posthog.com",
-			defaults: "2026-01-30",
-			capture_exceptions: true,
-			debug: import.meta.env.DEV
-		}}
-	>
+const RootComponent = () => {
+	const app = (
 		<ClerkWrapper>
 			<ThemeProvider
 				attribute="class"
@@ -88,8 +76,27 @@ const RootComponent = () => (
 				</ModelStoreProvider>
 			</ThemeProvider>
 		</ClerkWrapper>
-	</PostHogProvider>
-);
+	);
+
+	// PostHog is optional in local/dev when no project token is configured.
+	if (!posthogApiKey) return app;
+
+	return (
+		<PostHogProvider
+			apiKey={posthogApiKey}
+			options={{
+				api_host: "/ingest",
+				ui_host:
+					import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://eu.posthog.com",
+				defaults: "2026-01-30",
+				capture_exceptions: true,
+				debug: import.meta.env.DEV
+			}}
+		>
+			{app}
+		</PostHogProvider>
+	);
+};
 
 const NotFound = () => (
 	<div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">

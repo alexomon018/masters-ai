@@ -32,19 +32,20 @@ const Customization = () => {
 	});
 
 	const onSubmit = async (data: FormValues) => {
-		posthog.capture("customization_saved", {
-			has_name: data.name.length > 0,
-			has_occupation: data.occupation.length > 0,
-			has_traits: data.traits.length > 0,
-			has_preferences: data.preferences.length > 0
-		});
-		user?.update({
+		if (!user) return;
+		await user.update({
 			unsafeMetadata: {
 				name: data.name,
 				occupation: data.occupation,
 				traits: data.traits,
 				preferences: data.preferences
 			}
+		});
+		posthog.capture("customization_saved", {
+			has_name: data.name.length > 0,
+			has_occupation: data.occupation.length > 0,
+			has_traits: data.traits.length > 0,
+			has_preferences: data.preferences.length > 0
 		});
 	};
 

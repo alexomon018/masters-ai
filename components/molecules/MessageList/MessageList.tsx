@@ -16,7 +16,22 @@ interface MessageListProps {
 	feedbackMap: Record<string, FeedbackEntry>;
 }
 
+const MAX_MEASUREMENT_CACHE_ENTRIES = 50;
 const measurementsCache = new Map<string, VirtualItem[]>();
+
+const setMeasurementsCache = (
+	threadId: string,
+	measurements: VirtualItem[]
+) => {
+	measurementsCache.delete(threadId);
+	measurementsCache.set(threadId, measurements);
+
+	while (measurementsCache.size > MAX_MEASUREMENT_CACHE_ENTRIES) {
+		const oldestThreadId = measurementsCache.keys().next().value;
+		if (!oldestThreadId) break;
+		measurementsCache.delete(oldestThreadId);
+	}
+};
 
 const MessageList = ({
 	messages,
@@ -47,15 +62,21 @@ const MessageList = ({
 	// render instead fed back into onChange → re-measure → render, which made
 	// the list visibly resettle (flicker) on each thread open.
 	const prevCountRef = useRef(messages.length);
+	const prevThreadIdRef = useRef(threadId);
 	useLayoutEffect(() => {
+		if (prevThreadIdRef.current !== threadId) {
+			prevThreadIdRef.current = threadId;
+			prevCountRef.current = messages.length;
+			return;
+		}
 		const appended = messages.length > prevCountRef.current;
 		prevCountRef.current = messages.length;
 		if (appended && atEnd) virtualizer.scrollToEnd();
-	}, [virtualizer, messages.length, atEnd]);
+	}, [virtualizer, messages.length, atEnd, threadId]);
 
 	useEffect(
 		() => () => {
-			measurementsCache.set(threadId, virtualizer.takeSnapshot());
+			setMeasurementsCache(threadId, virtualizer.takeSnapshot());
 		},
 		[virtualizer, threadId]
 	);
