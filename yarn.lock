@@ -2372,7 +2372,7 @@
   dependencies:
     "@posthog/types" "^1.387.0"
 
-"@posthog/react@^3.0.4":
+"@posthog/react@^1.10.2":
   version "1.10.2"
   resolved "https://registry.yarnpkg.com/@posthog/react/-/react-1.10.2.tgz#1122ae3bdbf4499a7c47d56ca64c490284a6cef4"
   integrity sha512-/KXzUZiSByE9/6fHmnfDVVvld/3pvBuM6KFUuT5NkR4XwOHEAT/EwNwhUUFOOJpsyDa0PaEWWHZS6VY9r2CB3Q==
