@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
+import { usePostHog } from "@posthog/react";
 import { queryKeys } from "@constants";
 import {
 	useAutoNameThread,
@@ -37,6 +38,7 @@ interface Args {
 const useChat = ({ threadId, isNewThread }: Args) => {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+	const posthog = usePostHog();
 	const [input, setInput] = useState("");
 
 	const { user, isLoaded: userLoaded } = useUser();
@@ -172,6 +174,19 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		dismissedError === error && dismissedError !== null ? null : parsedError;
 	const chatError = localError ?? serverError;
 
+	// Sync new chat errors to PostHog — synchronizing with an external analytics
+	// system, which is a valid useEffect use.
+	const prevChatErrorRef = useRef(chatError);
+	useEffect(() => {
+		if (chatError && chatError !== prevChatErrorRef.current) {
+			posthog.capture("chat_error_shown", {
+				error_code: chatError.code,
+				is_anon: isAnon
+			});
+		}
+		prevChatErrorRef.current = chatError;
+	}, [chatError, posthog, isAnon]);
+
 	useThreadMessagesSync({
 		threadId,
 		agentMessages,
@@ -238,6 +253,11 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			// history.replaceState) keeps a later "New Chat" a real transition.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
+				posthog.capture("thread_created", {
+					thread_id: threadId,
+					model_id: selectedModel.id,
+					is_anon: isAnon
+				});
 				upsertThreadRemote(tokenFn, {
 					threadId,
 					title: UNTITLED_THREAD_TITLE,
@@ -255,6 +275,12 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 				});
 			}
 
+			posthog.capture("message_sent", {
+				thread_id: threadId,
+				model_id: selectedModel.id,
+				is_anon: isAnon,
+				message_length: text.length
+			});
 			sendMessage({
 				role: "user",
 				parts: [{ type: "text", text }]
@@ -266,7 +292,10 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			tokenFn,
 			queryClient,
 			navigate,
-			hasKeyForSelected
+			hasKeyForSelected,
+			posthog,
+			selectedModel.id,
+			isAnon
 		]
 	);
 

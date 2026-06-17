@@ -6,6 +6,7 @@ import {
 	DropdownMenuTrigger,
 	CustomIcon
 } from "@atoms";
+import { usePostHog } from "@posthog/react";
 import { Model, modelCards } from "@constants";
 import { useModelStore } from "@providers";
 
@@ -13,6 +14,7 @@ const ChatModelSelector = () => {
 	const { selectedModel, selectModel, enabledModels } = useModelStore(
 		(state) => state
 	);
+	const posthog = usePostHog();
 	const [open, setOpen] = useState(false);
 
 	const availableModels = modelCards.filter(
@@ -20,6 +22,11 @@ const ChatModelSelector = () => {
 	);
 
 	const onModelSelect = (model: Model) => {
+		posthog.capture("model_selected", {
+			model_id: model.id,
+			model_name: model.name,
+			previous_model_id: selectedModel.id
+		});
 		selectModel(model);
 		setOpen(false);
 	};

@@ -49,11 +49,14 @@ export async function upsertThreadRemote(
 	const base = workerBase();
 	if (!base) return;
 	const params = await authParams(getToken);
-	await fetch(`${base}/threads?${params.toString()}`, {
+	const res = await fetch(`${base}/threads?${params.toString()}`, {
 		method: "POST",
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(input)
 	});
+	if (!res.ok) {
+		throw new Error("Failed to upsert thread");
+	}
 }
 
 export async function deleteThreadRemote(
@@ -63,10 +66,13 @@ export async function deleteThreadRemote(
 	const base = workerBase();
 	if (!base) return;
 	const params = await authParams(getToken);
-	await fetch(
+	const res = await fetch(
 		`${base}/threads/${encodeURIComponent(threadId)}?${params.toString()}`,
 		{ method: "DELETE" }
 	);
+	if (!res.ok) {
+		throw new Error("Failed to delete thread");
+	}
 }
 
 export async function claimAnonThreadsRemote(

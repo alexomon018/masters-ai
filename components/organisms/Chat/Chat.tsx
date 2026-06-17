@@ -1,5 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import { ChatErrorBanner, MessageList } from "@molecules";
+import { usePostHog } from "@posthog/react";
 import useChat from "./useChat";
 import ChatForm from "../ChatForm/ChatForm";
 
@@ -14,6 +15,7 @@ interface ChatProps {
 // whole page.
 const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 	const formRef = useRef<HTMLFormElement>(null);
+	const posthog = usePostHog();
 
 	const {
 		messages,
@@ -32,9 +34,10 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 
 	const onClickQuestion = useCallback(
 		(value: string) => {
+			posthog.capture("initial_question_clicked", { question: value });
 			submitMessage(value);
 		},
-		[submitMessage]
+		[submitMessage, posthog]
 	);
 
 	const onSubmit = useCallback(
@@ -53,8 +56,8 @@ const Chat = React.memo(({ threadId, isNewThread }: ChatProps) => {
 				<div className="flex-1">
 					<div className="mb-4 flex w-full items-start gap-3 rounded-2xl p-3 md:gap-4 md:p-5">
 						<p className="text-base">
-							<strong>Welcome to Masters Chat</strong> Your ultimate
-							companion in navigating Frontend Masters courses.
+							<strong>Welcome to Masters Chat</strong> Your ultimate companion
+							in navigating Frontend Masters courses.
 						</p>
 					</div>
 				</div>

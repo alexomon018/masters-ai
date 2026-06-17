@@ -7,6 +7,7 @@ export interface Env {
 	ANTHROPIC_API_KEY: string;
 	BRAINTRUST_API_KEY?: string;
 	BRAINTRUST_ENV?: string;
+	POSTHOG_API_KEY?: string;
 	UPSTASH_VECTOR_REST_URL: string;
 	UPSTASH_VECTOR_REST_TOKEN: string;
 	UPSTASH_REDIS_REST_URL: string;

@@ -32,6 +32,7 @@ import {
 	encodeChatError
 } from "./chat-errors";
 import { claimThread } from "./thread-access";
+import { captureAiGeneration, providerFromModel } from "./posthog";
 import { tryCatch } from "../../utils/tryCatch";
 import type { Env } from "./env";
 
@@ -194,7 +195,8 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			return this.errorStreamResponse(gate.error);
 		}
 
-		const { model, modelId, userData, messages } = gate.data;
+		const { identity, model, modelId, userData, messages } = gate.data;
+		const turnStartMs = Date.now();
 
 		const result = streamAgent({
 			model,
@@ -208,7 +210,7 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 				ANTHROPIC_API_KEY: this.env.ANTHROPIC_API_KEY,
 				RAG_QUERY_REWRITE: this.env.RAG_QUERY_REWRITE,
 			},
-			onFinish: ({ steps }) => {
+			onFinish: ({ steps, usage, finishReason }) => {
 				const toolCalls = steps.flatMap((step) => step.toolCalls ?? []);
 				const toolResults = steps.flatMap((step) => step.toolResults ?? []);
 				const toolNames = toolCalls.map((call) => call.toolName);
@@ -222,6 +224,26 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 					ragSearchCount: toolNames.filter((n) => n === "ragSearch").length,
 					ragResultText: ragResults.join("\n\n---\n\n")
 				});
+
+				if (this.env.POSTHOG_API_KEY) {
+					this.ctx.waitUntil(
+						captureAiGeneration(
+							this.env.POSTHOG_API_KEY,
+							identity.userId,
+							{
+								$ai_trace_id: this.name,
+								$ai_session_id: this.name,
+								$ai_model: modelId,
+								$ai_provider: providerFromModel(modelId),
+								$ai_input_tokens: usage?.inputTokens,
+								$ai_output_tokens: usage?.outputTokens,
+								$ai_latency: (Date.now() - turnStartMs) / 1000,
+								$ai_stream: true,
+								$ai_stop_reason: finishReason
+							}
+						)
+					);
+				}
 			}
 		});
 
