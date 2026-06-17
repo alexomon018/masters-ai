@@ -19,6 +19,9 @@ interface ImportMetaEnv {
 	readonly VITE_CLERK_PUBLISHABLE_KEY: string;
 	// Optional Clerk Frontend API proxy (production DNS).
 	readonly VITE_CLERK_PROXY_URL?: string;
+	// PostHog analytics.
+	readonly VITE_PUBLIC_POSTHOG_PROJECT_TOKEN: string;
+	readonly VITE_PUBLIC_POSTHOG_HOST: string;
 }
 
 interface ImportMeta {

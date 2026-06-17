@@ -15,9 +15,8 @@ import {
 	BrainIcon,
 	ZapIcon
 } from "lucide-react";
-import { useState } from "react";
 import { modelCards } from "@constants";
-import { useModelStore } from "@providers";
+import { useModelsPicker } from "./useModelsPicker";
 
 type Feature = {
 	name: string;
@@ -46,35 +45,15 @@ const availableFeatures: Feature[] = [
 const ModelSelector = () => {
 	const {
 		selectedFeatures,
-		setSelectedFeatures,
 		clearFeatures,
 		enabledModels,
-		toggleModelEnabled,
 		enableAllModels,
-		disableAllModels
-	} = useModelStore((state) => state);
-
-	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
-
-	const toggleDescription = (modelId: string) => {
-		setExpandedModels((expanded) => {
-			const newExpanded = new Set(expanded);
-			if (newExpanded.has(modelId)) {
-				newExpanded.delete(modelId);
-			} else {
-				newExpanded.add(modelId);
-			}
-			return newExpanded;
-		});
-	};
-
-	const onCheckedFeature = (checked: boolean, feature: Feature) => {
-		setSelectedFeatures(
-			checked
-				? new Set([...selectedFeatures, feature.name])
-				: new Set([...selectedFeatures].filter((f) => f !== feature.name))
-		);
-	};
+		disableAllModels,
+		expandedModels,
+		toggleDescription,
+		onCheckedFeature,
+		handleToggleModel
+	} = useModelsPicker();
 
 	return (
 		<div className="mx-auto w-full max-w-4xl p-6">
@@ -107,7 +86,7 @@ const ModelSelector = () => {
 										key={feature.name}
 										checked={selectedFeatures.has(feature.name)}
 										onCheckedChange={(checked) => {
-											onCheckedFeature(checked, feature);
+											onCheckedFeature(checked, feature.name);
 										}}
 									>
 										<div className="flex items-center gap-2">
@@ -190,7 +169,9 @@ const ModelSelector = () => {
 										<CopyIcon className="size-5 text-muted-foreground" />
 										<Switch
 											checked={enabledModels.has(model.id)}
-											onCheckedChange={() => toggleModelEnabled(model.id)}
+											onCheckedChange={() => {
+												handleToggleModel(model.id, model.name);
+											}}
 										/>
 									</div>
 								</div>

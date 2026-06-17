@@ -1,6 +1,8 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { SettingsNavigation } from "@molecules";
 import { AccountUpgrade, Customization, ModelsPicker } from "@organisms";
+import { usePostHog } from "@posthog/react";
+import { useEffect } from "react";
 
 const renderTabContent = (tab: string) => {
 	switch (tab) {
@@ -21,6 +23,12 @@ const renderTabContent = (tab: string) => {
 
 const SettingsTabPage = () => {
 	const { tab } = useParams({ from: "/settings/$tab" });
+	const posthog = usePostHog();
+
+	// Sync settings tab navigation to PostHog (synchronizing with external analytics).
+	useEffect(() => {
+		posthog.capture("settings_tab_viewed", { tab });
+	}, [tab, posthog]);
 
 	return (
 		<>
