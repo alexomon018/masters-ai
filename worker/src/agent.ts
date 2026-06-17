@@ -29,6 +29,7 @@ import {
 	encodeChatError
 } from "./chat-errors";
 import { claimThread } from "./thread-access";
+import { tryCatch } from "../../utils/tryCatch";
 import type { Env } from "./env";
 
 const DEFAULT_MODEL: LLMModel = "claude-haiku-4-5";
@@ -157,19 +158,17 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 	) {
 		startBraintrust(this.env.BRAINTRUST_API_KEY, this.env.BRAINTRUST_ENV);
 
-		let gate: ChatGate;
-		try {
-			gate = await this.gateChatTurn(options);
-		} catch (err) {
-			// Gate failures (quota, thread access) happen before the model stream
-			// starts, so a raw throw would crash the turn with no client-visible
-			// reason. Emit an error-only UI stream instead, using the same encoded
-			// wire format the model-stream onError uses, so the SPA handles both
-			// the same way.
-			return this.errorStreamResponse(err);
+		// Gate failures (quota, thread access) happen before the model stream
+		// starts, so a raw throw would crash the turn with no client-visible
+		// reason. Emit an error-only UI stream instead, using the same encoded
+		// wire format the model-stream onError uses, so the SPA handles both
+		// the same way.
+		const gate = await tryCatch(this.gateChatTurn(options));
+		if (!gate.success) {
+			return this.errorStreamResponse(gate.error);
 		}
 
-		const { model, modelId, userData, messages } = gate;
+		const { model, modelId, userData, messages } = gate.data;
 
 		const result = streamAgent({
 			model,

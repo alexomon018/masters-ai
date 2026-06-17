@@ -42,6 +42,11 @@ describe("classifyChatError", () => {
 		expect(message).toContain("temporarily unavailable");
 	});
 
+	it("classifies a message-only credit error via the message field", () => {
+		const err = new Error("Your credit balance is too low");
+		expect(classifyChatError(err).code).toBe("PROVIDER_UNAVAILABLE");
+	});
+
 	it("falls back to UNKNOWN for unrecognized errors", () => {
 		expect(classifyChatError(new Error("boom")).code).toBe("UNKNOWN");
 		expect(classifyChatError("nope").code).toBe("UNKNOWN");

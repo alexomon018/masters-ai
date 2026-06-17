@@ -32,7 +32,7 @@ function isApiCallErrorLike(err: unknown): err is ApiCallErrorLike {
 	return (
 		typeof err === "object" &&
 		err !== null &&
-		("statusCode" in err || "responseBody" in err)
+		("statusCode" in err || "responseBody" in err || "message" in err)
 	);
 }
 
