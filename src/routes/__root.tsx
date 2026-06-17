@@ -1,8 +1,9 @@
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider, useUser } from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
-import { lazy, ReactNode, Suspense } from "react";
+import { lazy, ReactNode, Suspense, useEffect } from "react";
+import { PostHogProvider, usePostHog } from "@posthog/react";
 // Import providers directly (not via the @providers barrel) so the app bundle
 // never pulls in withThemeProvider → @storybook/addons.
 import { ThemeProvider } from "@/providers/themeProvider";
@@ -21,35 +22,73 @@ const RouterDevtools = import.meta.env.DEV
 		)
 	: () => null;
 
+// Syncs the authenticated Clerk user to PostHog. Must be inside both
+// PostHogProvider and ClerkProvider, so it lives inside ClerkWrapper.
+const PostHogUserIdentifier = () => {
+	const { user, isLoaded } = useUser();
+	const posthog = usePostHog();
+
+	useEffect(() => {
+		if (!isLoaded) return;
+		if (user) {
+			posthog.identify(user.id, {
+				email: user.primaryEmailAddress?.emailAddress,
+				name: user.fullName
+			});
+		} else {
+			posthog.reset();
+		}
+	}, [user, isLoaded, posthog]);
+
+	return null;
+};
+
 const ClerkWrapper = ({ children }: { children: ReactNode }) => {
 	// Clerk is optional in local/dev when no key is configured.
 	if (!clerkKey) return children;
-	return <ClerkProvider publishableKey={clerkKey}>{children}</ClerkProvider>;
+	return (
+		<ClerkProvider publishableKey={clerkKey}>
+			<PostHogUserIdentifier />
+			{children}
+		</ClerkProvider>
+	);
 };
 
 const RootComponent = () => (
-	<ClerkWrapper>
-		<ThemeProvider
-			attribute="class"
-			defaultTheme="system"
-			enableSystem
-			disableTransitionOnChange
-		>
-			<ModelStoreProvider>
-				<QueryClientProvider>
-					<Toaster />
-					<div className="flex h-full flex-col">
-						<main className="flex-1 overflow-auto">
-							<Outlet />
-						</main>
-					</div>
-					<Suspense fallback={null}>
-						<RouterDevtools />
-					</Suspense>
-				</QueryClientProvider>
-			</ModelStoreProvider>
-		</ThemeProvider>
-	</ClerkWrapper>
+	<PostHogProvider
+		apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
+		options={{
+			api_host: "/ingest",
+			ui_host:
+				import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://eu.posthog.com",
+			defaults: "2026-01-30",
+			capture_exceptions: true,
+			debug: import.meta.env.DEV
+		}}
+	>
+		<ClerkWrapper>
+			<ThemeProvider
+				attribute="class"
+				defaultTheme="system"
+				enableSystem
+				disableTransitionOnChange
+			>
+				<ModelStoreProvider>
+					<QueryClientProvider>
+						<Toaster />
+						<div className="flex h-full flex-col">
+							<main className="flex-1 overflow-auto">
+								<Outlet />
+							</main>
+						</div>
+						<Suspense fallback={null}>
+							<RouterDevtools />
+						</Suspense>
+					</QueryClientProvider>
+				</ModelStoreProvider>
+			</ThemeProvider>
+		</ClerkWrapper>
+	</PostHogProvider>
 );
 
 const NotFound = () => (

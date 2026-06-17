@@ -16,6 +16,7 @@ import {
 	ZapIcon
 } from "lucide-react";
 import { useState } from "react";
+import { usePostHog } from "@posthog/react";
 import { modelCards } from "@constants";
 import { useModelStore } from "@providers";
 
@@ -53,6 +54,7 @@ const ModelSelector = () => {
 		enableAllModels,
 		disableAllModels
 	} = useModelStore((state) => state);
+	const posthog = usePostHog();
 
 	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
 
@@ -190,7 +192,15 @@ const ModelSelector = () => {
 										<CopyIcon className="size-5 text-muted-foreground" />
 										<Switch
 											checked={enabledModels.has(model.id)}
-											onCheckedChange={() => toggleModelEnabled(model.id)}
+											onCheckedChange={() => {
+												const willEnable = !enabledModels.has(model.id);
+												posthog.capture("model_toggled", {
+													model_id: model.id,
+													model_name: model.name,
+													enabled: willEnable
+												});
+												toggleModelEnabled(model.id);
+											}}
 										/>
 									</div>
 								</div>

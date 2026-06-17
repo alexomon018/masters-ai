@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/clerk-react";
 import { useCallback, useState } from "react";
+import { usePostHog } from "@posthog/react";
 import {
 	deleteThreadRemote,
 	fetchThreads
@@ -26,11 +27,11 @@ export const useDangerZone = ({
 }): UseDangerZoneReturn => {
 	const queryClient = useQueryClient();
 	const { getToken } = useAuth();
+	const posthog = usePostHog();
 	const [isAlertOpen, setIsAlertOpen] = useState(false);
 
 	const tokenFn = useCallback(
-		async () =>
-			typeof getToken === "function" ? getToken() : null,
+		async () => (typeof getToken === "function" ? getToken() : null),
 		[getToken]
 	);
 
@@ -58,10 +59,9 @@ export const useDangerZone = ({
 				const jwt = await tokenFn();
 				const ticket = jwt ? await fetchWorkerTicket(jwt) : null;
 				if (base && ticket) {
-					await fetch(
-						`${base}/users/me?ticket=${encodeURIComponent(ticket)}`,
-						{ method: "DELETE" }
-					);
+					await fetch(`${base}/users/me?ticket=${encodeURIComponent(ticket)}`, {
+						method: "DELETE"
+					});
 				}
 
 				await queryClient.resetQueries();
@@ -78,9 +78,12 @@ export const useDangerZone = ({
 		try {
 			if (isAccountDeletion) {
 				await deleteAllDataMutation();
+				posthog.capture("all_messages_deleted");
+				posthog.capture("account_deleted");
 				await deleteUserMutation();
 			} else {
 				await deleteAllDataMutation();
+				posthog.capture("all_messages_deleted");
 			}
 			setIsAlertOpen(false);
 		} catch (error) {

@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePostHog } from "@posthog/react";
 import { queryKeys } from "@constants";
 import { useTokenFn, useThreadsQuery } from "@hooks";
 import { threadMessagesQueryOptions } from "@/components/organisms/Chat/helpers";
@@ -18,6 +19,7 @@ const THREADS_QUERY_KEY = queryKeys.threads();
 const useSideBar = () => {
 	const navigate = useNavigate();
 	const { user, isLoaded } = useUser();
+	const posthog = usePostHog();
 	const [openSearch, setOpenSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const queryClient = useQueryClient();
@@ -68,12 +70,11 @@ const useSideBar = () => {
 	const { mutateAsync: deleteThread } = useMutation({
 		mutationFn: async (threadId: string) => {
 			await deleteThreadRemote(tokenFn, threadId);
+			posthog.capture("thread_deleted", { thread_id: threadId });
 		},
 		onMutate: async (threadId) => {
 			await queryClient.cancelQueries({ queryKey: THREADS_QUERY_KEY });
-			const previous = queryClient.getQueryData<ThreadDto[]>(
-				THREADS_QUERY_KEY
-			);
+			const previous = queryClient.getQueryData<ThreadDto[]>(THREADS_QUERY_KEY);
 			queryClient.setQueryData<ThreadDto[]>(
 				THREADS_QUERY_KEY,
 				(prev) => prev?.filter((t) => t.id !== threadId) ?? []
@@ -127,9 +128,7 @@ const useSideBar = () => {
 		}) => upsertThreadRemote(tokenFn, { threadId, pinned }),
 		onMutate: async ({ threadId, pinned }) => {
 			await queryClient.cancelQueries({ queryKey: THREADS_QUERY_KEY });
-			const previous = queryClient.getQueryData<ThreadDto[]>(
-				THREADS_QUERY_KEY
-			);
+			const previous = queryClient.getQueryData<ThreadDto[]>(THREADS_QUERY_KEY);
 			queryClient.setQueryData<ThreadDto[]>(
 				THREADS_QUERY_KEY,
 				(prev) =>
@@ -151,9 +150,14 @@ const useSideBar = () => {
 		(threadId: string) => {
 			const thread = threads.find((t) => t.id === threadId);
 			if (!thread) return;
-			togglePin({ threadId, pinned: !thread.pinned });
+			const newPinned = !thread.pinned;
+			posthog.capture("thread_pinned", {
+				thread_id: threadId,
+				pinned: newPinned
+			});
+			togglePin({ threadId, pinned: newPinned });
 		},
-		[threads, togglePin]
+		[threads, togglePin, posthog]
 	);
 
 	useEffect(() => {

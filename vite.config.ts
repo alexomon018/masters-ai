@@ -52,5 +52,25 @@ export default defineConfig({
 	],
 	// Resolves @atoms / @organisms / @hooks / @/* etc. from tsconfig.json.
 	resolve: { tsconfigPaths: true },
-	server: { host: true, port: 3000 }
+	server: {
+		host: true,
+		port: 3000,
+		proxy: {
+			"/ingest/static": {
+				target: "https://eu-assets.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, "")
+			},
+			"/ingest/array": {
+				target: "https://eu-assets.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, "")
+			},
+			"/ingest": {
+				target: "https://eu.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, "")
+			}
+		}
+	}
 });

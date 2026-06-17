@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
+import { usePostHog } from "@posthog/react";
 import { queryKeys } from "@constants";
 import {
 	useAutoNameThread,
@@ -35,6 +36,7 @@ interface Args {
 const useChat = ({ threadId, isNewThread }: Args) => {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+	const posthog = usePostHog();
 	const [input, setInput] = useState("");
 
 	const { user, isLoaded: userLoaded } = useUser();
@@ -155,11 +157,25 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	// it but reappears for a fresh error. A new send resets `error`, so a later
 	// failure produces a different object and the banner shows again.
 	const [dismissedError, setDismissedError] = useState<Error | null>(null);
-	const dismissError = useCallback(() => setDismissedError(error ?? null), [
-		error
-	]);
+	const dismissError = useCallback(
+		() => setDismissedError(error ?? null),
+		[error]
+	);
 	const chatError =
 		dismissedError === error && dismissedError !== null ? null : parsedError;
+
+	// Sync new chat errors to PostHog — synchronizing with an external analytics
+	// system, which is a valid useEffect use.
+	const prevChatErrorRef = useRef(chatError);
+	useEffect(() => {
+		if (chatError && chatError !== prevChatErrorRef.current) {
+			posthog.capture("chat_error_shown", {
+				error_code: chatError.code,
+				is_anon: isAnon
+			});
+		}
+		prevChatErrorRef.current = chatError;
+	}, [chatError, posthog, isAnon]);
 
 	useThreadMessagesSync({
 		threadId,
@@ -193,6 +209,11 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			// history.replaceState) keeps a later "New Chat" a real transition.
 			if (isFirstSendRef.current) {
 				isFirstSendRef.current = false;
+				posthog.capture("thread_created", {
+					thread_id: threadId,
+					model_id: selectedModel.id,
+					is_anon: isAnon
+				});
 				upsertThreadRemote(tokenFn, {
 					threadId,
 					title: UNTITLED_THREAD_TITLE,
@@ -210,12 +231,27 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 				});
 			}
 
+			posthog.capture("message_sent", {
+				thread_id: threadId,
+				model_id: selectedModel.id,
+				is_anon: isAnon,
+				message_length: text.length
+			});
 			sendMessage({
 				role: "user",
 				parts: [{ type: "text", text }]
 			});
 		},
-		[threadId, sendMessage, tokenFn, queryClient, navigate]
+		[
+			threadId,
+			sendMessage,
+			tokenFn,
+			queryClient,
+			navigate,
+			posthog,
+			selectedModel.id,
+			isAnon
+		]
 	);
 
 	const handleSubmit = useCallback(

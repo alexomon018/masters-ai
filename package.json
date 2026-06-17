@@ -44,6 +44,8 @@
 		"prepare": "husky install"
 	},
 	"dependencies": {
+		"@posthog/react": "^3.0.4",
+		"posthog-js": "^1.257.3",
 		"@ai-sdk/anthropic": "^3.0.44",
 		"@ai-sdk/openai": "^3.0.29",
 		"@ai-sdk/react": "^3.0.0",
