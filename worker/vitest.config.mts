@@ -35,6 +35,7 @@ export default defineConfig(async () => {
 						UPSTASH_VECTOR_REST_TOKEN: "test-vector-token",
 						OPENAI_API_KEY: "test-openai-key",
 						ANTHROPIC_API_KEY: "test-anthropic-key",
+						KEY_ENCRYPTION_SECRET: "test-key-encryption-secret",
 						ALLOWED_ORIGINS: "http://localhost:3000"
 					}
 				}

@@ -102,6 +102,27 @@ export const feedbackTable = sqliteTable(
 	]
 );
 
+// Per-user BYOK provider keys. The key is encrypted at rest (AES-GCM via
+// worker/src/crypto/keyVault.ts); only ciphertext + iv are stored, plus the
+// last four chars for display. Composite PK means one key per user per provider.
+export const userApiKeysTable = sqliteTable(
+	"user_api_keys",
+	{
+		userId: text("user_id").notNull(),
+		provider: text("provider", { enum: ["anthropic", "openai"] }).notNull(),
+		ciphertext: text("ciphertext").notNull(),
+		iv: text("iv").notNull(),
+		lastFour: text("last_four").notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`)
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.provider] })]
+);
+
 export type Thread = typeof threadsTable.$inferSelect;
 export type NewThread = typeof threadsTable.$inferInsert;
 export type Feedback = typeof feedbackTable.$inferSelect;
@@ -110,3 +131,5 @@ export type Project = typeof projectsTable.$inferSelect;
 export type NewProject = typeof projectsTable.$inferInsert;
 export type Course = typeof coursesTable.$inferSelect;
 export type NewCourse = typeof coursesTable.$inferInsert;
+export type UserApiKey = typeof userApiKeysTable.$inferSelect;
+export type NewUserApiKey = typeof userApiKeysTable.$inferInsert;

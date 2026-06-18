@@ -148,6 +148,7 @@ All server-only secrets (`CLERK_SECRET_KEY`, `ANTHROPIC_API_KEY`, `UPSTASH_*`, `
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
 - `ANON_ID_SECRET` — HMAC secret for minting/verifying anon ids (worker-only now).
 - `ALLOWED_ORIGINS` — comma-separated browser origins permitted for CORS. e.g. `http://localhost:3000,https://masters-ai.vercel.app`.
+- `KEY_ENCRYPTION_SECRET` — AES-GCM master secret for encrypting BYOK provider keys at rest in D1 (`user_api_keys`). Rotating it invalidates all stored user keys.
 
 ## Code conventions
 

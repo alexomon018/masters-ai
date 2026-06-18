@@ -1,5 +1,6 @@
-import { AlertTriangle, Clock, X } from "lucide-react";
+import { AlertTriangle, Clock, KeyRound, X } from "lucide-react";
 import { SignInButton } from "@clerk/clerk-react";
+import { Link } from "@tanstack/react-router";
 import type { ParsedChatError } from "@/components/organisms/Chat/helpers";
 
 interface ChatErrorBannerProps {
@@ -11,6 +12,7 @@ interface ChatErrorBannerProps {
 const ICONS = {
 	QUOTA_EXCEEDED: Clock,
 	PROVIDER_UNAVAILABLE: AlertTriangle,
+	NO_API_KEY: KeyRound,
 	UNKNOWN: AlertTriangle
 } as const;
 
@@ -20,7 +22,16 @@ const ChatErrorBanner = ({
 	onDismiss
 }: ChatErrorBannerProps) => {
 	const Icon = ICONS[error.code];
-	const showSignIn = error.code === "QUOTA_EXCEEDED" && isAnon;
+	// Anon users hit Settings as a dead end (it's signed-in only), so a keyless
+	// BYOK send sends them to sign-in first; signed-in users go straight to the
+	// API-keys tab.
+	const showSignIn =
+		(error.code === "QUOTA_EXCEEDED" || error.code === "NO_API_KEY") && isAnon;
+	const showConnectKey = error.code === "NO_API_KEY" && !isAnon;
+	const signInLabel =
+		error.code === "NO_API_KEY"
+			? "Sign in to connect a key"
+			: "Sign in to send more messages";
 
 	return (
 		<div
@@ -36,9 +47,18 @@ const ChatErrorBanner = ({
 							type="button"
 							className="mt-1.5 font-medium underline underline-offset-2 hover:no-underline"
 						>
-							Sign in to send more messages
+							{signInLabel}
 						</button>
 					</SignInButton>
+				)}
+				{showConnectKey && (
+					<Link
+						to="/settings/$tab"
+						params={{ tab: "api-keys" }}
+						className="mt-1.5 inline-block font-medium underline underline-offset-2 hover:no-underline"
+					>
+						Connect a key in Settings
+					</Link>
 				)}
 			</div>
 			<button

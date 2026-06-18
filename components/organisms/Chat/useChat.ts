@@ -15,6 +15,7 @@ import {
 } from "@hooks";
 import { useModelStore } from "@/providers";
 import { upsertThreadRemote } from "@/components/organisms/SideBar/threadsApi";
+import { fetchUserKeys } from "@/components/organisms/ApiKeysManager/userKeysApi";
 import {
 	authSubject,
 	fetchThreadFeedback,
@@ -24,6 +25,7 @@ import {
 	resolveAgentAuth,
 	threadMessagesQueryOptions
 } from "./helpers";
+import type { ParsedChatError } from "./helpers";
 
 const THREADS_QUERY_KEY = queryKeys.threads();
 const UNTITLED_THREAD_TITLE = "New Chat";
@@ -157,12 +159,20 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	// it but reappears for a fresh error. A new send resets `error`, so a later
 	// failure produces a different object and the banner shows again.
 	const [dismissedError, setDismissedError] = useState<Error | null>(null);
-	const dismissError = useCallback(
-		() => setDismissedError(error ?? null),
-		[error]
-	);
-	const chatError =
+
+	// Locally-raised error for sends we block before they reach the worker (a
+	// BYOK model selected with no key on file). Distinct from `error` so the
+	// existing dismiss-tracking for server errors stays untouched.
+	const [localError, setLocalError] = useState<ParsedChatError | null>(null);
+
+	const dismissError = useCallback(() => {
+		setLocalError(null);
+		setDismissedError(error ?? null);
+	}, [error]);
+
+	const serverError =
 		dismissedError === error && dismissedError !== null ? null : parsedError;
+	const chatError = localError ?? serverError;
 
 	// Sync new chat errors to PostHog — synchronizing with an external analytics
 	// system, which is a valid useEffect use.
@@ -197,10 +207,45 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 		[]
 	);
 
+	// Connected BYOK provider keys, only ever fetched for signed-in users (anon
+	// visitors can't reach BYOK models). Lets us block a keyless BYOK send
+	// before it mints a thread or hits the worker.
+	const { data: userKeys = [] } = useQuery({
+		queryKey: queryKeys.userKeys(authSubject(user?.id)),
+		queryFn: () => fetchUserKeys(tokenFn),
+		enabled: Boolean(user?.id)
+	});
+
+	const hasKeyForSelected =
+		!selectedModel.byok ||
+		(Boolean(user?.id) &&
+			userKeys.some((k) => k.provider === selectedModel.provider));
+
+	// Clear the keyless-BYOK banner once the blocker is resolved — the user
+	// switched models or connected the needed key.
+	useEffect(() => {
+		if (hasKeyForSelected) setLocalError(null);
+	}, [hasKeyForSelected]);
+
 	const runSubmit = useCallback(
 		(rawText: string) => {
 			const text = rawText.trim();
 			if (!text) return;
+
+			// Block a BYOK model with no connected key here, before the first-send
+			// branch creates a thread and navigates. The worker enforces the same
+			// rule as the authoritative backstop, but stopping client-side avoids a
+			// stranded empty "New Chat" in the sidebar and a wasted round-trip.
+			if (!hasKeyForSelected) {
+				setLocalError({
+					code: "NO_API_KEY",
+					message:
+						"This model needs your own API key. Connect one in Settings to use it."
+				});
+				return;
+			}
+
+			setLocalError(null);
 			setInput("");
 
 			// First send: register the thread and swap the URL to /chat/<id>. The
@@ -248,6 +293,7 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 			tokenFn,
 			queryClient,
 			navigate,
+			hasKeyForSelected,
 			posthog,
 			selectedModel.id,
 			isAnon

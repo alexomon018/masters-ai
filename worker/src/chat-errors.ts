@@ -6,6 +6,7 @@
 export type ChatErrorCode =
 	| "QUOTA_EXCEEDED"
 	| "PROVIDER_UNAVAILABLE"
+	| "NO_API_KEY"
 	| "UNKNOWN";
 
 export class ChatError extends Error {

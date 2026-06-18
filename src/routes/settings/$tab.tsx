@@ -1,6 +1,11 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { SettingsNavigation } from "@molecules";
-import { AccountUpgrade, Customization, ModelsPicker } from "@organisms";
+import {
+	AccountUpgrade,
+	ApiKeysManager,
+	Customization,
+	ModelsPicker
+} from "@organisms";
 import { usePostHog } from "@posthog/react";
 import { useEffect } from "react";
 
@@ -12,6 +17,8 @@ const renderTabContent = (tab: string) => {
 			return <Customization />;
 		case "models":
 			return <ModelsPicker />;
+		case "api-keys":
+			return <ApiKeysManager />;
 		case "attachments":
 			return (
 				<div className="text-center text-muted-foreground">Coming Soon</div>
