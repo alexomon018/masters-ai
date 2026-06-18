@@ -7,7 +7,9 @@ interface MessageUsageProps {
 }
 
 const MessageUsage = ({ used, total, resetsAt }: MessageUsageProps) => {
-	const percentage = (used / total) * 100;
+	const percentage =
+		total > 0 ? Math.min(100, Math.max(0, (used / total) * 100)) : 0;
+	const remaining = Math.max(0, total - used);
 
 	return (
 		<Card className="p-5">
@@ -23,7 +25,7 @@ const MessageUsage = ({ used, total, resetsAt }: MessageUsageProps) => {
 			</div>
 			<Progress value={percentage} className="h-2" />
 			<p className="mt-2 text-xs text-muted-foreground">
-				{total - used} messages remaining
+				{remaining} messages remaining
 			</p>
 		</Card>
 	);

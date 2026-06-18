@@ -134,6 +134,10 @@ export async function deleteUserKey(
 	auth: AuthedRequest,
 	body: DeleteKeyBody
 ): Promise<Response> {
+	if (!auth.userId.startsWith("user:")) {
+		console.warn("[user-keys] rejected delete: authenticated user required");
+		return json({ error: "Unauthorized" }, 401);
+	}
 	const repo = makeUserApiKeyRepo(getDb(env));
 	await repo.delete(auth.userId, body.provider);
 	return new Response(null, { status: 204 });

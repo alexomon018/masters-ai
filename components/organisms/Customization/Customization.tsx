@@ -1,4 +1,5 @@
 import { Input, Textarea, Label, Button } from "@atoms";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useUser } from "@clerk/clerk-react";
 import { usePostHog } from "@posthog/react";
@@ -15,21 +16,30 @@ const Customization = () => {
 	const posthog = usePostHog();
 
 	// Get initial values from user metadata if available
-	const initialValues = {
-		name: (user?.unsafeMetadata?.name as string) || "",
-		occupation: (user?.unsafeMetadata?.occupation as string) || "",
-		traits: (user?.unsafeMetadata?.traits as string) || "",
-		preferences: (user?.unsafeMetadata?.preferences as string) || ""
-	};
+	const initialValues = useMemo<FormValues>(
+		() => ({
+			name: (user?.unsafeMetadata?.name as string) || "",
+			occupation: (user?.unsafeMetadata?.occupation as string) || "",
+			traits: (user?.unsafeMetadata?.traits as string) || "",
+			preferences: (user?.unsafeMetadata?.preferences as string) || ""
+		}),
+		[user?.unsafeMetadata]
+	);
 
 	const {
 		register,
 		handleSubmit,
+		reset,
 		formState: { errors, isSubmitting }
 	} = useForm<FormValues>({
-		defaultValues: initialValues,
-		values: initialValues
+		defaultValues: initialValues
 	});
+
+	// Sync the form only when the Clerk metadata actually changes, so live edits
+	// aren't wiped by re-renders.
+	useEffect(() => {
+		reset(initialValues);
+	}, [initialValues, reset]);
 
 	const onSubmit = async (data: FormValues) => {
 		if (!user) return;

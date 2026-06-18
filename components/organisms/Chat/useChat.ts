@@ -210,16 +210,20 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	// Connected BYOK provider keys, only ever fetched for signed-in users (anon
 	// visitors can't reach BYOK models). Lets us block a keyless BYOK send
 	// before it mints a thread or hits the worker.
-	const { data: userKeys = [] } = useQuery({
+	const { data: userKeys = [], isError: userKeysError } = useQuery({
 		queryKey: queryKeys.userKeys(authSubject(user?.id)),
 		queryFn: () => fetchUserKeys(tokenFn),
 		enabled: Boolean(user?.id)
 	});
 
+	// On a userKeys fetch failure we can't tell whether a key exists, so we let
+	// the send through and rely on the worker's authoritative check rather than
+	// blocking the user on a transient error.
 	const hasKeyForSelected =
 		!selectedModel.byok ||
 		(Boolean(user?.id) &&
-			userKeys.some((k) => k.provider === selectedModel.provider));
+			(userKeysError ||
+				userKeys.some((k) => k.provider === selectedModel.provider)));
 
 	// Clear the keyless-BYOK banner once the blocker is resolved — the user
 	// switched models or connected the needed key.

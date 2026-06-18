@@ -34,14 +34,20 @@ export async function saveUserKey(
 	const base = workerBase();
 	if (!base) return { ok: false, error: "Worker not configured" };
 	const params = await buildAuthQueryParams(getToken);
-	const res = await fetch(`${base}/user-keys?${params.toString()}`, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ provider, apiKey })
-	});
-	if (res.ok) return { ok: true };
-	const body = (await res.json().catch(() => null)) as { error?: string } | null;
-	return { ok: false, error: body?.error ?? "Failed to save key" };
+	try {
+		const res = await fetch(`${base}/user-keys?${params.toString()}`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ provider, apiKey })
+		});
+		if (res.ok) return { ok: true };
+		const body = (await res.json().catch(() => null)) as {
+			error?: string;
+		} | null;
+		return { ok: false, error: body?.error ?? "Failed to save key" };
+	} catch {
+		return { ok: false, error: "Network error — please try again." };
+	}
 }
 
 export async function deleteUserKey(
@@ -51,10 +57,14 @@ export async function deleteUserKey(
 	const base = workerBase();
 	if (!base) return false;
 	const params = await buildAuthQueryParams(getToken);
-	const res = await fetch(`${base}/user-keys?${params.toString()}`, {
-		method: "DELETE",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ provider })
-	});
-	return res.ok;
+	try {
+		const res = await fetch(`${base}/user-keys?${params.toString()}`, {
+			method: "DELETE",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ provider })
+		});
+		return res.ok;
+	} catch {
+		return false;
+	}
 }
