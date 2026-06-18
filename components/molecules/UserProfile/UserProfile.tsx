@@ -3,11 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage, Card } from "@atoms";
 interface UserProfileProps {
 	name: string;
 	email: string;
-	plan: string;
 	avatarUrl?: string;
 }
 
-const UserProfile = ({ name, email, plan, avatarUrl }: UserProfileProps) => (
+const UserProfile = ({ name, email, avatarUrl }: UserProfileProps) => (
 	<Card className="flex items-center gap-4 p-5">
 		<Avatar className="size-14 shrink-0">
 			{avatarUrl ? (
@@ -20,9 +19,6 @@ const UserProfile = ({ name, email, plan, avatarUrl }: UserProfileProps) => (
 			<h3 className="truncate text-base font-semibold">{name}</h3>
 			<p className="truncate text-sm text-muted-foreground">{email}</p>
 		</div>
-		<span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
-			{plan}
-		</span>
 	</Card>
 );
 

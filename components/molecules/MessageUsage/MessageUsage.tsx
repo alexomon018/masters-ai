@@ -16,7 +16,7 @@ const MessageUsage = ({ used, total, resetsAt }: MessageUsageProps) => {
 				<span className="text-xs text-muted-foreground">Resets {resetsAt}</span>
 			</div>
 			<div className="mb-2 flex items-center justify-between text-sm">
-				<span>Standard</span>
+				<span>Included models</span>
 				<span className="text-muted-foreground">
 					{used}/{total}
 				</span>

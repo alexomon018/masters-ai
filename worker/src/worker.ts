@@ -224,7 +224,8 @@ export default {
 					if (!parsed.success) {
 						return new Response(
 							JSON.stringify({
-								error: "invalid body",
+								error:
+									parsed.error.issues[0]?.message ?? "Invalid request.",
 								issues: parsed.error.issues
 							}),
 							{

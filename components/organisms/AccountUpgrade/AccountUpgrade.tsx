@@ -28,7 +28,6 @@ const AccountUpgrade = () => {
 				<UserProfile
 					name={user?.fullName || ""}
 					email={user?.emailAddresses[0]?.emailAddress || ""}
-					plan="Free Plan"
 					avatarUrl={user?.imageUrl || ""}
 				/>
 				<MessageUsage
