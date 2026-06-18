@@ -4,7 +4,8 @@ const queryKeys = {
 	threadMessages: (threadId: string) =>
 		["thread-messages", threadId] as const,
 	threadFeedback: (subject: string, threadId: string) =>
-		["thread-feedback", subject, threadId] as const
+		["thread-feedback", subject, threadId] as const,
+	userKeys: (subject: string) => ["user-keys", subject] as const
 };
 
 export default queryKeys;

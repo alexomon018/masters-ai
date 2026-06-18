@@ -4,11 +4,13 @@
 export type ChatErrorCode =
 	| "QUOTA_EXCEEDED"
 	| "PROVIDER_UNAVAILABLE"
+	| "NO_API_KEY"
 	| "UNKNOWN";
 
 const KNOWN_CODES: ReadonlySet<ChatErrorCode> = new Set<ChatErrorCode>([
 	"QUOTA_EXCEEDED",
 	"PROVIDER_UNAVAILABLE",
+	"NO_API_KEY",
 	"UNKNOWN"
 ]);
 

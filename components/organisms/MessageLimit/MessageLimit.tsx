@@ -44,7 +44,7 @@ const MessageLimitDisplay: React.FC<MessageLimitDisplayProps> = ({
 	if (messageLimit.remaining === 0 && user) {
 		return (
 			<div className={`text-sm text-amber-500 ${className}`}>
-				{`You've reached the message limit. Upgrade to a paid plan to continue.`}
+				{`You've reached today's message limit. It resets tomorrow, or connect your API key to use frontier models.`}
 			</div>
 		);
 	}

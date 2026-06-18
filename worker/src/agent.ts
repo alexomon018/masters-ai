@@ -19,9 +19,12 @@ import { streamAgent } from "./agent-core";
 import { flushBraintrust, logSpanMetadata, startBraintrust } from "./braintrust";
 import {
 	getModel,
+	isByokOnlyModel,
+	modelProvider,
 	resolveWorkerModelLabel,
 	type LLMModel
 } from "./providers";
+import { getDecryptedUserKey } from "./routes/user-keys";
 import { checkAndIncrementQuota } from "./quota";
 import {
 	ChatError,
@@ -59,6 +62,7 @@ interface ChatGate {
 	identity: ConnectionIdentity;
 	model: LanguageModel;
 	modelId: LLMModel;
+	byokKey: string | undefined;
 	userData: UserData | undefined;
 	messages: ModelMessage[];
 }
@@ -115,31 +119,52 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			throw new Error(claim.reason);
 		}
 
-		const quota = await checkAndIncrementQuota(
-			{
-				UPSTASH_REDIS_REST_URL: this.env.UPSTASH_REDIS_REST_URL,
-				UPSTASH_REDIS_REST_TOKEN: this.env.UPSTASH_REDIS_REST_TOKEN
-			},
-			identity.userId,
-			identity.isAuthenticated
-		);
-		if (!quota.allowed) {
-			// Anon users get a sign-in CTA rendered client-side, so keep the message
-			// itself neutral; signed-in users just learn the limit resets tomorrow.
-			const tail =
-				quota.isAuthenticated === false
-					? ""
-					: " Your limit resets tomorrow.";
-			throw new ChatError(
-				"QUOTA_EXCEEDED",
-				`You've reached today's message limit of ${quota.limit}.${tail}`
-			);
-		}
-
 		const parsed = chatBodySchema.safeParse(options?.body ?? {});
 		const body = parsed.success ? parsed.data : {};
 		const modelId = resolveWorkerModelLabel(body.model ?? DEFAULT_MODEL);
-		const model = getModel(modelId, this.env);
+
+		// BYOK-only frontier models require the caller's own provider key. They
+		// bill the user directly, so they bypass our daily quota; free models
+		// (env key) stay quota-gated as before.
+		let byokKey: string | undefined;
+		if (isByokOnlyModel(modelId)) {
+			const key = await getDecryptedUserKey(
+				this.env,
+				identity.userId,
+				modelProvider(modelId)
+			);
+			if (!key) {
+				throw new ChatError(
+					"NO_API_KEY",
+					"This model needs your own API key. Connect one in Settings to use it."
+				);
+			}
+			byokKey = key;
+		} else {
+			const quota = await checkAndIncrementQuota(
+				{
+					UPSTASH_REDIS_REST_URL: this.env.UPSTASH_REDIS_REST_URL,
+					UPSTASH_REDIS_REST_TOKEN: this.env.UPSTASH_REDIS_REST_TOKEN
+				},
+				identity.userId,
+				identity.isAuthenticated
+			);
+			if (!quota.allowed) {
+				// Anon users get a sign-in CTA rendered client-side, so keep the
+				// message itself neutral; signed-in users just learn the limit
+				// resets tomorrow.
+				const tail =
+					quota.isAuthenticated === false
+						? ""
+						: " Your limit resets tomorrow.";
+				throw new ChatError(
+					"QUOTA_EXCEEDED",
+					`You've reached today's message limit of ${quota.limit}.${tail}`
+				);
+			}
+		}
+
+		const model = getModel(modelId, this.env, byokKey);
 
 		const fullHistory = await convertToModelMessages(this.messages);
 		const messages = await compactHistory(fullHistory, { model });
@@ -148,6 +173,7 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			identity,
 			model,
 			modelId,
+			byokKey,
 			userData: body.userData,
 			messages
 		};

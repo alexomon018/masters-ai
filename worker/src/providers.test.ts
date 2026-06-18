@@ -2,12 +2,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { env } from "cloudflare:test";
 import {
 	getModel,
+	isByokOnlyModel,
+	modelProvider,
 	parseModelLabel,
 	resolveWorkerModelLabel,
 	type LLMModel
 } from "./providers";
 
-const VALID: LLMModel[] = ["claude-haiku-4-5", "gpt-5.4-mini"];
+const VALID: LLMModel[] = [
+	"claude-haiku-4-5",
+	"gpt-5.4-mini",
+	"claude-opus-4-8",
+	"gpt-5.4"
+];
 
 describe("parseModelLabel", () => {
 	it.each(VALID)("accepts the valid label %s", (label) => {
@@ -40,5 +47,33 @@ describe("getModel", () => {
 	it.each(VALID)("returns a language model for %s", (modelId) => {
 		const model = getModel(modelId, env);
 		expect(model).toBeDefined();
+	});
+
+	it("accepts an override key for a BYOK model", () => {
+		const model = getModel("claude-opus-4-8", env, "sk-ant-user-key");
+		expect(model).toBeDefined();
+	});
+});
+
+describe("modelProvider", () => {
+	it.each([
+		["claude-haiku-4-5", "anthropic"],
+		["claude-opus-4-8", "anthropic"],
+		["gpt-5.4-mini", "openai"],
+		["gpt-5.4", "openai"]
+	] as const)("maps %s to %s", (modelId, provider) => {
+		expect(modelProvider(modelId)).toBe(provider);
+	});
+});
+
+describe("isByokOnlyModel", () => {
+	it("flags frontier models as BYOK-only", () => {
+		expect(isByokOnlyModel("claude-opus-4-8")).toBe(true);
+		expect(isByokOnlyModel("gpt-5.4")).toBe(true);
+	});
+
+	it("does not flag free models", () => {
+		expect(isByokOnlyModel("claude-haiku-4-5")).toBe(false);
+		expect(isByokOnlyModel("gpt-5.4-mini")).toBe(false);
 	});
 });

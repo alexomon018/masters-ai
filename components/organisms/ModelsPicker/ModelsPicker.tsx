@@ -15,6 +15,7 @@ import {
 	BrainIcon,
 	ZapIcon
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { modelCards } from "@constants";
 import { useModelsPicker } from "./useModelsPicker";
 
@@ -52,14 +53,17 @@ const ModelSelector = () => {
 		expandedModels,
 		toggleDescription,
 		onCheckedFeature,
-		handleToggleModel
+		handleToggleModel,
+		connectedProviders
 	} = useModelsPicker();
 
 	return (
-		<div className="mx-auto w-full max-w-4xl p-6">
+		<div className="w-full">
 			<div className="space-y-4">
-				<h1 className="text-2xl font-bold">Available Models</h1>
-				<p className="text-muted-foreground">
+				<h1 className="text-xl font-semibold tracking-tight">
+					Available Models
+				</h1>
+				<p className="text-sm text-muted-foreground">
 					{`Choose which models appear in your model selector. This won't affect
 					existing conversations.`}
 				</p>
@@ -74,7 +78,7 @@ const ModelSelector = () => {
 								>
 									<span>Filter by features</span>
 									{selectedFeatures.size > 0 && (
-										<span className="ml-2 rounded-full bg-teal-400 px-2 py-0.5 text-xs font-medium">
+										<span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
 											{selectedFeatures.size}
 										</span>
 									)}
@@ -127,7 +131,11 @@ const ModelSelector = () => {
 									selectedFeatures.has(feature.name)
 								)
 						)
-						.map((model) => (
+						.map((model) => {
+							const locked =
+								model.byok === true &&
+								!connectedProviders.has(model.provider);
+							return (
 							<Card key={model.id} className="p-6">
 								<div className="flex items-start justify-between">
 									<div className="flex gap-4">
@@ -166,17 +174,30 @@ const ModelSelector = () => {
 										</div>
 									</div>
 									<div className="flex items-center gap-4">
-										<CopyIcon className="size-5 text-muted-foreground" />
-										<Switch
-											checked={enabledModels.has(model.id)}
-											onCheckedChange={() => {
-												handleToggleModel(model.id, model.name);
-											}}
-										/>
+										{locked ? (
+											<Link
+												to="/settings/$tab"
+												params={{ tab: "api-keys" }}
+												className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+											>
+												Connect a key
+											</Link>
+										) : (
+											<>
+												<CopyIcon className="size-5 text-muted-foreground" />
+												<Switch
+													checked={enabledModels.has(model.id)}
+													onCheckedChange={() => {
+														handleToggleModel(model.id, model.name);
+													}}
+												/>
+											</>
+										)}
 									</div>
 								</div>
 							</Card>
-						))}
+							);
+						})}
 				</div>
 			</div>
 		</div>

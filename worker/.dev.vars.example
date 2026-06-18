@@ -17,6 +17,10 @@ CLERK_SECRET_KEY=
 # HMAC secret for the masters_anon_id cookie. MUST match Next.js ANON_ID_SECRET.
 ANON_ID_SECRET=
 
+# AES-GCM master secret for encrypting BYOK provider keys at rest. Any
+# high-entropy string; rotating it invalidates all stored user keys.
+KEY_ENCRYPTION_SECRET=
+
 # Comma-separated browser origins for CORS (local dev example below).
 ALLOWED_ORIGINS=http://localhost:3000
 

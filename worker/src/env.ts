@@ -16,6 +16,7 @@ export interface Env {
 	ANON_ID_SECRET: string;
 	ALLOWED_ORIGINS: string;
 	RAG_QUERY_REWRITE?: string;
+	KEY_ENCRYPTION_SECRET: string;
 }
 
 export interface ToolEnv {

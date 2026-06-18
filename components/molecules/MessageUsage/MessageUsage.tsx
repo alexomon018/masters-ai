@@ -1,4 +1,4 @@
-import { Progress } from "@atoms";
+import { Card, Progress } from "@atoms";
 
 interface MessageUsageProps {
 	used: number;
@@ -7,23 +7,27 @@ interface MessageUsageProps {
 }
 
 const MessageUsage = ({ used, total, resetsAt }: MessageUsageProps) => {
-	const percentage = (used / total) * 100;
+	const percentage =
+		total > 0 ? Math.min(100, Math.max(0, (used / total) * 100)) : 0;
+	const remaining = Math.max(0, total - used);
 
 	return (
-		<div className="rounded-lg bg-card p-4">
-			<h3 className="font-medium">Message Usage</h3>
-			<p className="mb-2 text-xs text-muted-foreground">Resets {resetsAt}</p>
+		<Card className="p-5">
+			<div className="mb-3 flex items-baseline justify-between">
+				<h3 className="text-base font-medium">Message Usage</h3>
+				<span className="text-xs text-muted-foreground">Resets {resetsAt}</span>
+			</div>
 			<div className="mb-2 flex items-center justify-between text-sm">
-				<span>Standard</span>
-				<span>
+				<span>Included models</span>
+				<span className="text-muted-foreground">
 					{used}/{total}
 				</span>
 			</div>
 			<Progress value={percentage} className="h-2" />
 			<p className="mt-2 text-xs text-muted-foreground">
-				{total - used} messages remaining
+				{remaining} messages remaining
 			</p>
-		</div>
+		</Card>
 	);
 };
 

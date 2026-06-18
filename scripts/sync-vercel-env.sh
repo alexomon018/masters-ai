@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync Next.js env vars from .env to Vercel (masters-ai project).
+# Sync Vite env vars from .env to Vercel (masters-ai project).
 # Worker secrets stay in worker/.dev.vars + `wrangler secret put`.
 #
 # Usage: ./scripts/sync-vercel-env.sh
@@ -39,7 +39,7 @@ echo ""
 # Shared across Development, Preview, Production
 for name in \
 	CLERK_SECRET_KEY \
-	NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
+	VITE_CLERK_PUBLISHABLE_KEY \
 	ANON_ID_SECRET \
 	UPSTASH_REDIS_REST_URL \
 	UPSTASH_REDIS_REST_TOKEN \
@@ -57,8 +57,8 @@ if [[ -n "${ENABLE_LOGGING:-}" ]]; then
 fi
 
 # Worker URL — per Vercel environment
-put NEXT_PUBLIC_WORKER_URL "$PREVIEW_WORKER_URL" development preview
-put NEXT_PUBLIC_WORKER_URL "$PROD_WORKER_URL" production
+put VITE_WORKER_URL "$PREVIEW_WORKER_URL" development preview
+put VITE_WORKER_URL "$PROD_WORKER_URL" production
 
 # Clerk redirects — localhost for local `vercel dev`, prod URLs for deployed envs
 put NEXT_PUBLIC_CLERK_SIGN_UP_URL "${NEXT_PUBLIC_CLERK_SIGN_UP_URL:-http://localhost:3000/auth}" development
@@ -81,4 +81,4 @@ echo ""
 echo "If preview still 401/CORS after deploy, delete the preview secret so vars apply:"
 echo "  yarn wrangler secret delete ALLOWED_ORIGINS --env preview"
 echo ""
-echo "Redeploy or push a branch to pick up NEXT_PUBLIC_* changes."
+echo "Redeploy or push a branch to pick up VITE_* changes."

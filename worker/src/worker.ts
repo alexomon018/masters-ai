@@ -19,6 +19,13 @@ import {
 	postFeedback
 } from "./routes/feedback";
 import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
+import {
+	deleteKeyBodySchema,
+	deleteUserKey,
+	listUserKeys,
+	upsertKeyBodySchema,
+	upsertUserKey
+} from "./routes/user-keys";
 import { getUsage } from "./routes/usage";
 import { issueAnonId } from "./routes/anon-id";
 import { resolveAllowedOrigin } from "./cors";
@@ -193,6 +200,65 @@ export default {
 						);
 					}
 					return upsertThread(env, { userId }, parsed.data);
+				}),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/user-keys" && request.method === "GET") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, (userId) =>
+					listUserKeys(env, { userId })
+				),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/user-keys" && request.method === "POST") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = upsertKeyBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error:
+									parsed.error.issues[0]?.message ?? "Invalid request.",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return upsertUserKey(env, { userId }, parsed.data);
+				}),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/user-keys" && request.method === "DELETE") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, async (userId) => {
+					const raw = await request.json().catch(() => null);
+					const parsed = deleteKeyBodySchema.safeParse(raw);
+					if (!parsed.success) {
+						return new Response(
+							JSON.stringify({
+								error: "invalid body",
+								issues: parsed.error.issues
+							}),
+							{
+								status: 400,
+								headers: { "content-type": "application/json" }
+							}
+						);
+					}
+					return deleteUserKey(env, { userId }, parsed.data);
 				}),
 				env,
 				origin

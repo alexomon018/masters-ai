@@ -3,12 +3,29 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
 import type { Env } from "./env";
 
-export type LLMModel = "claude-haiku-4-5" | "gpt-5.4-mini";
+export type LLMModel =
+	| "claude-haiku-4-5"
+	| "gpt-5.4-mini"
+	| "claude-opus-4-8"
+	| "gpt-5.4";
 
-const VALID_MODELS: ReadonlySet<LLMModel> = new Set<LLMModel>([
-	"claude-haiku-4-5",
-	"gpt-5.4-mini"
+export type LLMProvider = "anthropic" | "openai";
+
+const MODEL_PROVIDER: Record<LLMModel, LLMProvider> = {
+	"claude-haiku-4-5": "anthropic",
+	"gpt-5.4-mini": "openai",
+	"claude-opus-4-8": "anthropic",
+	"gpt-5.4": "openai"
+};
+
+const BYOK_ONLY_MODELS: ReadonlySet<LLMModel> = new Set<LLMModel>([
+	"claude-opus-4-8",
+	"gpt-5.4"
 ]);
+
+const VALID_MODELS: ReadonlySet<LLMModel> = new Set<LLMModel>(
+	Object.keys(MODEL_PROVIDER) as LLMModel[]
+);
 
 const DEFAULT_MODEL: LLMModel = "claude-haiku-4-5";
 
@@ -24,18 +41,28 @@ export function resolveWorkerModelLabel(label: string): LLMModel {
 	return DEFAULT_MODEL;
 }
 
-export function getModel(modelId: LLMModel, env: Env): LanguageModel {
-	const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
-	const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
+export function modelProvider(modelId: LLMModel): LLMProvider {
+	return MODEL_PROVIDER[modelId];
+}
 
-	switch (modelId) {
-		case "claude-haiku-4-5":
-			return anthropic.languageModel(modelId);
-		case "gpt-5.4-mini":
-			return openai.languageModel(modelId);
-		default: {
-			const _exhaustive: never = modelId;
-			throw new Error(`Unhandled model id: ${String(_exhaustive)}`);
-		}
+export function isByokOnlyModel(modelId: LLMModel): boolean {
+	return BYOK_ONLY_MODELS.has(modelId);
+}
+
+export function getModel(
+	modelId: LLMModel,
+	env: Env,
+	overrideKey?: string
+): LanguageModel {
+	const provider = MODEL_PROVIDER[modelId];
+
+	if (provider === "anthropic") {
+		const anthropic = createAnthropic({
+			apiKey: overrideKey ?? env.ANTHROPIC_API_KEY
+		});
+		return anthropic.languageModel(modelId);
 	}
+
+	const openai = createOpenAI({ apiKey: overrideKey ?? env.OPENAI_API_KEY });
+	return openai.languageModel(modelId);
 }

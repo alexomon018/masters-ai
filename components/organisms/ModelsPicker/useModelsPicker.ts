@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePostHog } from "@posthog/react";
 import { Model } from "@constants";
 import { useModelStore } from "@providers";
+import { useApiKeysManager } from "@/components/organisms/ApiKeysManager/useApiKeysManager";
 
 export const useModelsPicker = () => {
 	const {
@@ -14,6 +15,11 @@ export const useModelsPicker = () => {
 		disableAllModels
 	} = useModelStore((state) => state);
 	const posthog = usePostHog();
+
+	const { providers } = useApiKeysManager();
+	const connectedProviders = new Set(
+		providers.filter((p) => p.connected).map((p) => p.provider)
+	);
 
 	const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
 
@@ -56,7 +62,8 @@ export const useModelsPicker = () => {
 		expandedModels,
 		toggleDescription,
 		onCheckedFeature,
-		handleToggleModel
+		handleToggleModel,
+		connectedProviders
 	};
 };
 

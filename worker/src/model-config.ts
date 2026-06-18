@@ -14,12 +14,18 @@ export interface ModelAgentConfig {
 
 const MODEL_AGENT_CONFIG: Record<LLMModel, ModelAgentConfig> = {
 	"claude-haiku-4-5": {
-		repairToolCalls: false,
+		repairToolCalls: false
 	},
 	"gpt-5.4-mini": {
 		forceFirstStepToolChoice: "required",
-		repairToolCalls: true,
+		repairToolCalls: true
 	},
+	"claude-opus-4-8": {
+		repairToolCalls: false
+	},
+	"gpt-5.4": {
+		repairToolCalls: true
+	}
 };
 
 export function getModelAgentConfig(modelId: LLMModel): ModelAgentConfig {
