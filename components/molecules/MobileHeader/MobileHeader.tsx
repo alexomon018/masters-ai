@@ -33,7 +33,9 @@ const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
 				masters.chat
 			</h1>
 
-			{isLoaded && user ? (
+			{!isLoaded && <div className="size-8" />}
+
+			{isLoaded && user && (
 				<button
 					type="button"
 					onClick={() =>
@@ -49,8 +51,16 @@ const MobileHeader = ({ onOpenSidebar, user, isLoaded }: MobileHeaderProps) => {
 						</AvatarFallback>
 					</Avatar>
 				</button>
-			) : (
-				<div className="size-8" />
+			)}
+
+			{isLoaded && !user && (
+				<button
+					type="button"
+					onClick={() => navigate({ to: "/auth" })}
+					className="rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-[#e2e8f0] dark:hover:bg-[#2a2a2a]"
+				>
+					Sign in
+				</button>
 			)}
 		</header>
 	);
