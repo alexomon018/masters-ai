@@ -132,7 +132,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 			/>
 			<aside
 				className={cn(
-					"fixed left-0 top-0 z-50 flex h-screen w-80 flex-col border-r border-gray-200 bg-white dark:border-[#2a2a2a] dark:bg-[#1a1a1a]",
+					"fixed left-0 top-0 z-50 flex h-dvh w-80 flex-col border-r border-gray-200 bg-white dark:border-[#2a2a2a] dark:bg-[#1a1a1a]",
 					"transition-transform duration-300 ease-in-out",
 					isOpen ? "translate-x-0" : "-translate-x-full",
 					"md:sticky md:z-30 md:translate-x-0"
@@ -201,7 +201,7 @@ const SideBar = ({ activeThreadId, isOpen, onClose }: SideBarProps) => {
 					)}
 				</div>
 
-				<div className="border-t border-gray-200 p-4 dark:border-[#2a2a2a]">
+				<div className="border-t border-gray-200 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-[#2a2a2a]">
 					{footerContent}
 				</div>
 			</aside>

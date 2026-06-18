@@ -33,7 +33,7 @@ const ChatForm = ({
 	onClickQuestion
 }: ChatFormProps) => (
 	<div className="flex shrink-0 flex-col items-center justify-center">
-		<div className="w-full max-w-screen-md rounded-xl px-4 py-3 md:px-5 md:py-6">
+		<div className="w-full max-w-screen-md rounded-xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-5 md:py-6">
 			{showInitialQuestions && onClickQuestion && (
 				<InitialQuestions onClickQuestion={onClickQuestion} />
 			)}
