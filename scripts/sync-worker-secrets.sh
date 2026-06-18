@@ -64,6 +64,7 @@ SECRETS=(
 	UPSTASH_REDIS_REST_URL
 	UPSTASH_REDIS_REST_TOKEN
 	BRAINTRUST_API_KEY
+	POSTHOG_API_KEY
 )
 
 echo "Syncing worker secrets to Cloudflare env: $TARGET"

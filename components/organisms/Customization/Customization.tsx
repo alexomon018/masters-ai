@@ -1,6 +1,7 @@
 import { Input, Textarea, Label, Button } from "@atoms";
 import { useForm } from "react-hook-form";
 import { useUser } from "@clerk/clerk-react";
+import { usePostHog } from "@posthog/react";
 
 type FormValues = {
 	name: string;
@@ -11,6 +12,7 @@ type FormValues = {
 
 const Customization = () => {
 	const { user } = useUser();
+	const posthog = usePostHog();
 
 	// Get initial values from user metadata if available
 	const initialValues = {
@@ -30,13 +32,20 @@ const Customization = () => {
 	});
 
 	const onSubmit = async (data: FormValues) => {
-		user?.update({
+		if (!user) return;
+		await user.update({
 			unsafeMetadata: {
 				name: data.name,
 				occupation: data.occupation,
 				traits: data.traits,
 				preferences: data.preferences
 			}
+		});
+		posthog.capture("customization_saved", {
+			has_name: data.name.length > 0,
+			has_occupation: data.occupation.length > 0,
+			has_traits: data.traits.length > 0,
+			has_preferences: data.preferences.length > 0
 		});
 	};
 

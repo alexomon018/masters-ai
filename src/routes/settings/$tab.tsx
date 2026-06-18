@@ -7,6 +7,8 @@ import {
 	Customization,
 	ModelsPicker
 } from "@organisms";
+import { usePostHog } from "@posthog/react";
+import { useEffect } from "react";
 
 const ComingSoon = () => (
 	<div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-10 text-center">
@@ -37,6 +39,12 @@ const renderTabContent = (tab: string) => {
 
 const SettingsTabPage = () => {
 	const { tab } = useParams({ from: "/settings/$tab" });
+	const posthog = usePostHog();
+
+	// Sync settings tab navigation to PostHog (synchronizing with external analytics).
+	useEffect(() => {
+		posthog.capture("settings_tab_viewed", { tab });
+	}, [tab, posthog]);
 
 	return (
 		<>
