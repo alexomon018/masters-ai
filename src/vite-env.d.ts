@@ -12,10 +12,9 @@ interface ImportMetaEnv {
 	readonly PROD: boolean;
 	readonly DEV: boolean;
 	readonly SSR: boolean;
-	// Cloudflare Worker base URL (chat WS + API routes + anon-id). Was
-	// NEXT_PUBLIC_WORKER_URL under Next.
+	// Cloudflare Worker base URL (chat WS + API routes + anon-id).
 	readonly VITE_WORKER_URL: string;
-	// Clerk publishable key. Was NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.
+	// Clerk publishable key.
 	readonly VITE_CLERK_PUBLISHABLE_KEY: string;
 	// Optional Clerk Frontend API proxy (production DNS).
 	readonly VITE_CLERK_PROXY_URL?: string;

@@ -16,11 +16,17 @@ function json(body: unknown, status = 200): Response {
 	return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
 }
 
-const providerSchema = z.enum(["anthropic", "openai"]);
+const providerSchema = z.enum(["anthropic", "openai"], {
+	error: "Unsupported provider."
+});
 
 export const upsertKeyBodySchema = z.object({
 	provider: providerSchema,
-	apiKey: z.string().min(20).max(300)
+	apiKey: z
+		.string({ error: "Enter an API key." })
+		.trim()
+		.min(20, "That key looks too short — paste the full API key.")
+		.max(300, "That key is too long — check you pasted only the key.")
 });
 export type UpsertKeyBody = z.infer<typeof upsertKeyBodySchema>;
 

@@ -71,6 +71,12 @@ export const useApiKeysManager = () => {
 		[tokenFn, queryClient, userKeysQueryKey]
 	);
 
+	const clearError = useCallback((provider: KeyProvider) => {
+		setErrors((prev) =>
+			prev[provider] === undefined ? prev : { ...prev, [provider]: undefined }
+		);
+	}, []);
+
 	const disconnect = useCallback(
 		async (provider: KeyProvider) => {
 			setPending(provider);
@@ -92,7 +98,7 @@ export const useApiKeysManager = () => {
 		[tokenFn, queryClient, userKeysQueryKey]
 	);
 
-	return { providers, save, disconnect, pending, errors };
+	return { providers, save, disconnect, clearError, pending, errors };
 };
 
 export default useApiKeysManager;

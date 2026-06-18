@@ -1,6 +1,11 @@
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { ClerkProvider, useUser } from "@clerk/clerk-react";
+import {
+	ClerkLoaded,
+	ClerkLoading,
+	ClerkProvider,
+	useUser
+} from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
 import { lazy, ReactNode, Suspense, useEffect } from "react";
 import { PostHogProvider, usePostHog } from "@posthog/react";
@@ -44,10 +49,14 @@ const PostHogUserIdentifier = () => {
 const ClerkWrapper = ({ children }: { children: ReactNode }) => {
 	// Clerk is optional in local/dev when no key is configured.
 	if (!clerkKey) return children;
+
 	return (
 		<ClerkProvider publishableKey={clerkKey}>
 			<PostHogUserIdentifier />
-			{children}
+			<ClerkLoading>
+				<div className="flex h-screen items-center justify-center bg-background" />
+			</ClerkLoading>
+			<ClerkLoaded>{children}</ClerkLoaded>
 		</ClerkProvider>
 	);
 };

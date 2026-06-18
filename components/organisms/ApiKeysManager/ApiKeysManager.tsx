@@ -11,7 +11,8 @@ const ProviderRow = ({
 	pending,
 	error,
 	onSave,
-	onDisconnect
+	onDisconnect,
+	onClearError
 }: {
 	provider: KeyProvider;
 	label: string;
@@ -21,6 +22,7 @@ const ProviderRow = ({
 	error: string | undefined;
 	onSave: (value: string) => Promise<boolean>;
 	onDisconnect: () => void;
+	onClearError: () => void;
 }) => {
 	const [value, setValue] = useState("");
 
@@ -52,7 +54,14 @@ const ProviderRow = ({
 					{pending ? "Removing..." : "Disconnect"}
 				</Button>
 			) : (
-				<div className="space-y-2">
+				<form
+					className="space-y-2"
+					onSubmit={async (e) => {
+						e.preventDefault();
+						const saved = await onSave(value);
+						if (saved) setValue("");
+					}}
+				>
 					<Label htmlFor={`key-${provider}`} className="text-sm font-medium">
 						{label} API key
 					</Label>
@@ -63,27 +72,28 @@ const ProviderRow = ({
 							autoComplete="off"
 							placeholder={placeholder}
 							value={value}
-							onChange={(e) => setValue(e.target.value)}
+							onChange={(e) => {
+								setValue(e.target.value);
+								if (error) onClearError();
+							}}
 						/>
 						<Button
+							type="submit"
 							disabled={pending || value.trim().length === 0}
-							onClick={async () => {
-								const saved = await onSave(value);
-								if (saved) setValue("");
-							}}
 						>
 							{pending ? "Connecting..." : "Connect"}
 						</Button>
 					</div>
 					{error && <p className="text-sm text-destructive">{error}</p>}
-				</div>
+				</form>
 			)}
 		</Card>
 	);
 };
 
 const ApiKeysManager = () => {
-	const { providers, save, disconnect, pending, errors } = useApiKeysManager();
+	const { providers, save, disconnect, clearError, pending, errors } =
+		useApiKeysManager();
 
 	return (
 		<div className="flex w-full flex-col gap-6">
@@ -108,6 +118,7 @@ const ApiKeysManager = () => {
 						error={errors[p.provider]}
 						onSave={(value) => save(p.provider, value)}
 						onDisconnect={() => disconnect(p.provider)}
+						onClearError={() => clearError(p.provider)}
 					/>
 				))}
 			</div>
