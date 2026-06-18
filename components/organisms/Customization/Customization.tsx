@@ -50,10 +50,12 @@ const Customization = () => {
 	};
 
 	return (
-		<div className="flex w-full max-w-3xl flex-col gap-6 p-6">
-			<h1 className="text-2xl font-semibold">Customize masters.chat</h1>
+		<div className="flex w-full flex-col gap-6">
+			<h1 className="text-xl font-semibold tracking-tight">
+				Customize masters.chat
+			</h1>
 
-			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 				<div className="space-y-2">
 					<Label htmlFor="name" className="text-sm font-medium">
 						What should masters.chat call you?
@@ -65,7 +67,9 @@ const Customization = () => {
 						aria-invalid={errors.name ? "true" : "false"}
 					/>
 					{errors.name && (
-						<p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+						<p className="mt-1 text-sm text-destructive">
+							{errors.name.message}
+						</p>
 					)}
 				</div>
 
@@ -105,9 +109,11 @@ const Customization = () => {
 					/>
 				</div>
 
-				<Button type="submit" className="mt-4 w-[30%]" disabled={isSubmitting}>
-					{isSubmitting ? "Saving..." : "Save Preferences"}
-				</Button>
+				<div className="flex justify-end">
+					<Button type="submit" disabled={isSubmitting}>
+						{isSubmitting ? "Saving..." : "Save Preferences"}
+					</Button>
+				</div>
 			</form>
 		</div>
 	);

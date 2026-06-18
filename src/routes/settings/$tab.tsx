@@ -1,5 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { SettingsNavigation } from "@molecules";
+import { Paperclip } from "lucide-react";
 import {
 	AccountUpgrade,
 	ApiKeysManager,
@@ -8,6 +9,16 @@ import {
 } from "@organisms";
 import { usePostHog } from "@posthog/react";
 import { useEffect } from "react";
+
+const ComingSoon = () => (
+	<div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-10 text-center">
+		<Paperclip className="size-6 text-muted-foreground" />
+		<p className="text-base font-medium">Attachments are coming soon</p>
+		<p className="text-sm text-muted-foreground">
+			You&apos;ll be able to manage uploaded files here.
+		</p>
+	</div>
+);
 
 const renderTabContent = (tab: string) => {
 	switch (tab) {
@@ -20,9 +31,7 @@ const renderTabContent = (tab: string) => {
 		case "api-keys":
 			return <ApiKeysManager />;
 		case "attachments":
-			return (
-				<div className="text-center text-muted-foreground">Coming Soon</div>
-			);
+			return <ComingSoon />;
 		default:
 			return <AccountUpgrade />;
 	}
@@ -39,7 +48,7 @@ const SettingsTabPage = () => {
 
 	return (
 		<>
-			<SettingsNavigation className="hidden lg:flex" />
+			<SettingsNavigation className="flex lg:hidden" />
 			{renderTabContent(tab)}
 		</>
 	);

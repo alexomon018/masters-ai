@@ -3,6 +3,7 @@ import InitialQuestions from "./InitialQuestions/InitialQuestions";
 import MessageList from "./MessageList/MessageList";
 import SettingsHeader from "./SettingsHeader/SettingsHeader";
 import SettingsNavigation from "./SettingsNavigation/SettingsNavigation";
+import SettingsNavRail from "./SettingsNavRail/SettingsNavRail";
 import DangerZoneSection from "./DangerZoneSection/DangerZoneSection";
 import UserProfile from "./UserProfile/UserProfile";
 import MessageUsage from "./MessageUsage/MessageUsage";
@@ -32,6 +33,7 @@ export {
 	MessageList,
 	SettingsHeader,
 	SettingsNavigation,
+	SettingsNavRail,
 	DangerZoneSection,
 	UserProfile,
 	MessageUsage,
