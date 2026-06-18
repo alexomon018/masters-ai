@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { server } from "./msw/server";
 
-process.env.NEXT_PUBLIC_WORKER_URL = "http://localhost:8787";
+process.env.VITE_WORKER_URL = "http://localhost:8787";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 

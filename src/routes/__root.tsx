@@ -1,6 +1,7 @@
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import {
+	ClerkFailed,
 	ClerkLoaded,
 	ClerkLoading,
 	ClerkProvider,
@@ -57,6 +58,15 @@ const ClerkWrapper = ({ children }: { children: ReactNode }) => {
 				<div className="flex h-screen items-center justify-center bg-background" />
 			</ClerkLoading>
 			<ClerkLoaded>{children}</ClerkLoaded>
+			<ClerkFailed>
+				<div className="flex h-screen flex-col items-center justify-center gap-2 bg-background text-center text-muted-foreground">
+					<p className="text-lg">Something went wrong</p>
+					<p className="text-sm">
+						We couldn&apos;t start the app. Please refresh the page or try
+						again later.
+					</p>
+				</div>
+			</ClerkFailed>
 		</ClerkProvider>
 	);
 };
