@@ -101,7 +101,7 @@ describe("user-keys route", () => {
 			{ userId: "anon:x" },
 			{ provider: "anthropic", apiKey: "sk-ant-1234567890abcdef1234" }
 		);
-		expect(res.status).toBe(403);
+		expect(res.status).toBe(401);
 	});
 
 	it("lists connected providers without leaking the key", async () => {

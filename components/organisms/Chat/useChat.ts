@@ -211,14 +211,15 @@ const useChat = ({ threadId, isNewThread }: Args) => {
 	// visitors can't reach BYOK models). Lets us block a keyless BYOK send
 	// before it mints a thread or hits the worker.
 	const { data: userKeys = [] } = useQuery({
-		queryKey: queryKeys.userKeys(),
+		queryKey: queryKeys.userKeys(authSubject(user?.id)),
 		queryFn: () => fetchUserKeys(tokenFn),
-		enabled: userLoaded && !isAnon
+		enabled: Boolean(user?.id)
 	});
 
 	const hasKeyForSelected =
 		!selectedModel.byok ||
-		userKeys.some((k) => k.provider === selectedModel.provider);
+		(Boolean(user?.id) &&
+			userKeys.some((k) => k.provider === selectedModel.provider));
 
 	// Clear the keyless-BYOK banner once the blocker is resolved — the user
 	// switched models or connected the needed key.

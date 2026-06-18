@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { tryCatch } from "../../../utils/tryCatch";
 import { getDb } from "../db";
 import { makeUserApiKeyRepo } from "../repository/userApiKeys";
 import { decryptKey, encryptKey, lastFour } from "../crypto/keyVault";
@@ -28,27 +29,42 @@ export const deleteKeyBodySchema = z.object({
 });
 export type DeleteKeyBody = z.infer<typeof deleteKeyBodySchema>;
 
+type KeyValidation =
+	| { status: "valid" }
+	| { status: "invalid" }
+	| { status: "unavailable" };
+
+const VALIDATION_TIMEOUT_MS = 10_000;
+
 async function validateProviderKey(
 	provider: LLMProvider,
 	apiKey: string
-): Promise<boolean> {
-	try {
-		if (provider === "anthropic") {
-			const res = await fetch("https://api.anthropic.com/v1/models?limit=1", {
-				headers: {
-					"x-api-key": apiKey,
-					"anthropic-version": "2023-06-01"
-				}
-			});
-			return res.ok;
-		}
-		const res = await fetch("https://api.openai.com/v1/models", {
-			headers: { authorization: `Bearer ${apiKey}` }
-		});
-		return res.ok;
-	} catch {
-		return false;
+): Promise<KeyValidation> {
+	const url =
+		provider === "anthropic"
+			? "https://api.anthropic.com/v1/models?limit=1"
+			: "https://api.openai.com/v1/models";
+	const headers: Record<string, string> =
+		provider === "anthropic"
+			? { "x-api-key": apiKey, "anthropic-version": "2023-06-01" }
+			: { authorization: `Bearer ${apiKey}` };
+
+	const { data: res, error } = await tryCatch(
+		fetch(url, { headers, signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS) })
+	);
+
+	if (error) {
+		console.error(`[user-keys] ${provider} validation request failed:`, error);
+		return { status: "unavailable" };
 	}
+	if (res.ok) return { status: "valid" };
+	// 401/403 mean the provider rejected the key; other statuses (429, 5xx) are
+	// upstream problems we shouldn't blame on the user's key.
+	if (res.status === 401 || res.status === 403) return { status: "invalid" };
+	console.error(
+		`[user-keys] ${provider} validation returned unexpected status ${res.status}`
+	);
+	return { status: "unavailable" };
 }
 
 export async function listUserKeys(
@@ -72,16 +88,23 @@ export async function upsertUserKey(
 	body: UpsertKeyBody
 ): Promise<Response> {
 	if (!auth.userId.startsWith("user:")) {
-		return json({ error: "authenticated user required" }, 403);
+		console.warn("[user-keys] rejected upsert: authenticated user required");
+		return json({ error: "Unauthorized" }, 401);
 	}
 	if (!env.KEY_ENCRYPTION_SECRET) {
 		return json({ error: "server misconfigured" }, 500);
 	}
 
 	const apiKey = body.apiKey.trim();
-	const valid = await validateProviderKey(body.provider, apiKey);
-	if (!valid) {
+	const validation = await validateProviderKey(body.provider, apiKey);
+	if (validation.status === "invalid") {
 		return json({ error: "The API key was rejected by the provider." }, 400);
+	}
+	if (validation.status === "unavailable") {
+		return json(
+			{ error: "Could not verify the key right now. Please try again." },
+			502
+		);
 	}
 
 	const sealed = await encryptKey(apiKey, env.KEY_ENCRYPTION_SECRET);
@@ -120,5 +143,15 @@ export async function getDecryptedUserKey(
 	const repo = makeUserApiKeyRepo(getDb(env));
 	const row = await repo.get(userId, provider);
 	if (!row) return null;
-	return decryptKey({ ciphertext: row.ciphertext, iv: row.iv }, env.KEY_ENCRYPTION_SECRET);
+	const { data, error } = await tryCatch(
+		decryptKey(
+			{ ciphertext: row.ciphertext, iv: row.iv },
+			env.KEY_ENCRYPTION_SECRET
+		)
+	);
+	if (error) {
+		console.error(`[user-keys] failed to decrypt ${provider} key:`, error);
+		return null;
+	}
+	return data;
 }

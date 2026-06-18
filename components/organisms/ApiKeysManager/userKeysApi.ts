@@ -20,7 +20,9 @@ export async function fetchUserKeys(
 	if (!base) return [];
 	const params = await buildAuthQueryParams(getToken);
 	const res = await fetch(`${base}/user-keys?${params.toString()}`);
-	if (!res.ok) return [];
+	if (!res.ok) {
+		throw new Error(`Failed to fetch user keys (${res.status})`);
+	}
 	return (await res.json()) as UserKeyDto[];
 }
 

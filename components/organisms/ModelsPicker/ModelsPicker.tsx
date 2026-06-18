@@ -181,16 +181,14 @@ const ModelSelector = () => {
 													Connect a key
 												</Link>
 											) : (
-												<>
-													<CopyIcon className="size-5 text-muted-foreground" />
-													<Switch
-														checked={enabledModels.has(model.id)}
-														onCheckedChange={() => {
-															handleToggleModel(model.id, model.name);
-														}}
-													/>
-												</>
+												<CopyIcon className="size-5 text-muted-foreground" />
 											)}
+											<Switch
+												checked={enabledModels.has(model.id)}
+												onCheckedChange={() => {
+													handleToggleModel(model.id, model.name);
+												}}
+											/>
 										</div>
 									</div>
 								</Card>

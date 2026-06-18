@@ -19,7 +19,7 @@ const ProviderRow = ({
 	connected: { lastFour: string } | undefined;
 	pending: boolean;
 	error: string | undefined;
-	onSave: (value: string) => void;
+	onSave: (value: string) => Promise<boolean>;
 	onDisconnect: () => void;
 }) => {
 	const [value, setValue] = useState("");
@@ -67,7 +67,10 @@ const ProviderRow = ({
 						/>
 						<Button
 							disabled={pending || value.trim().length === 0}
-							onClick={() => onSave(value)}
+							onClick={async () => {
+								const saved = await onSave(value);
+								if (saved) setValue("");
+							}}
 						>
 							{pending ? "Connecting..." : "Connect"}
 						</Button>

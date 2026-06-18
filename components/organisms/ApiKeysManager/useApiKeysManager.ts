@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@constants";
 import { useTokenFn } from "@hooks";
+import { authSubject } from "@/components/organisms/Chat/helpers/agentAuth";
 import {
 	deleteUserKey,
 	fetchUserKeys,
@@ -9,8 +11,6 @@ import {
 	type KeyProvider,
 	type UserKeyDto
 } from "./userKeysApi";
-
-const USER_KEYS_QUERY_KEY = queryKeys.userKeys();
 
 export interface ProviderState {
 	provider: KeyProvider;
@@ -31,9 +31,12 @@ const PROVIDERS: Array<{
 export const useApiKeysManager = () => {
 	const tokenFn = useTokenFn();
 	const queryClient = useQueryClient();
+	const { user } = useUser();
+
+	const userKeysQueryKey = queryKeys.userKeys(authSubject(user?.id));
 
 	const { data: keys = [] } = useQuery({
-		queryKey: USER_KEYS_QUERY_KEY,
+		queryKey: userKeysQueryKey,
 		queryFn: () => fetchUserKeys(tokenFn)
 	});
 
@@ -53,26 +56,40 @@ export const useApiKeysManager = () => {
 		async (provider: KeyProvider, apiKey: string) => {
 			setPending(provider);
 			setErrors((prev) => ({ ...prev, [provider]: undefined }));
-			const result = await saveUserKey(tokenFn, provider, apiKey.trim());
-			setPending(null);
-			if (!result.ok) {
-				setErrors((prev) => ({ ...prev, [provider]: result.error }));
-				return false;
+			try {
+				const result = await saveUserKey(tokenFn, provider, apiKey.trim());
+				if (!result.ok) {
+					setErrors((prev) => ({ ...prev, [provider]: result.error }));
+					return false;
+				}
+				await queryClient.invalidateQueries({ queryKey: userKeysQueryKey });
+				return true;
+			} finally {
+				setPending(null);
 			}
-			await queryClient.invalidateQueries({ queryKey: USER_KEYS_QUERY_KEY });
-			return true;
 		},
-		[tokenFn, queryClient]
+		[tokenFn, queryClient, userKeysQueryKey]
 	);
 
 	const disconnect = useCallback(
 		async (provider: KeyProvider) => {
 			setPending(provider);
-			await deleteUserKey(tokenFn, provider);
-			setPending(null);
-			await queryClient.invalidateQueries({ queryKey: USER_KEYS_QUERY_KEY });
+			setErrors((prev) => ({ ...prev, [provider]: undefined }));
+			try {
+				const ok = await deleteUserKey(tokenFn, provider);
+				if (!ok) {
+					setErrors((prev) => ({
+						...prev,
+						[provider]: "Failed to disconnect key"
+					}));
+					return;
+				}
+				await queryClient.invalidateQueries({ queryKey: userKeysQueryKey });
+			} finally {
+				setPending(null);
+			}
 		},
-		[tokenFn, queryClient]
+		[tokenFn, queryClient, userKeysQueryKey]
 	);
 
 	return { providers, save, disconnect, pending, errors };
