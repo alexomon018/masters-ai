@@ -68,13 +68,13 @@ const ModelSelector = () => {
 					existing conversations.`}
 				</p>
 
-				<div className="mb-6 flex items-center justify-between">
+				<div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div className="flex items-center gap-2">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="outline"
-									className="w-[200px] justify-between outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+									className="w-full justify-between outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:w-[200px]"
 								>
 									<span>Filter by features</span>
 									{selectedFeatures.size > 0 && (
@@ -104,19 +104,26 @@ const ModelSelector = () => {
 						{selectedFeatures.size > 0 && (
 							<Button
 								variant="ghost"
-								size="icon"
-								className="ml-2 size-8"
+								className="h-9 px-3"
 								onClick={clearFeatures}
 							>
 								Clear
 							</Button>
 						)}
 					</div>
-					<div className="space-x-2">
-						<Button variant="secondary" onClick={enableAllModels}>
+					<div className="flex gap-2">
+						<Button
+							variant="secondary"
+							className="flex-1 sm:flex-none"
+							onClick={enableAllModels}
+						>
 							Select All
 						</Button>
-						<Button variant="secondary" onClick={disableAllModels}>
+						<Button
+							variant="secondary"
+							className="flex-1 sm:flex-none"
+							onClick={disableAllModels}
+						>
 							Unselect All
 						</Button>
 					</div>
@@ -136,10 +143,10 @@ const ModelSelector = () => {
 								model.byok === true &&
 								!connectedProviders.has(model.provider);
 							return (
-							<Card key={model.id} className="p-6">
-								<div className="flex items-start justify-between">
-									<div className="flex gap-4">
-										<div className="bg-primary/10 flex size-12 shrink-0 items-center justify-center rounded-lg">
+							<Card key={model.id} className="p-4 sm:p-6">
+								<div className="flex items-start justify-between gap-3">
+									<div className="flex gap-3 sm:gap-4">
+										<div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
 											<CustomIcon icon={model.icon} />
 										</div>
 										<div>
@@ -173,7 +180,7 @@ const ModelSelector = () => {
 											</div>
 										</div>
 									</div>
-									<div className="flex items-center gap-4">
+									<div className="flex shrink-0 items-center gap-3 sm:gap-4">
 										{locked ? (
 											<Link
 												to="/settings/$tab"
