@@ -9,13 +9,13 @@ const AuthPage = () => (
 	<div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-5 py-10">
 		<div
 			aria-hidden
-			className="pointer-events-none absolute left-1/2 top-1/2 size-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl"
+			className="bg-primary/10 pointer-events-none absolute left-1/2 top-1/2 size-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
 		/>
 
-		<Card className="relative w-full max-w-sm border-border/60 p-8 shadow-lg sm:p-10">
+		<Card className="border-border/60 relative w-full max-w-sm p-8 shadow-lg sm:p-10">
 			<div className="flex flex-col items-center gap-7 text-center">
 				<div className="flex flex-col items-center gap-3">
-					<span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
+					<span className="bg-primary/10 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
 						FE Masters Chat
 					</span>
 					<h1 className="text-3xl font-bold tracking-tight text-foreground">
