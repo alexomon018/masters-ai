@@ -27,13 +27,13 @@ export interface Model {
 
 const modelCards: Model[] = [
 	{
-		id: "claude-haiku-4-5",
-		name: "Claude Haiku 4.5",
-		shortDescription: "The fastest model with near-frontier intelligence.",
+		id: "gpt-5.4-mini",
+		name: "GPT-5.4 mini",
+		shortDescription: "OpenAI's strongest mini model — fast and cheap.",
 		longDescription:
-			"Anthropic's fastest model with near-frontier intelligence. Great default for everyday questions — quick, cheap, and still capable enough for most coding and reasoning tasks.",
-		icon: "anthropic",
-		provider: "anthropic",
+			"OpenAI's strongest mini model. Pick this when latency matters more than peak quality.",
+		icon: "openai",
+		provider: "openai",
 		features: [
 			{
 				name: "Fast",
@@ -43,13 +43,13 @@ const modelCards: Model[] = [
 		isDefault: true
 	},
 	{
-		id: "gpt-5.4-mini",
-		name: "GPT-5.4 mini",
-		shortDescription: "OpenAI's strongest mini model — fast and cheap.",
+		id: "claude-haiku-4-5",
+		name: "Claude Haiku 4.5",
+		shortDescription: "The fastest model with near-frontier intelligence.",
 		longDescription:
-			"OpenAI's strongest mini model. Pick this when latency matters more than peak quality.",
-		icon: "openai",
-		provider: "openai",
+			"Anthropic's fastest model with near-frontier intelligence. Great default for everyday questions — quick, cheap, and still capable enough for most coding and reasoning tasks.",
+		icon: "anthropic",
+		provider: "anthropic",
 		features: [
 			{
 				name: "Fast",
