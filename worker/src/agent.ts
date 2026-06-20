@@ -16,7 +16,11 @@ import {
 import { z } from "zod";
 import { compactHistory } from "./context/compaction";
 import { streamAgent } from "./agent-core";
-import { flushBraintrust, logSpanMetadata, startBraintrust } from "./braintrust";
+import {
+	flushBraintrust,
+	logSpanMetadata,
+	startBraintrust
+} from "./braintrust";
 import {
 	getModel,
 	isByokOnlyModel,
@@ -26,11 +30,7 @@ import {
 } from "./providers";
 import { getDecryptedUserKey } from "./routes/user-keys";
 import { checkAndIncrementQuota } from "./quota";
-import {
-	ChatError,
-	classifyChatError,
-	encodeChatError
-} from "./chat-errors";
+import { ChatError, classifyChatError, encodeChatError } from "./chat-errors";
 import { claimThread } from "./thread-access";
 import { captureAiGeneration, providerFromModel } from "./posthog";
 import { tryCatch } from "../../utils/tryCatch";
@@ -154,9 +154,7 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 				// message itself neutral; signed-in users just learn the limit
 				// resets tomorrow.
 				const tail =
-					quota.isAuthenticated === false
-						? ""
-						: " Your limit resets tomorrow.";
+					quota.isAuthenticated === false ? "" : " Your limit resets tomorrow.";
 				throw new ChatError(
 					"QUOTA_EXCEEDED",
 					`You've reached today's message limit of ${quota.limit}.${tail}`
@@ -208,40 +206,35 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN,
 				THREAD_INDEX: this.env.THREAD_INDEX,
 				ANTHROPIC_API_KEY: this.env.ANTHROPIC_API_KEY,
-				RAG_QUERY_REWRITE: this.env.RAG_QUERY_REWRITE,
+				RAG_QUERY_REWRITE: this.env.RAG_QUERY_REWRITE
 			},
 			onFinish: ({ steps, usage, finishReason }) => {
 				const toolCalls = steps.flatMap((step) => step.toolCalls ?? []);
 				const toolResults = steps.flatMap((step) => step.toolResults ?? []);
 				const toolNames = toolCalls.map((call) => call.toolName);
-				const ragResults = toolResults
-					.filter((r) => r.toolName === "ragSearch")
-					.map((r) =>
-						typeof r.output === "string" ? r.output : JSON.stringify(r.output)
-					);
+				const sourceResults = toolResults.map(
+					(r) =>
+						`[${r.toolName}] ${typeof r.output === "string" ? r.output : JSON.stringify(r.output)}`
+				);
 				logSpanMetadata({
 					toolNames,
 					ragSearchCount: toolNames.filter((n) => n === "ragSearch").length,
-					ragResultText: ragResults.join("\n\n---\n\n")
+					ragResultText: sourceResults.join("\n\n---\n\n")
 				});
 
 				if (this.env.POSTHOG_API_KEY) {
 					this.ctx.waitUntil(
-						captureAiGeneration(
-							this.env.POSTHOG_API_KEY,
-							identity.userId,
-							{
-								$ai_trace_id: this.name,
-								$ai_session_id: this.name,
-								$ai_model: modelId,
-								$ai_provider: providerFromModel(modelId),
-								$ai_input_tokens: usage?.inputTokens,
-								$ai_output_tokens: usage?.outputTokens,
-								$ai_latency: (Date.now() - turnStartMs) / 1000,
-								$ai_stream: true,
-								$ai_stop_reason: finishReason
-							}
-						)
+						captureAiGeneration(this.env.POSTHOG_API_KEY, identity.userId, {
+							$ai_trace_id: this.name,
+							$ai_session_id: this.name,
+							$ai_model: modelId,
+							$ai_provider: providerFromModel(modelId),
+							$ai_input_tokens: usage?.inputTokens,
+							$ai_output_tokens: usage?.outputTokens,
+							$ai_latency: (Date.now() - turnStartMs) / 1000,
+							$ai_stream: true,
+							$ai_stop_reason: finishReason
+						})
 					);
 				}
 			}
