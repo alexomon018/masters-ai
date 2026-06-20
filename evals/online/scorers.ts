@@ -134,7 +134,7 @@ project.scorers.create({
 		"Reference-free LLM rubric: helpful, on-topic, no fabricated Frontend Masters courses or instructors.",
 	model: "gpt-5.4-mini",
 	useCot: true,
-	choiceScores: { a: 1, b: 0.75, c: 0.5, d: 0.25, e: 0 },
+	choiceScores: { a: 1, b: 0.5, c: 0 },
 	messages: [
 		{
 			role: "user",
@@ -146,17 +146,17 @@ User input:
 Assistant's answer:
 {{output}}
 
-Grade the answer on these reference-free criteria:
-- Directly helpful and on-topic for the user's question.
-- Does NOT invent Frontend Masters course names or instructor names.
-- Clear, accurate, and professional.
+Grade the answer reference-free on whether it is (1) directly helpful and on-topic, (2) clear and professional, and (3) free of obviously fabricated Frontend Masters course or instructor names.
+
+Anchor your grade — do not default to a low score:
+- A correct, on-topic, well-formed answer is (a), even if it is brief or a simple list. A clean list of courses by an instructor, or a clear explanation of a concept with proper Frontend Masters attribution, is (a).
+- Use (b) only for a real but minor flaw: a small inaccuracy, a misspelled name (e.g. "Biran Holt"), a partly-off-topic tangent, or a slightly confusing structure — where the answer is still useful.
+- Use (c) only when the answer is genuinely unhelpful, off-topic, empty, or contains fabricated Frontend Masters courses/instructors.
 
 How good is the answer overall?
-(a) Excellent on all criteria
-(b) Good, minor issues
-(c) Mediocre
-(d) Poor
-(e) Unhelpful or fabricated content`
+(a) Good — helpful, on-topic, no real problems
+(b) Acceptable — minor issues but still useful
+(c) Bad — unhelpful, off-topic, or fabricated`
 		}
 	]
 });
@@ -195,7 +195,7 @@ project.scorers.create({
 	messages: [
 		{
 			role: "user",
-			content: `You are checking whether an AI tutor's answer is faithful to the retrieved Frontend Masters transcript sources.
+			content: `You are checking whether an AI tutor's answer is faithful to the retrieved Frontend Masters sources. Sources may be transcript chunks (ragSearch) or catalog lookups (course/instructor lists), each tagged with the tool that produced it, e.g. [ragSearch] or [listCoursesByInstructor].
 
 Retrieved sources:
 {{metadata.ragResultText}}
@@ -206,11 +206,13 @@ User input:
 Assistant's answer:
 {{output}}
 
-If the retrieved sources are empty, answer (a).
-Otherwise, judge whether the claims in the answer are supported by the sources:
-(a) Fully supported (or no sources to contradict)
-(b) Partially supported — some claims go beyond the sources
-(c) Unsupported — the answer asserts course content not in the sources`
+If the retrieved sources are empty or whitespace, answer (a) — there is nothing to contradict.
+
+Otherwise judge only the answer's FACTUAL claims about Frontend Masters (course names, instructor names, what a course/instructor teaches, what the transcript said). General programming explanation, light synthesis, paraphrase, summary, and illustrative code examples are EXPECTED of a tutor and must NOT lower the score as long as they do not assert Frontend Masters specifics absent from the sources.
+
+(a) Faithful — every Frontend Masters factual claim is supported by the sources (reasonable paraphrase and added general explanation are fine).
+(b) Mostly faithful — core claims are supported, but at least one Frontend Masters specific (a course name, instructor, or "the course says X") is stated without support in the sources.
+(c) Unfaithful — the answer contradicts the sources or fabricates Frontend Masters course/instructor content not present in them.`
 		}
 	]
 });
