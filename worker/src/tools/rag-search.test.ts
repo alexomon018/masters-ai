@@ -1,9 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import type { Index } from "@upstash/vector";
 
 import {
 	filterResultsByScore,
 	formatRagHits,
 	rerankHits,
+	searchRagIndex,
 	stripCourseVersion,
 	topHitIsRelevant,
 	type RagHit,
@@ -172,6 +175,79 @@ describe("topHitIsRelevant", () => {
 			text: "Define rows and columns for your layout.",
 		});
 		expect(topHitIsRelevant("zzzzz", top)).toBe(true);
+	});
+});
+
+describe("searchRagIndex", () => {
+	const row = (over: {
+		score: number;
+		courseName: string;
+		text: string;
+	}) => ({
+		score: over.score,
+		metadata: {
+			courseName: over.courseName,
+			fileName: "f",
+			timestamp: "1:00",
+			teacherName: "Jem Young",
+		},
+		data: over.text,
+	});
+
+	const makeVector = (
+		impl: (args: { filter?: string }) => unknown[]
+	): Index => {
+		const query = vi.fn(async (args: { filter?: string }) => impl(args));
+		return { query } as unknown as Index;
+	};
+
+	it("retries without the filter when the course GLOB yields zero hits", async () => {
+		// The user types the marketing title; the index slug is "fullstack v3".
+		// The filtered query matches nothing, the unfiltered retry recovers it.
+		const vector = makeVector(({ filter }) =>
+			filter
+				? []
+				: [
+						row({
+							score: 0.83,
+							courseName: "fullstack v3",
+							text: "Full stack for front end engineers setup.",
+						}),
+					]
+		);
+
+		const hits = await searchRagIndex(
+			"full stack front end engineers",
+			vector,
+			{ courseName: "Full Stack for Front-End Engineers" }
+		);
+
+		expect(vector.query).toHaveBeenCalledTimes(2);
+		expect(hits).toHaveLength(1);
+		expect(hits[0]?.courseName).toBe("fullstack v3");
+	});
+
+	it("does not retry when the filtered query already returns hits", async () => {
+		const vector = makeVector(() => [
+			row({
+				score: 0.86,
+				courseName: "fullstack v3",
+				text: "Full stack for front end engineers setup.",
+			}),
+		]);
+
+		await searchRagIndex("fullstack", vector, { courseName: "Fullstack" });
+
+		expect(vector.query).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not retry when no filter was applied", async () => {
+		const vector = makeVector(() => []);
+
+		const hits = await searchRagIndex("anything", vector);
+
+		expect(vector.query).toHaveBeenCalledTimes(1);
+		expect(hits).toHaveLength(0);
 	});
 });
 

@@ -250,12 +250,11 @@ function toRagHits(results: VectorQueryResult[]): RagHit[] {
 	});
 }
 
-export async function searchRagIndex(
+async function queryAndRank(
 	query: string,
 	vector: Index,
-	filters?: RagFilters
+	filter?: string
 ): Promise<RagHit[]> {
-	const filter = buildMetadataFilter(filters);
 	const { data: results, error } = await tryCatch(
 		vector.query({
 			data: query,
@@ -290,6 +289,27 @@ export async function searchRagIndex(
 		return [];
 	}
 	return ranked.slice(0, MAX_RESULTS_AFTER_DEDUP);
+}
+
+export async function searchRagIndex(
+	query: string,
+	vector: Index,
+	filters?: RagFilters
+): Promise<RagHit[]> {
+	const filter = buildMetadataFilter(filters);
+	const hits = await queryAndRank(query, vector, filter);
+	if (hits.length > 0 || !filter) {
+		return hits;
+	}
+
+	// The metadata GLOB is an AND-of-all-tokens hard filter, so a course/teacher
+	// name that doesn't match the indexed slug zeroes recall even when the course
+	// is in the index — e.g. the user types "Full Stack for Front-End Engineers"
+	// but the slug is "fullstack v3". Retry without the filter so embedding
+	// similarity can recover the course on its own.
+	// eslint-disable-next-line no-console
+	console.log(`[ragSearch] filter '${filter}' yielded 0 hits; retrying unfiltered`);
+	return queryAndRank(query, vector);
 }
 
 export function formatRagHits(hits: RagHit[]): string {
