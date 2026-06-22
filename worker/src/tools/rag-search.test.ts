@@ -4,6 +4,7 @@ import {
 	filterResultsByScore,
 	formatRagHits,
 	rerankHits,
+	stripCourseVersion,
 	topHitIsRelevant,
 	type RagHit,
 } from "./rag-search";
@@ -190,5 +191,25 @@ describe("formatRagHits", () => {
 		expect(formatted).toContain("Source [1]");
 		expect(formatted).toContain("Answer using ONLY these transcript sources");
 		expect(formatted).not.toContain("Score:");
+	});
+});
+
+describe("stripCourseVersion", () => {
+	it("drops a trailing version so the course family still matches", () => {
+		expect(stripCourseVersion("Complete Intro to React, v9")).toBe(
+			"Complete Intro to React"
+		);
+		expect(stripCourseVersion("Complete Intro to React v9")).toBe(
+			"Complete Intro to React"
+		);
+		expect(stripCourseVersion("Complete Intro to React, version 9")).toBe(
+			"Complete Intro to React"
+		);
+		expect(stripCourseVersion("Web Components v.2")).toBe("Web Components");
+	});
+
+	it("leaves mid-title numbers and unversioned titles untouched", () => {
+		expect(stripCourseVersion("Vue 3 Fundamentals")).toBe("Vue 3 Fundamentals");
+		expect(stripCourseVersion("CSS Grid")).toBe("CSS Grid");
 	});
 });

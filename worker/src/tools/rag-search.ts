@@ -184,6 +184,17 @@ function toLooseGlob(value: string): string {
 	return `*${pattern}*`;
 }
 
+// Drop a trailing course-version token ("v9", "version 9", "v.9") before
+// building the GLOB. A user pasting "Complete Intro to React, v9" when the
+// index only holds v8 would otherwise produce a filter ending in `*[Vv]9*`
+// that matches zero rows — silently zeroing recall for the right course.
+// Matching the course family lets the embedding rank the closest version.
+export function stripCourseVersion(course: string): string {
+	return course
+		.replace(/[,\s]*\bv(?:ersion)?\.?\s*\d+\b\s*$/i, "")
+		.trim();
+}
+
 function buildMetadataFilter(filters?: RagFilters): string | undefined {
 	const teacher = filters?.teacherName?.trim();
 	const course = filters?.courseName?.trim();
@@ -195,7 +206,10 @@ function buildMetadataFilter(filters?: RagFilters): string | undefined {
 		);
 	}
 
-	if (course) return `courseName GLOB '${toLooseGlob(course)}'`;
+	if (course) {
+		const family = stripCourseVersion(course) || course;
+		return `courseName GLOB '${toLooseGlob(family)}'`;
+	}
 	if (teacher) return `teacherName GLOB '${toLooseGlob(teacher)}'`;
 	return undefined;
 }
