@@ -7,6 +7,7 @@ import {
 	maybeRewriteRagQuery,
 	type RagQueryRewriteContext
 } from "./rag-query-rewrite";
+import { normalizeInstructor, slugToTitle } from "../course-name";
 
 interface ChunkMetadata {
 	courseName: string;
@@ -35,10 +36,6 @@ type VectorQueryResult = {
 	metadata?: ChunkMetadata;
 	data?: unknown;
 };
-
-function formatCourseName(raw: string): string {
-	return raw.replace(/^\d{4}-\d{2}-\d{2}-/, "").replaceAll("-", " ");
-}
 
 export interface RagHit {
 	courseName: string;
@@ -237,12 +234,15 @@ function dedupResults(filtered: VectorQueryResult[]): VectorQueryResult[] {
 function toRagHits(results: VectorQueryResult[]): RagHit[] {
 	return results.map((row) => {
 		const meta = row.metadata;
+		const teacherName = meta?.teacherName
+			? normalizeInstructor(meta.teacherName)
+			: "Unknown instructor";
 		return {
 			courseName: meta?.courseName
-				? formatCourseName(meta.courseName)
+				? slugToTitle(meta.courseName, teacherName)
 				: "Unknown course",
 			fileName: meta?.fileName ?? "",
-			teacherName: meta?.teacherName || "Unknown instructor",
+			teacherName,
 			timestamp: meta?.timestamp || "",
 			score: row.score,
 			text: typeof row.data === "string" ? row.data : ""

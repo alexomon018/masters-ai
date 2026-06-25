@@ -224,7 +224,8 @@ describe("searchRagIndex", () => {
 
 		expect(vector.query).toHaveBeenCalledTimes(2);
 		expect(hits).toHaveLength(1);
-		expect(hits[0]?.courseName).toBe("fullstack v3");
+		// slugToTitle normalizes the raw slug casing for the source header.
+		expect(hits[0]?.courseName).toBe("Fullstack v3");
 	});
 
 	it("does not retry when the filtered query already returns hits", async () => {
