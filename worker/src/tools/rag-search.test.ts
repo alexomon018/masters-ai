@@ -188,6 +188,7 @@ describe("searchRagIndex", () => {
 		metadata: {
 			courseName: over.courseName,
 			fileName: "f",
+			chunkIndex: 0,
 			timestamp: "1:00",
 			teacherName: "Jem Young",
 		},
@@ -202,15 +203,15 @@ describe("searchRagIndex", () => {
 	};
 
 	it("retries without the filter when the course GLOB yields zero hits", async () => {
-		// The user types the marketing title; the index slug is "fullstack v3".
-		// The filtered query matches nothing, the unfiltered retry recovers it.
+		// The user types a slightly different title than the indexed one. The
+		// filtered query matches nothing, the unfiltered retry recovers it.
 		const vector = makeVector(({ filter }) =>
 			filter
 				? []
 				: [
 						row({
 							score: 0.83,
-							courseName: "fullstack v3",
+							courseName: "Full Stack for Front-End Engineers, v3",
 							text: "Full stack for front end engineers setup.",
 						}),
 					]
@@ -219,13 +220,13 @@ describe("searchRagIndex", () => {
 		const hits = await searchRagIndex(
 			"full stack front end engineers",
 			vector,
-			{ courseName: "Full Stack for Front-End Engineers" }
+			{ courseName: "Full Stack for Front End Engineers" }
 		);
 
 		expect(vector.query).toHaveBeenCalledTimes(2);
 		expect(hits).toHaveLength(1);
-		// slugToTitle normalizes the raw slug casing for the source header.
-		expect(hits[0]?.courseName).toBe("Fullstack v3");
+		// v2 metadata is already the clean citable title, used verbatim.
+		expect(hits[0]?.courseName).toBe("Full Stack for Front-End Engineers, v3");
 	});
 
 	it("does not retry when the filtered query already returns hits", async () => {

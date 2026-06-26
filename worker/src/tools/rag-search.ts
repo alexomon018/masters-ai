@@ -7,7 +7,6 @@ import {
 	maybeRewriteRagQuery,
 	type RagQueryRewriteContext
 } from "./rag-query-rewrite";
-import { normalizeInstructor, slugToTitle } from "../course-name";
 
 interface ChunkMetadata {
 	courseName: string;
@@ -232,35 +231,16 @@ function dedupResults(filtered: VectorQueryResult[]): VectorQueryResult[] {
 	return [...seen.values()].sort((a, b) => b.score - a.score);
 }
 
-// The v2 index stores a clean, citable course title and a normalized instructor,
-// flagged by the presence of `chunkIndex`/`courseDir`. For those rows trust the
-// metadata as-is; for legacy rows fall back to slug/instructor normalization.
-function isCleanMetadata(meta: ChunkMetadata | undefined): boolean {
-	return Boolean(meta && (meta.chunkIndex !== undefined || meta.courseDir));
-}
-
+// The v2 index stores a clean, citable course title and a normalized instructor
+// in metadata, so the hit is built directly from it — no slug/instructor
+// normalization needed.
 function toRagHits(results: VectorQueryResult[]): RagHit[] {
 	return results.map((row) => {
 		const meta = row.metadata;
-		if (isCleanMetadata(meta)) {
-			return {
-				courseName: meta?.courseName || "Unknown course",
-				fileName: meta?.fileName ?? "",
-				teacherName: meta?.teacherName || "Unknown instructor",
-				timestamp: meta?.timestamp || "",
-				score: row.score,
-				text: typeof row.data === "string" ? row.data : ""
-			};
-		}
-		const teacherName = meta?.teacherName
-			? normalizeInstructor(meta.teacherName)
-			: "Unknown instructor";
 		return {
-			courseName: meta?.courseName
-				? slugToTitle(meta.courseName, teacherName)
-				: "Unknown course",
+			courseName: meta?.courseName || "Unknown course",
 			fileName: meta?.fileName ?? "",
-			teacherName,
+			teacherName: meta?.teacherName || "Unknown instructor",
 			timestamp: meta?.timestamp || "",
 			score: row.score,
 			text: typeof row.data === "string" ? row.data : ""

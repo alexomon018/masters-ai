@@ -1,22 +1,14 @@
 import { Index } from "@upstash/vector";
-import {
-	normalizeInstructor,
-	slugToTitle,
-	releaseDate
-} from "../src/course-name";
 
 const PAGE_SIZE = 1000;
 
+// The v2 index stores the clean citable course title in `courseName`, the
+// normalized instructor in `teacherName`, and the release date as a dedicated
+// `releaseDate` field — so the catalog rows are built directly from metadata.
 interface ChunkMetadata {
 	courseName?: string;
 	teacherName?: string;
-	// Present on the v2 index (chunked re-ingest): courseName is already the
-	// clean citable title and the release date is a dedicated field rather than a
-	// prefix of the slug. `chunkIndex`/`courseDir` flag a v2 row.
 	releaseDate?: string;
-	version?: string;
-	chunkIndex?: number;
-	courseDir?: string;
 }
 
 interface CoursePair {
@@ -28,10 +20,6 @@ interface CoursePair {
 
 function sqlString(value: string): string {
 	return `'${value.replaceAll("'", "''")}'`;
-}
-
-function isCleanMetadata(meta: ChunkMetadata | undefined): boolean {
-	return Boolean(meta && (meta.chunkIndex !== undefined || meta.courseDir));
 }
 
 async function collectCoursePairs(
@@ -50,28 +38,15 @@ async function collectCoursePairs(
 
 		for (const vec of page.vectors) {
 			const meta = vec.metadata as ChunkMetadata | undefined;
-			const rawTeacher = meta?.teacherName?.trim();
+			const teacherName = meta?.teacherName?.trim();
 			const courseName = meta?.courseName?.trim();
-			if (!rawTeacher || !courseName) continue;
-
-			const teacherName = normalizeInstructor(rawTeacher);
-
-			// On the v2 index courseName is the clean title and releaseDate is a
-			// dedicated field. On the legacy index courseName is a dated slug, so
-			// derive the title and date the old way.
-			const clean = isCleanMetadata(meta);
-			const courseTitle = clean
-				? courseName
-				: slugToTitle(courseName, teacherName);
-			const releasedAt = clean
-				? (meta?.releaseDate?.trim() ?? "")
-				: releaseDate(courseName);
+			if (!teacherName || !courseName) continue;
 
 			pairs.set(`${teacherName}::${courseName}`, {
 				teacherName,
 				courseName,
-				courseTitle,
-				releasedAt
+				courseTitle: courseName,
+				releasedAt: meta?.releaseDate?.trim() ?? ""
 			});
 		}
 
