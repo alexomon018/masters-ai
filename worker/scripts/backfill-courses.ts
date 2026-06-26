@@ -1,15 +1,21 @@
 import { Index } from "@upstash/vector";
-import {
-	normalizeInstructor,
-	slugToTitle,
-	releaseDate
-} from "../src/course-name";
 
 const PAGE_SIZE = 1000;
 
+// The v2 index stores the clean citable course title in `courseName`, the
+// normalized instructor in `teacherName`, and the release date as a dedicated
+// `releaseDate` field — so the catalog rows are built directly from metadata.
 interface ChunkMetadata {
 	courseName?: string;
 	teacherName?: string;
+	releaseDate?: string;
+}
+
+interface CoursePair {
+	teacherName: string;
+	courseName: string;
+	courseTitle: string;
+	releasedAt: string;
 }
 
 function sqlString(value: string): string {
@@ -18,8 +24,8 @@ function sqlString(value: string): string {
 
 async function collectCoursePairs(
 	index: Index
-): Promise<Map<string, { teacherName: string; courseName: string }>> {
-	const pairs = new Map<string, { teacherName: string; courseName: string }>();
+): Promise<Map<string, CoursePair>> {
+	const pairs = new Map<string, CoursePair>();
 	let cursor = "";
 
 	do {
@@ -32,11 +38,16 @@ async function collectCoursePairs(
 
 		for (const vec of page.vectors) {
 			const meta = vec.metadata as ChunkMetadata | undefined;
-			const rawTeacher = meta?.teacherName?.trim();
+			const teacherName = meta?.teacherName?.trim();
 			const courseName = meta?.courseName?.trim();
-			if (!rawTeacher || !courseName) continue;
-			const teacherName = normalizeInstructor(rawTeacher);
-			pairs.set(`${teacherName}::${courseName}`, { teacherName, courseName });
+			if (!teacherName || !courseName) continue;
+
+			pairs.set(`${teacherName}::${courseName}`, {
+				teacherName,
+				courseName,
+				courseTitle: courseName,
+				releasedAt: meta?.releaseDate?.trim() ?? ""
+			});
 		}
 
 		cursor = page.nextCursor;
@@ -45,17 +56,26 @@ async function collectCoursePairs(
 	return pairs;
 }
 
-async function main(): Promise<void> {
+function vectorCreds(): { url: string; token: string } {
+	const v2Url = process.env.UPSTASH_VECTOR_REST_URL_V2?.trim();
+	const v2Token = process.env.UPSTASH_VECTOR_REST_TOKEN_V2?.trim();
+	if (v2Url && v2Token) {
+		console.error("[backfill-courses] using v2 vector index");
+		return { url: v2Url, token: v2Token };
+	}
 	const url = process.env.UPSTASH_VECTOR_REST_URL;
 	const token = process.env.UPSTASH_VECTOR_REST_TOKEN;
 	if (!url || !token) {
 		console.error(
-			"Missing UPSTASH_VECTOR_REST_URL / UPSTASH_VECTOR_REST_TOKEN. Load worker/.dev.vars."
+			"Missing vector creds. Set UPSTASH_VECTOR_REST_URL(_V2)/_TOKEN(_V2). Load worker/.dev.vars and/or .env."
 		);
 		process.exit(1);
 	}
+	return { url, token };
+}
 
-	const index = new Index({ url, token });
+async function main(): Promise<void> {
+	const index = new Index(vectorCreds());
 	const pairs = await collectCoursePairs(index);
 
 	const rows = [...pairs.values()].sort(
@@ -76,7 +96,7 @@ async function main(): Promise<void> {
 		"DELETE FROM courses;",
 		...rows.map(
 			(r) =>
-				`INSERT INTO courses (instructor, course_name, course_title, released_at) VALUES (${sqlString(r.teacherName)}, ${sqlString(r.courseName)}, ${sqlString(slugToTitle(r.courseName, r.teacherName))}, ${sqlString(releaseDate(r.courseName))});`
+				`INSERT INTO courses (instructor, course_name, course_title, released_at) VALUES (${sqlString(r.teacherName)}, ${sqlString(r.courseName)}, ${sqlString(r.courseTitle)}, ${sqlString(r.releasedAt)});`
 		)
 	];
 
