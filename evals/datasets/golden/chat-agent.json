@@ -103,8 +103,8 @@
 	},
 	{
 		"id": "gold-chat-node-streams",
-		"difficulty": "medium",
-		"category": "domain",
+		"difficulty": "hard",
+		"category": "edge",
 		"messages": [
 			{
 				"role": "user",
@@ -112,17 +112,11 @@
 			}
 		],
 		"expectsRagCall": true,
-		"expectedCourses": [
-			"node js"
-		],
-		"expectedKeywords": [
-			"stream",
-			"backpressure"
-		],
-		"expectedAnswer": "Backpressure happens when a writable stream's buffer fills and the readable should pause until it drains. pipe() coordinates pausing and resuming between readable and writable streams.",
 		"expectedCharacteristics": [
-			"Calls ragSearch",
-			"Explains backpressure or pausing/resuming streams in Node"
+			"Calls ragSearch before answering",
+			"Acknowledges the Frontend Masters courses do not specifically cover Node.js stream backpressure (retrieval is tangential)",
+			"Does not fabricate course-specific backpressure mechanics (write() returning false, the 'drain' event, pipe() coordination) and attribute them to a course",
+			"If it gives general backpressure guidance, clearly frames it as general knowledge not drawn from a specific Frontend Masters course"
 		]
 	},
 	{
@@ -336,11 +330,11 @@
 		"messages": [
 			{
 				"role": "user",
-				"content": "How do Node.js streams handle backpressure?"
+				"content": "How do modules work in Node.js?"
 			},
 			{
 				"role": "assistant",
-				"content": "Backpressure happens when a writable stream's buffer fills, so the readable should pause until it drains. pipe() coordinates pausing and resuming between streams."
+				"content": "In Node.js each file is a module, and you share code by exporting from one file and importing it into another. Node supports both CommonJS (require / module.exports) and ES modules (import / export)."
 			},
 			{
 				"role": "user",
@@ -350,7 +344,7 @@
 		"expectsRagCall": false,
 		"expectedCharacteristics": [
 			"Does not call ragSearch on the casual acknowledgment",
-			"Brief acknowledgment without re-explaining backpressure",
+			"Brief acknowledgment without re-explaining Node modules",
 			"Routing flips off after the prior domain turn"
 		]
 	},
@@ -361,15 +355,15 @@
 		"messages": [
 			{
 				"role": "user",
-				"content": "Give me an overview of Node.js streams."
+				"content": "Give me an overview of how modules work in Node.js."
 			},
 			{
 				"role": "assistant",
-				"content": "Node streams come in readable, writable, duplex, and transform flavors, and you pipe data between them. Backpressure keeps fast producers from overwhelming slow consumers."
+				"content": "Node.js splits code into modules: each file is its own module, and you share code between them by exporting and importing. Node supports the older CommonJS style and the newer ES modules style."
 			},
 			{
 				"role": "user",
-				"content": "focus on just the backpressure part"
+				"content": "focus on just the CommonJS vs ES modules difference"
 			}
 		],
 		"expectsRagCall": true,
@@ -377,14 +371,15 @@
 			"node js"
 		],
 		"expectedKeywords": [
-			"backpressure",
-			"stream"
+			"module",
+			"require"
 		],
-		"expectedAnswer": "Backpressure is when a writable stream can't consume data as fast as the readable produces it; write() returning false signals the producer to pause until the 'drain' event fires, and pipe() handles this pausing and resuming automatically.",
+		"expectedAnswer": "CommonJS uses require() to import and module.exports to export, while ES modules use import and export syntax. Node supports both, and the module system used is influenced by the package.json type field or the file extension.",
 		"expectedCharacteristics": [
-			"Narrows to backpressure from the broader streams context",
-			"Calls ragSearch for backpressure detail",
-			"Does not re-dump the full streams overview"
+			"Narrows to the CommonJS vs ES modules distinction from the broader modules context",
+			"Calls ragSearch for the module-system detail",
+			"Does not re-dump the full modules overview",
+			"Answer grounded in retrieved Frontend Masters transcript content"
 		]
 	},
 	{
@@ -657,7 +652,7 @@
 			},
 			{
 				"role": "user",
-				"content": "switching gears - how does Node.js handle stream backpressure?"
+				"content": "switching gears - how do modules work in Node.js?"
 			}
 		],
 		"expectsRagCall": true,
@@ -665,14 +660,15 @@
 			"node js"
 		],
 		"expectedKeywords": [
-			"backpressure",
-			"stream"
+			"module",
+			"require"
 		],
-		"expectedAnswer": "When a writable stream buffer fills, the readable should pause until the writable drains, and pipe coordinates pausing and resuming.",
+		"expectedAnswer": "In Node.js each file is a module, and you share code across files by exporting from one module and importing into another. Node supports CommonJS (require / module.exports) and ES modules (import / export).",
 		"expectedCharacteristics": [
 			"Recognizes the topic switch away from closures",
-			"Calls ragSearch for Node.js stream backpressure",
-			"Does not keep answering about closures"
+			"Calls ragSearch for Node.js modules",
+			"Does not keep answering about closures",
+			"Answer grounded in retrieved Frontend Masters transcript content"
 		]
 	},
 	{
@@ -744,6 +740,386 @@
 			"Explains client components grounded in the retrieved transcript chunks",
 			"Does not assert claims (e.g. 'use client is a React thing not a Next.js thing') that the transcript does not actually support",
 			"Cites the next js course and Scott Moss verbatim"
+		]
+	},
+	{
+		"id": "gold-chat-css-box-model",
+		"difficulty": "simple",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is the CSS box model?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"css foundations"
+		],
+		"expectedInstructor": "Emma Bostian",
+		"expectedKeywords": [
+			"box",
+			"padding"
+		],
+		"expectedAnswer": "The CSS box model treats every element as a box made up of the content, padding around the content, a border, and a margin outside the border.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains the content/padding/border/margin box model",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites a Frontend Masters course or instructor when using FM content"
+		]
+	},
+	{
+		"id": "gold-chat-tailwind-utility",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How does Tailwind's utility-first approach to styling work?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"tailwind"
+		],
+		"expectedInstructor": "Steve Kinney",
+		"expectedKeywords": [
+			"utility",
+			"class"
+		],
+		"expectedAnswer": "Tailwind is a utility-first CSS framework: instead of writing custom CSS, you compose small single-purpose utility classes directly in your markup to build a design.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains composing small utility classes rather than writing custom CSS",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites the Tailwind CSS course or Steve Kinney"
+		]
+	},
+	{
+		"id": "gold-chat-container-image-layers",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is a container image and how do layers work?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"containers"
+		],
+		"expectedTopCourse": "containers",
+		"expectedInstructor": "Brian Holt",
+		"expectedKeywords": [
+			"image",
+			"layer"
+		],
+		"expectedAnswer": "A container image is a packaged, immutable snapshot of an application and its dependencies. Images are built up from layers, where each instruction adds a layer, and layers can be cached and shared between images.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains container images and layering",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites the Complete Intro to Containers course or Brian Holt"
+		]
+	},
+	{
+		"id": "gold-chat-git-rebase-merge",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What's the difference between git rebase and git merge?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"git"
+		],
+		"expectedInstructor": "The Primeagen",
+		"expectedKeywords": [
+			"rebase",
+			"merge"
+		],
+		"expectedAnswer": "Merge combines two branches by creating a merge commit that ties their histories together, preserving the branching shape. Rebase instead replays your commits on top of another branch, producing a linear history.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Contrasts rebase (replaying commits, linear history) with merge (merge commit)",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites the Git course or instructor"
+		]
+	},
+	{
+		"id": "gold-chat-jwt-auth",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How does authentication with JSON Web Tokens work?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedKeywords": [
+			"token"
+		],
+		"expectedAnswer": "With JWT authentication, the server issues a signed token after a user logs in. The client sends that token on subsequent requests, and the server verifies the signature to authenticate the request without storing session state.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains issuing and verifying a signed token for authentication",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites a Frontend Masters course or instructor when using FM content"
+		]
+	},
+	{
+		"id": "gold-chat-vitest-unit-test",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I write a unit test with Vitest?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedKeywords": [
+			"test"
+		],
+		"expectedAnswer": "In Vitest you write tests using describe and it/test blocks and make assertions with expect, similar to Jest, then run them with the Vitest test runner.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains writing tests with describe/it and expect assertions",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites a Frontend Masters course or instructor when using FM content"
+		]
+	},
+	{
+		"id": "gold-chat-react-usestate",
+		"difficulty": "simple",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What does the useState hook do in React?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"react"
+		],
+		"expectedKeywords": [
+			"state"
+		],
+		"expectedAnswer": "useState lets a function component hold state. It returns the current state value and a setter function, and calling the setter updates the state and re-renders the component.",
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains useState returning a value and a setter that triggers a re-render",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites a React course or instructor"
+		]
+	},
+	{
+		"id": "gold-chat-kevin-powell-scoped",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "In Kevin Powell's CSS course, what does he teach about modern CSS layout?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"pro css",
+			"professional css"
+		],
+		"expectedInstructor": "Kevin Powell",
+		"expectedCharacteristics": [
+			"Calls ragSearch scoped to Kevin Powell or the Professional CSS course",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites the Professional CSS course or Kevin Powell verbatim",
+			"Does not fabricate topics the transcript does not cover"
+		]
+	},
+	{
+		"id": "gold-chat-version-react-v9",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "In the Complete Intro to React v9, what app does Brian Holt build?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"react"
+		],
+		"expectedInstructor": "Brian Holt",
+		"expectedCharacteristics": [
+			"Calls ragSearch, ideally scoped to the React course or Brian Holt",
+			"Answer grounded in the retrieved transcript chunks",
+			"Cites the Complete Intro to React course and Brian Holt verbatim",
+			"If the retrieved version differs from v9, tells the user which version was actually found rather than asserting v9 blindly"
+		]
+	},
+	{
+		"id": "gold-chat-abstain-pytorch",
+		"difficulty": "edge",
+		"category": "edge",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I train a deep neural network from scratch in PyTorch?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Recognizes that the Frontend Masters catalog does not cover training neural networks in PyTorch",
+			"Does not fabricate a Frontend Masters course or instructor for PyTorch model training",
+			"Either abstains or clearly frames any guidance as general knowledge not from a specific course"
+		]
+	},
+	{
+		"id": "gold-chat-abstain-quantum",
+		"difficulty": "edge",
+		"category": "edge",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Explain how quantum computing qubits and superposition work."
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Recognizes the Frontend Masters catalog does not cover quantum computing",
+			"Does not fabricate a Frontend Masters course or instructor for quantum computing",
+			"Either abstains or clearly frames any guidance as general knowledge not from a specific course"
+		]
+	},
+	{
+		"id": "gold-chat-multiturn-css-then-react",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is the CSS box model?"
+			},
+			{
+				"role": "assistant",
+				"content": "The CSS box model treats every element as a box of content, padding, border, and margin."
+			},
+			{
+				"role": "user",
+				"content": "different topic now - what does the useState hook do in React?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"react"
+		],
+		"expectedKeywords": [
+			"state"
+		],
+		"expectedAnswer": "useState lets a function component hold state. It returns the current value and a setter, and calling the setter re-renders the component with the new state.",
+		"expectedCharacteristics": [
+			"Recognizes the topic switch from CSS to React",
+			"Calls ragSearch for the React useState question",
+			"Does not keep answering about the CSS box model",
+			"Answer grounded in the retrieved transcript chunks"
+		]
+	},
+	{
+		"id": "gold-chat-pronoun-tailwind",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is Tailwind CSS?"
+			},
+			{
+				"role": "assistant",
+				"content": "Tailwind is a utility-first CSS framework where you compose small utility classes in your markup instead of writing custom CSS."
+			},
+			{
+				"role": "user",
+				"content": "why would I use it instead of writing my own CSS?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"tailwind"
+		],
+		"expectedInstructor": "Steve Kinney",
+		"expectedCharacteristics": [
+			"Resolves the pronoun to Tailwind from the prior turn",
+			"Answers the tradeoffs question grounded in retrieved transcript chunks",
+			"Cites the Tailwind CSS course or Steve Kinney",
+			"Does not fabricate benefits the transcript does not mention"
+		]
+	},
+	{
+		"id": "gold-chat-rephrase-simpler",
+		"difficulty": "medium",
+		"category": "routing",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is the CSS box model?"
+			},
+			{
+				"role": "assistant",
+				"content": "The CSS box model treats every element as a box made up of content, padding, a border, and a margin. Padding is inside the border; margin is outside it."
+			},
+			{
+				"role": "user",
+				"content": "can you say that more simply?"
+			}
+		],
+		"expectsRagCall": false,
+		"expectedCharacteristics": [
+			"Does not call ragSearch again on a pure rephrase request",
+			"Restates the previous box-model answer in simpler terms",
+			"Does not introduce new course claims not already established"
+		]
+	},
+	{
+		"id": "gold-chat-thanks-then-new",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What is the CSS box model?"
+			},
+			{
+				"role": "assistant",
+				"content": "The CSS box model treats every element as a box of content, padding, border, and margin."
+			},
+			{
+				"role": "user",
+				"content": "thanks! now explain how git rebase differs from merge"
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCourses": [
+			"git"
+		],
+		"expectedKeywords": [
+			"rebase",
+			"merge"
+		],
+		"expectedCharacteristics": [
+			"Treats the turn as a new substantive request despite the leading 'thanks'",
+			"Calls ragSearch for the git rebase vs merge question",
+			"Contrasts rebase and merge grounded in retrieved transcript chunks",
+			"Does not keep answering about the CSS box model"
 		]
 	}
 ]
