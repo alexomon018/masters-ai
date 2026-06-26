@@ -674,5 +674,76 @@
 			"Calls ragSearch for Node.js stream backpressure",
 			"Does not keep answering about closures"
 		]
+	},
+	{
+		"id": "gold-chat-faithful-thin-coverage",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "How do I improve performance of React applications?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectsSingleRagCall": true,
+		"expectedCourses": [
+			"intermediate react"
+		],
+		"expectedKeywords": [
+			"performance"
+		],
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Only attributes performance claims to the course that appear in the retrieved transcript chunks",
+			"Does not present a synthesized best-practice checklist or numbered steps as if it came from the course",
+			"Separates any general guidance from cited course content, or labels it as not from the course",
+			"Cites the course and instructor names verbatim without inventing additional techniques"
+		]
+	},
+	{
+		"id": "gold-chat-faithful-tangential-match",
+		"difficulty": "hard",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Find me something about coding interview prep."
+			}
+		],
+		"expectsRagCall": true,
+		"expectedCharacteristics": [
+			"Does not inflate a course that only mentions interviews in passing into a strong interview-prep recommendation",
+			"Acknowledges when retrieved transcripts only touch interview prep incidentally",
+			"Offers to search a different way when coverage is thin rather than overstating relevance",
+			"Only names courses and instructors returned by a tool, verbatim"
+		]
+	},
+	{
+		"id": "gold-chat-faithful-no-editorializing",
+		"difficulty": "medium",
+		"category": "domain",
+		"messages": [
+			{
+				"role": "user",
+				"content": "What are client components in Next.js?"
+			}
+		],
+		"expectsRagCall": true,
+		"expectsSingleRagCall": true,
+		"expectedCourses": [
+			"next js"
+		],
+		"expectedInstructor": "Scott Moss",
+		"expectedKeywords": [
+			"use client",
+			"client"
+		],
+		"expectedCharacteristics": [
+			"Calls ragSearch before answering",
+			"Explains client components grounded in the retrieved transcript chunks",
+			"Does not assert claims (e.g. 'use client is a React thing not a Next.js thing') that the transcript does not actually support",
+			"Cites the next js course and Scott Moss verbatim"
+		]
 	}
 ]
