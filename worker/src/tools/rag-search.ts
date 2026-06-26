@@ -14,6 +14,10 @@ interface ChunkMetadata {
 	fileName: string;
 	timestamp: string;
 	teacherName: string;
+	courseDir?: string;
+	version?: string;
+	releaseDate?: string;
+	chunkIndex?: number;
 }
 
 export const SCORE_THRESHOLD = 0.7;
@@ -24,7 +28,8 @@ export const FALLBACK_MAX_RESULTS = 3;
 // rank ~17 behind higher-cosine React/Java hits). Output is still trimmed to
 // MAX_RESULTS_AFTER_DEDUP, so the model sees the same amount either way.
 export const TOP_K = 30;
-export const MAX_RESULTS_AFTER_DEDUP = 5;
+
+export const MAX_RESULTS_AFTER_DEDUP = 7;
 // Cosine score that is trustworthy on its own, even without lexical overlap.
 // Below this, a top hit must share at least one query token to be returned —
 // otherwise it is almost certainly an embedding artifact (every chunk scores
@@ -143,9 +148,7 @@ export function topHitIsRelevant(
 	const queryTokens = tokenize(query);
 	if (queryTokens.length === 0) return true;
 
-	const haystack = tokenSet(
-		`${top.courseName} ${top.teacherName} ${top.text}`
-	);
+	const haystack = tokenSet(`${top.courseName} ${top.teacherName} ${top.text}`);
 	return queryTokens.some((token) => haystack.has(token));
 }
 
@@ -187,9 +190,7 @@ function toLooseGlob(value: string): string {
 // that matches zero rows — silently zeroing recall for the right course.
 // Matching the course family lets the embedding rank the closest version.
 export function stripCourseVersion(course: string): string {
-	return course
-		.replace(/[,\s]*\bv(?:ersion)?\.?\s*\d+\b\s*$/i, "")
-		.trim();
+	return course.replace(/[,\s]*\bv(?:ersion)?\.?\s*\d+\b\s*$/i, "").trim();
 }
 
 function buildMetadataFilter(filters?: RagFilters): string | undefined {
@@ -214,13 +215,13 @@ function buildMetadataFilter(filters?: RagFilters): string | undefined {
 function dedupResults(filtered: VectorQueryResult[]): VectorQueryResult[] {
 	const seen = filtered.reduce((map, row, index) => {
 		const meta = row.metadata;
-		// Dedup on course+file when present, but rows with missing metadata must
-		// stay distinct (collapsing them on `undefined::undefined` drops recall
-		// before the rerank). Fall back to the row content / position so each
-		// metadata-less hit keeps its own key.
+		// Dedup on course+file+chunk. The v2 index splits a file into many chunks,
+		// so the key MUST include chunkIndex or adjacent chunks from one file
+		// collapse to a single hit (dropping recall). Rows with missing metadata
+		// stay distinct via row content / position so each keeps its own key.
 		const key =
 			meta?.courseName || meta?.fileName
-				? `${meta?.courseName ?? ""}::${meta?.fileName ?? ""}`
+				? `${meta?.courseName ?? ""}::${meta?.fileName ?? ""}::${meta?.chunkIndex ?? ""}`
 				: `__row_${typeof row.data === "string" ? row.data : index}`;
 		if (!map.has(key) || row.score > (map.get(key)!.score ?? 0)) {
 			map.set(key, row);
@@ -231,9 +232,26 @@ function dedupResults(filtered: VectorQueryResult[]): VectorQueryResult[] {
 	return [...seen.values()].sort((a, b) => b.score - a.score);
 }
 
+// The v2 index stores a clean, citable course title and a normalized instructor,
+// flagged by the presence of `chunkIndex`/`courseDir`. For those rows trust the
+// metadata as-is; for legacy rows fall back to slug/instructor normalization.
+function isCleanMetadata(meta: ChunkMetadata | undefined): boolean {
+	return Boolean(meta && (meta.chunkIndex !== undefined || meta.courseDir));
+}
+
 function toRagHits(results: VectorQueryResult[]): RagHit[] {
 	return results.map((row) => {
 		const meta = row.metadata;
+		if (isCleanMetadata(meta)) {
+			return {
+				courseName: meta?.courseName || "Unknown course",
+				fileName: meta?.fileName ?? "",
+				teacherName: meta?.teacherName || "Unknown instructor",
+				timestamp: meta?.timestamp || "",
+				score: row.score,
+				text: typeof row.data === "string" ? row.data : ""
+			};
+		}
 		const teacherName = meta?.teacherName
 			? normalizeInstructor(meta.teacherName)
 			: "Unknown instructor";
@@ -308,7 +326,9 @@ export async function searchRagIndex(
 	// but the slug is "fullstack v3". Retry without the filter so embedding
 	// similarity can recover the course on its own.
 	// eslint-disable-next-line no-console
-	console.log(`[ragSearch] filter '${filter}' yielded 0 hits; retrying unfiltered`);
+	console.log(
+		`[ragSearch] filter '${filter}' yielded 0 hits; retrying unfiltered`
+	);
 	return queryAndRank(query, vector);
 }
 

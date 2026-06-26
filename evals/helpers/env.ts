@@ -21,6 +21,16 @@ function required(name: string): string {
 	return value;
 }
 
+function vectorCreds(): { url: string; token: string } {
+	const v2Url = process.env.UPSTASH_VECTOR_REST_URL_V2?.trim();
+	const v2Token = process.env.UPSTASH_VECTOR_REST_TOKEN_V2?.trim();
+	if (v2Url && v2Token) return { url: v2Url, token: v2Token };
+	return {
+		url: required("UPSTASH_VECTOR_REST_URL"),
+		token: required("UPSTASH_VECTOR_REST_TOKEN")
+	};
+}
+
 export function modelEnv(): Env {
 	return {
 		OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
@@ -34,12 +44,13 @@ export async function toolEnv(): Promise<ToolEnv> {
 	if (!toolEnvPromise) {
 		toolEnvPromise = (async () => {
 			const catalog = await getEvalCatalogDb();
+			const vector = vectorCreds();
 			return {
-				UPSTASH_VECTOR_REST_URL: required("UPSTASH_VECTOR_REST_URL"),
-				UPSTASH_VECTOR_REST_TOKEN: required("UPSTASH_VECTOR_REST_TOKEN"),
+				UPSTASH_VECTOR_REST_URL: vector.url,
+				UPSTASH_VECTOR_REST_TOKEN: vector.token,
 				THREAD_INDEX: catalog,
 				ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-				RAG_QUERY_REWRITE: process.env.RAG_QUERY_REWRITE,
+				RAG_QUERY_REWRITE: process.env.RAG_QUERY_REWRITE
 			};
 		})().catch((err) => {
 			toolEnvPromise = null;
@@ -50,10 +61,7 @@ export async function toolEnv(): Promise<ToolEnv> {
 }
 
 export function vectorClient(): Index {
-	return new Index({
-		url: required("UPSTASH_VECTOR_REST_URL"),
-		token: required("UPSTASH_VECTOR_REST_TOKEN")
-	});
+	return new Index(vectorCreds());
 }
 
 export function model(modelId: LLMModel): LanguageModel {
