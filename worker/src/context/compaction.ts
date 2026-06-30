@@ -16,10 +16,30 @@ export type CompactGenerateTextFn = (args: {
 // A summary persisted in the DO across turns. `coveredCount` is how many of the
 // current turn's model messages (from the front) the summary already accounts
 // for, so the next turn only has to summarize what was added on top instead of
-// re-summarizing the whole tail every time.
+// re-summarizing the whole tail every time. `anchor` fingerprints the last
+// summarized message so reuse can be rejected if head-truncation
+// (maxPersistedMessages) shifted the prefix out from under `coveredCount`.
 export interface PersistedSummary {
 	coveredCount: number;
 	text: string;
+	anchor?: string;
+}
+
+// Fingerprint of a single message, stable across turns as long as the message
+// itself is retained. Used as the summary's anchor; a mismatch means the
+// summarized prefix was evicted and the summary can no longer be trusted.
+function fingerprintMessage(m: ModelMessage): string {
+	return `${m.role}|${messageToText(m).slice(0, 200)}`;
+}
+
+// Anchor for a summary covering the first `coveredCount` messages: the
+// fingerprint of the last message it summarized. Exported for tests.
+export function computeSummaryAnchor(
+	messages: ModelMessage[],
+	coveredCount: number
+): string | undefined {
+	if (coveredCount <= 0 || coveredCount > messages.length) return undefined;
+	return fingerprintMessage(messages[coveredCount - 1]);
 }
 
 interface CompactOptions {
@@ -114,10 +134,15 @@ export async function compactHistory(
 	const recentMessages = messages.slice(olderCount);
 
 	// Reuse the prior summary only when it still describes a valid prefix of the
-	// current history. If the persisted history was truncated (maxPersistedMessages)
-	// the stored coveredCount can exceed what remains, so fall back to a full
-	// recompute rather than trust a stale boundary.
-	const canReuse = prior !== null && prior.coveredCount <= olderCount;
+	// current history. coveredCount alone is not enough: head-truncation
+	// (maxPersistedMessages) shifts the prefix without changing counts, so also
+	// require the boundary message to still match the stored anchor. Any
+	// mismatch (or a pre-anchor summary) forces a safe full recompute.
+	const canReuse =
+		prior !== null &&
+		prior.coveredCount <= olderCount &&
+		prior.anchor !== undefined &&
+		computeSummaryAnchor(olderMessages, prior.coveredCount) === prior.anchor;
 	const newOlder = canReuse
 		? olderMessages.slice(prior.coveredCount)
 		: olderMessages;
@@ -143,6 +168,10 @@ export async function compactHistory(
 
 	return {
 		messages: [summaryMessage(summaryText), ...recentMessages],
-		summary: { coveredCount: olderCount, text: summaryText }
+		summary: {
+			coveredCount: olderCount,
+			text: summaryText,
+			anchor: computeSummaryAnchor(olderMessages, olderCount)
+		}
 	};
 }

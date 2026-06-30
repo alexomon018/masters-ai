@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { LanguageModel, ModelMessage } from "ai";
-import { compactHistory, type CompactGenerateTextFn } from "./compaction";
+import {
+	compactHistory,
+	computeSummaryAnchor,
+	type CompactGenerateTextFn
+} from "./compaction";
 
 const model = {} as LanguageModel;
 
@@ -39,7 +43,11 @@ describe("compactHistory", () => {
 		// One system summary + last 4 verbatim.
 		expect(result.messages).toHaveLength(5);
 		expect(result.messages[0].role).toBe("system");
-		expect(result.summary).toEqual({ coveredCount: 6, text: "fresh summary" });
+		expect(result.summary).toMatchObject({
+			coveredCount: 6,
+			text: "fresh summary"
+		});
+		expect(result.summary?.anchor).toBe(computeSummaryAnchor(messages, 6));
 	});
 
 	it("extends a reusable prior summary instead of recomputing from scratch", async () => {
@@ -53,13 +61,38 @@ describe("compactHistory", () => {
 			model,
 			threshold: 1000,
 			keepLast: 4,
-			priorSummary: { coveredCount: 4, text: "prior" },
+			priorSummary: {
+				coveredCount: 4,
+				text: "prior",
+				anchor: computeSummaryAnchor(messages, 4)
+			},
 			generateTextFn: gen
 		});
 		expect(gen).toHaveBeenCalledTimes(1);
 		const promptArg = gen.mock.calls[0][0].prompt;
 		expect(promptArg).toContain("Existing summary");
 		expect(promptArg).toContain("prior");
+		expect(result.summary?.coveredCount).toBe(6);
+	});
+
+	it("recomputes (does not reuse) when the anchor no longer matches the prefix", async () => {
+		const gen = vi.fn(
+			async (_args: { model: LanguageModel; system: string; prompt: string }) => ({
+				text: "recomputed after truncation"
+			})
+		);
+		const messages = msgs(10, 2000);
+		// coveredCount fits, but a stale/incorrect anchor (head truncation) must
+		// force a full recompute rather than a blind reuse.
+		const result = await compactHistory(messages, {
+			model,
+			threshold: 1000,
+			keepLast: 4,
+			priorSummary: { coveredCount: 4, text: "prior", anchor: "stale-anchor" },
+			generateTextFn: gen
+		});
+		expect(gen).toHaveBeenCalledTimes(1);
+		expect(gen.mock.calls[0][0].prompt).toContain("Summarize this conversation");
 		expect(result.summary?.coveredCount).toBe(6);
 	});
 
@@ -70,11 +103,15 @@ describe("compactHistory", () => {
 			model,
 			threshold: 1000,
 			keepLast: 4,
-			priorSummary: { coveredCount: 6, text: "already covers it" },
+			priorSummary: {
+				coveredCount: 6,
+				text: "already covers it",
+				anchor: computeSummaryAnchor(messages, 6)
+			},
 			generateTextFn: gen as unknown as CompactGenerateTextFn
 		});
 		expect(gen).not.toHaveBeenCalled();
-		expect(result.summary).toEqual({
+		expect(result.summary).toMatchObject({
 			coveredCount: 6,
 			text: "already covers it"
 		});
