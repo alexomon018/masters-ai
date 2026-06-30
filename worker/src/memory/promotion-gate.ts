@@ -29,6 +29,11 @@ export const FACT_ACTIVE_CONFIDENCE = 0.8;
 export const MAX_CONTENT_LENGTH = 500;
 export const MAX_KEY_LENGTH = 64;
 
+// Default confidence for an inferred candidate that arrives without an explicit
+// score. Kept below every type floor so unscored inferred memory is rejected
+// rather than silently treated as certain — promotion requires a real score.
+export const UNSCORED_INFERRED_CONFIDENCE = 0.4;
+
 export interface AcceptedCandidate {
 	outcome: "accepted";
 	type: MemoryType;
@@ -56,7 +61,11 @@ function normalizeContent(raw: string): string {
 
 function normalizeKey(raw: string | null | undefined): string | null {
 	if (raw == null) return null;
-	const cleaned = raw.replace(/\s+/g, "_").trim().toLowerCase();
+	// Trim BEFORE collapsing whitespace so leading/trailing spaces don't become
+	// stray underscores (" response format " -> "response_format", not
+	// "_response_format_") — otherwise the same logical key fails to match an
+	// existing preference row during supersession.
+	const cleaned = raw.trim().replace(/\s+/g, "_").toLowerCase();
 	return cleaned.length > 0 ? cleaned : null;
 }
 
@@ -109,10 +118,15 @@ export async function evaluateCandidate(
 	}
 
 	const source: MemorySource = candidate.source ?? "inferred";
+	// A missing score is only "certain" for an explicit human signal. An
+	// inferred candidate with no score must not coast through the gate as 1.0;
+	// fall back to a sub-threshold default so it needs a real score to promote.
 	const confidence =
 		typeof candidate.confidence === "number"
 			? Math.max(0, Math.min(1, candidate.confidence))
-			: 1;
+			: source === "inferred"
+				? UNSCORED_INFERRED_CONFIDENCE
+				: 1;
 
 	if (confidence < minConfidenceFor(candidate.type)) {
 		return { outcome: "rejected", reason: "confidence below threshold" };
