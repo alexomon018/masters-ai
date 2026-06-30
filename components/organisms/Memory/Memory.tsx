@@ -82,6 +82,7 @@ const Memory = () => {
 	const {
 		memory,
 		isLoading,
+		isError,
 		isEmpty,
 		forget,
 		clearAll,
@@ -89,10 +90,37 @@ const Memory = () => {
 		clearing
 	} = useMemory();
 	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [actionError, setActionError] = useState<string | null>(null);
+	const [clearError, setClearError] = useState<string | null>(null);
+
+	const handleForget = async (id: string) => {
+		setActionError(null);
+		const ok = await forget(id);
+		if (!ok) setActionError("Couldn't remove that item. Please try again.");
+	};
+
+	const handleClearAll = async () => {
+		setClearError(null);
+		const ok = await clearAll();
+		if (ok) {
+			setConfirmOpen(false);
+		} else {
+			setClearError("Couldn't clear your memory. Please try again.");
+		}
+	};
 
 	const renderBody = () => {
 		if (isLoading) {
 			return <p className="text-sm text-muted-foreground">Loading…</p>;
+		}
+		// A failed /memory fetch must NOT masquerade as "no memory" — the data
+		// only falls back to empty because the request errored.
+		if (isError) {
+			return (
+				<Card className="p-8 text-center text-sm text-destructive">
+					We couldn&apos;t load your memory right now. Please try again later.
+				</Card>
+			);
 		}
 		if (isEmpty) {
 			return (
@@ -104,26 +132,29 @@ const Memory = () => {
 		}
 		return (
 			<>
+				{actionError && (
+					<p className="text-sm text-destructive">{actionError}</p>
+				)}
 				<Section
 					title="Preferences"
 					items={memory.preferences}
 					render={(i) => (i.key ? `${i.key}: ${i.content}` : i.content)}
 					pendingId={pendingId}
-					onForget={forget}
+					onForget={handleForget}
 				/>
 				<Section
 					title="Facts about you"
 					items={memory.facts}
 					render={(i) => i.content}
 					pendingId={pendingId}
-					onForget={forget}
+					onForget={handleForget}
 				/>
 				<Section
 					title="Recent sessions"
 					items={memory.episodes}
 					render={(i) => i.content}
 					pendingId={pendingId}
-					onForget={forget}
+					onForget={handleForget}
 				/>
 
 				<div className="flex justify-end border-t pt-4">
@@ -152,7 +183,13 @@ const Memory = () => {
 
 			{renderBody()}
 
-			<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+			<AlertDialog
+				open={confirmOpen}
+				onOpenChange={(open) => {
+					setConfirmOpen(open);
+					if (!open) setClearError(null);
+				}}
+			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle className="text-destructive">
@@ -163,6 +200,9 @@ const Memory = () => {
 							about you. This cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
+					{clearError && (
+						<p className="text-sm text-destructive">{clearError}</p>
+					)}
 					<AlertDialogFooter>
 						<Button variant="outline" onClick={() => setConfirmOpen(false)}>
 							Cancel
@@ -170,10 +210,7 @@ const Memory = () => {
 						<Button
 							variant="destructive"
 							disabled={clearing}
-							onClick={async () => {
-								await clearAll();
-								setConfirmOpen(false);
-							}}
+							onClick={handleClearAll}
 						>
 							{clearing ? "Clearing…" : "Clear all"}
 						</Button>

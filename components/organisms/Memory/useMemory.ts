@@ -38,12 +38,18 @@ export const useMemory = () => {
 	const [pendingId, setPendingId] = useState<string | null>(null);
 	const [clearing, setClearing] = useState(false);
 
+	// Both return whether the delete succeeded so the caller can keep the
+	// confirm dialog open / show a per-item error on failure. Only invalidate
+	// (and thus optimistically refresh) when the server actually confirmed it.
 	const forget = useCallback(
-		async (memoryId: string) => {
+		async (memoryId: string): Promise<boolean> => {
 			setPendingId(memoryId);
 			try {
-				await deleteMemoryItem(tokenFn, memoryId);
-				await queryClient.invalidateQueries({ queryKey: memoryQueryKey });
+				const ok = await deleteMemoryItem(tokenFn, memoryId);
+				if (ok) {
+					await queryClient.invalidateQueries({ queryKey: memoryQueryKey });
+				}
+				return ok;
 			} finally {
 				setPendingId(null);
 			}
@@ -51,11 +57,14 @@ export const useMemory = () => {
 		[tokenFn, queryClient, memoryQueryKey]
 	);
 
-	const clearAll = useCallback(async () => {
+	const clearAll = useCallback(async (): Promise<boolean> => {
 		setClearing(true);
 		try {
-			await clearAllMemory(tokenFn);
-			await queryClient.invalidateQueries({ queryKey: memoryQueryKey });
+			const ok = await clearAllMemory(tokenFn);
+			if (ok) {
+				await queryClient.invalidateQueries({ queryKey: memoryQueryKey });
+			}
+			return ok;
 		} finally {
 			setClearing(false);
 		}
