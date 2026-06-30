@@ -65,6 +65,37 @@ describe("memory repository promotion", () => {
 		expect(await repo().listActive("user:a")).toHaveLength(1);
 	});
 
+	it("does not let the same thread self-confirm a provisional fact", async () => {
+		const first = await repo().promote("user:a", {
+			type: "fact",
+			content: "Likes Deno",
+			confidence: 0.7,
+			sourceThreadId: "t1"
+		});
+		expect(first).toMatchObject({ outcome: "written", status: "provisional" });
+
+		// Same thread, same confidence: no independent corroboration and not
+		// stronger, so it must stay provisional (just a dedup touch).
+		const repeat = await repo().promote("user:a", {
+			type: "fact",
+			content: "Likes Deno",
+			confidence: 0.7,
+			sourceThreadId: "t1"
+		});
+		expect(repeat.outcome).toBe("deduplicated");
+		expect(await repo().listActive("user:a")).toHaveLength(0);
+
+		// A strictly stronger observation (even same thread) does confirm.
+		const stronger = await repo().promote("user:a", {
+			type: "fact",
+			content: "Likes Deno",
+			confidence: 0.95,
+			sourceThreadId: "t1"
+		});
+		expect(stronger.outcome).toBe("confirmed");
+		expect(await repo().listActive("user:a")).toHaveLength(1);
+	});
+
 	it("supersedes a preference when its value changes", async () => {
 		await repo().promote("user:a", {
 			type: "preference",

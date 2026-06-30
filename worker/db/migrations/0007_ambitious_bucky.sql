@@ -1,0 +1,2 @@
+DROP INDEX `user_memory_dedup`;--> statement-breakpoint
+CREATE UNIQUE INDEX `user_memory_live_dedup` ON `user_memory` (`user_id`,`content_hash`) WHERE "user_memory"."status" IN ('active', 'provisional');

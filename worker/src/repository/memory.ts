@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { schema, type Database } from "../db";
-import { evaluateCandidate } from "../memory/promotion-gate";
+import { evaluateCandidate, type AcceptedCandidate } from "../memory/promotion-gate";
+import { tryCatch } from "../../../utils/tryCatch";
 import type { MemoryCandidate } from "../memory/types";
 import type { NewUserMemory, UserMemory } from "../../db/schema";
 
@@ -81,6 +82,77 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 		return rows.map(toView);
 	}
 
+	// The single live (active/provisional) row for a (user, content) pair, if
+	// any. Backed by the partial unique index, so there is at most one.
+	async function findLiveMatch(
+		userId: string,
+		contentHash: string
+	): Promise<UserMemory | undefined> {
+		const rows = await db
+			.select()
+			.from(schema.userMemoryTable)
+			.where(
+				and(
+					eq(schema.userMemoryTable.userId, userId),
+					eq(schema.userMemoryTable.contentHash, contentHash),
+					inArray(schema.userMemoryTable.status, [...VISIBLE_STATUSES])
+				)
+			)
+			.all();
+		return rows[0];
+	}
+
+	// Resolve a duplicate against an existing live row. A provisional fact is
+	// promoted to active only on *corroboration* — a new observation from a
+	// different thread, or a strictly stronger confidence. A same-thread repeat
+	// at equal-or-lower confidence is just a dedup and stays provisional, so a
+	// model can't self-confirm its own earlier inference within one conversation.
+	async function resolveLiveMatch(
+		userId: string,
+		liveMatch: UserMemory,
+		gated: AcceptedCandidate
+	): Promise<PromoteOutcome> {
+		const now = new Date();
+		const gatedConfidence = toStoredConfidence(gated.confidence);
+		const independent =
+			!!gated.sourceThreadId &&
+			gated.sourceThreadId !== liveMatch.sourceThreadId;
+		const stronger = gatedConfidence > liveMatch.confidence;
+
+		if (liveMatch.status === "provisional" && (independent || stronger)) {
+			await db
+				.update(schema.userMemoryTable)
+				.set({
+					status: "active",
+					confidence: Math.max(liveMatch.confidence, gatedConfidence),
+					// Record the confirming observation's provenance, not the
+					// original — it's the stronger/independent evidence.
+					sourceThreadId: gated.sourceThreadId ?? liveMatch.sourceThreadId,
+					updatedAt: now
+				})
+				.where(
+					and(
+						eq(schema.userMemoryTable.userId, userId),
+						eq(schema.userMemoryTable.memoryId, liveMatch.memoryId)
+					)
+				)
+				.run();
+			return { outcome: "confirmed", memoryId: liveMatch.memoryId };
+		}
+
+		await db
+			.update(schema.userMemoryTable)
+			.set({ updatedAt: now })
+			.where(
+				and(
+					eq(schema.userMemoryTable.userId, userId),
+					eq(schema.userMemoryTable.memoryId, liveMatch.memoryId)
+				)
+			)
+			.run();
+		return { outcome: "deduplicated", memoryId: liveMatch.memoryId };
+	}
+
 	return {
 		async listActive(userId) {
 			return listByStatuses(userId, ["active"]);
@@ -96,64 +168,8 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 				return { outcome: "rejected", reason: gated.reason };
 			}
 
-			// Dedup by (userId, contentHash) across still-live rows. The same
-			// assertion arriving twice must collapse to one row, never compete in
-			// retrieval as duplicates.
-			const existing = await db
-				.select()
-				.from(schema.userMemoryTable)
-				.where(
-					and(
-						eq(schema.userMemoryTable.userId, userId),
-						eq(schema.userMemoryTable.contentHash, gated.contentHash),
-						inArray(schema.userMemoryTable.status, [...VISIBLE_STATUSES])
-					)
-				)
-				.all();
-
-			const liveMatch = existing[0];
-			if (liveMatch) {
-				const now = new Date();
-				// A second observation of a provisional fact is the confirmation
-				// signal that promotes it to active (and thus injectable).
-				if (
-					liveMatch.status === "provisional" &&
-					(gated.status === "active" || gated.status === "provisional")
-				) {
-					await db
-						.update(schema.userMemoryTable)
-						.set({
-							status: "active",
-							confidence: Math.max(
-								liveMatch.confidence,
-								toStoredConfidence(gated.confidence)
-							),
-							sourceThreadId:
-								gated.sourceThreadId ?? liveMatch.sourceThreadId,
-							updatedAt: now
-						})
-						.where(
-							and(
-								eq(schema.userMemoryTable.userId, userId),
-								eq(schema.userMemoryTable.memoryId, liveMatch.memoryId)
-							)
-						)
-						.run();
-					return { outcome: "confirmed", memoryId: liveMatch.memoryId };
-				}
-
-				await db
-					.update(schema.userMemoryTable)
-					.set({ updatedAt: now })
-					.where(
-						and(
-							eq(schema.userMemoryTable.userId, userId),
-							eq(schema.userMemoryTable.memoryId, liveMatch.memoryId)
-						)
-					)
-					.run();
-				return { outcome: "deduplicated", memoryId: liveMatch.memoryId };
-			}
+			const liveMatch = await findLiveMatch(userId, gated.contentHash);
+			if (liveMatch) return resolveLiveMatch(userId, liveMatch, gated);
 
 			const memoryId = crypto.randomUUID();
 			const now = new Date();
@@ -192,8 +208,19 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 				createdAt: now,
 				updatedAt: now
 			};
-			await db.insert(schema.userMemoryTable).values(row).run();
-			return { outcome: "written", memoryId, status: gated.status };
+			const inserted = await tryCatch(
+				db.insert(schema.userMemoryTable).values(row).run()
+			);
+			if (inserted.success) {
+				return { outcome: "written", memoryId, status: gated.status };
+			}
+			// The partial unique index rejects a duplicate live row — a concurrent
+			// promote (e.g. from another Durable Object) won the race. Resolve
+			// against the row that now exists instead of surfacing the conflict; if
+			// none exists the failure was a real error, so rethrow.
+			const raced = await findLiveMatch(userId, gated.contentHash);
+			if (raced) return resolveLiveMatch(userId, raced, gated);
+			throw inserted.error;
 		},
 
 		async deleteOne(userId, memoryId) {

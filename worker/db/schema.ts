@@ -15,6 +15,7 @@ import {
 	integer,
 	primaryKey,
 	index,
+	uniqueIndex,
 	check
 } from "drizzle-orm/sqlite-core";
 
@@ -153,7 +154,15 @@ export const userMemoryTable = sqliteTable(
 	(table) => [
 		primaryKey({ columns: [table.userId, table.memoryId] }),
 		index("user_memory_scope").on(table.userId, table.type, table.status),
-		index("user_memory_dedup").on(table.userId, table.contentHash),
+		// Partial UNIQUE index: at most one *live* (active/provisional) row per
+		// (user, content). This is the real dedup invariant — it makes concurrent
+		// promotes from different Durable Objects fail-fast at the DB instead of
+		// silently creating duplicate live rows, which a read-then-insert check
+		// alone can't guarantee. Superseded/revoked rows are excluded so an old
+		// preference value can coexist with its replacement.
+		uniqueIndex("user_memory_live_dedup")
+			.on(table.userId, table.contentHash)
+			.where(sql`${table.status} IN ('active', 'provisional')`),
 		check(
 			"user_memory_type",
 			sql`${table.type} IN ('preference', 'fact', 'episode')`
