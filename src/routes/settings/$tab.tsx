@@ -5,6 +5,7 @@ import {
 	AccountUpgrade,
 	ApiKeysManager,
 	Customization,
+	Memory,
 	ModelsPicker
 } from "@organisms";
 import { usePostHog } from "@posthog/react";
@@ -26,6 +27,8 @@ const renderTabContent = (tab: string) => {
 			return <AccountUpgrade />;
 		case "customization":
 			return <Customization />;
+		case "memory":
+			return <Memory />;
 		case "models":
 			return <ModelsPicker />;
 		case "api-keys":

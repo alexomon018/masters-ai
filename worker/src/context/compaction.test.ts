@@ -43,7 +43,11 @@ describe("compactHistory", () => {
 	});
 
 	it("extends a reusable prior summary instead of recomputing from scratch", async () => {
-		const gen = vi.fn(async () => ({ text: "extended summary" }));
+		const gen = vi.fn(
+			async (_args: { model: LanguageModel; system: string; prompt: string }) => ({
+				text: "extended summary"
+			})
+		);
 		const messages = msgs(10, 2000);
 		const result = await compactHistory(messages, {
 			model,
@@ -77,7 +81,11 @@ describe("compactHistory", () => {
 	});
 
 	it("recomputes when a stale prior covers more than remains", async () => {
-		const gen = vi.fn(async () => ({ text: "recomputed" }));
+		const gen = vi.fn(
+			async (_args: { model: LanguageModel; system: string; prompt: string }) => ({
+				text: "recomputed"
+			})
+		);
 		const messages = msgs(10, 2000);
 		const result = await compactHistory(messages, {
 			model,
