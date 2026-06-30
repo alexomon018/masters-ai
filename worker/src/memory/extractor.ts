@@ -127,11 +127,10 @@ export async function extractMemoryCandidates(
 	} catch (error) {
 		// Extraction is best-effort enrichment; a failure must never surface to
 		// the user (it already ran in the background) or block memory the next
-		// turn would still re-observe.
+		// turn would still re-observe. Log the full error object so stack and
+		// provider metadata survive for debugging.
 		// eslint-disable-next-line no-console
-		console.error(
-			`[memory] extraction failed: ${error instanceof Error ? error.message : String(error)}`
-		);
+		console.error("[memory] extraction failed:", error);
 		return [];
 	}
 

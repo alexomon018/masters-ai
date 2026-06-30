@@ -30,24 +30,29 @@ export interface MemoryExtractionSummary {
 	outcomes: PromoteOutcome[];
 }
 
-const EMPTY_SUMMARY: MemoryExtractionSummary = {
-	candidates: 0,
-	written: 0,
-	confirmed: 0,
-	deduplicated: 0,
-	rejected: 0,
-	outcomes: []
-};
+// Factory rather than a shared constant: each caller gets its own outcomes
+// array and counters, so an early-return summary can never be aliased/mutated
+// across extraction runs.
+function emptySummary(): MemoryExtractionSummary {
+	return {
+		candidates: 0,
+		written: 0,
+		confirmed: 0,
+		deduplicated: 0,
+		rejected: 0,
+		outcomes: []
+	};
+}
 
 export async function runMemoryExtraction(
 	env: Env,
 	{ userId, threadId, messages, repo, generateObjectFn }: RunMemoryExtractionArgs
 ): Promise<MemoryExtractionSummary> {
-	if (!isMemoryExtractionEnabled(env)) return EMPTY_SUMMARY;
-	if (!env.THREAD_INDEX) return EMPTY_SUMMARY;
+	if (!isMemoryExtractionEnabled(env)) return emptySummary();
+	if (!env.THREAD_INDEX) return emptySummary();
 
 	const transcript = buildExtractionTranscript(messages);
-	if (!transcript) return EMPTY_SUMMARY;
+	if (!transcript) return emptySummary();
 
 	const candidates = await extractMemoryCandidates(
 		env,
@@ -55,13 +60,15 @@ export async function runMemoryExtraction(
 		threadId,
 		generateObjectFn
 	);
-	if (candidates.length === 0) return EMPTY_SUMMARY;
+	if (candidates.length === 0) return emptySummary();
 
 	const memoryRepo = repo ?? makeMemoryRepo(getDb(env));
 	const outcomes: PromoteOutcome[] = [];
 	for (const candidate of candidates) {
-		// Sequential: preference supersession and dedup both read-then-write the
-		// same scope, so concurrent promotes could race within one user.
+		// Sequential within a run for readable outcomes; the cross-run / cross-DO
+		// invariant (no duplicate live rows for the same user+content) is enforced
+		// at the repository boundary via the partial unique index in promote(),
+		// not by this ordering.
 		// eslint-disable-next-line no-await-in-loop
 		outcomes.push(await memoryRepo.promote(userId, candidate));
 	}
