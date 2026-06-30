@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ModelMessage } from "ai";
 import {
 	buildAgentCallOptions,
+	buildSystemPrompt,
 	isCasualMessage,
 	isContextFollowupMessage,
 } from "./agent-core";
@@ -164,5 +165,22 @@ describe("buildAgentCallOptions", () => {
 
 		expect(options.activeTools).toEqual([]);
 		expect(options.prepareStep?.({ stepNumber: 0 })).toBeUndefined();
+	});
+});
+
+describe("buildSystemPrompt memory injection", () => {
+	it("omits the memory section when no block is provided", () => {
+		const prompt = buildSystemPrompt({ modelLabel: "claude-haiku-4-5" });
+		expect(prompt).not.toContain("long-term memory");
+	});
+
+	it("appends the memory block when provided", () => {
+		const prompt = buildSystemPrompt({
+			modelLabel: "claude-haiku-4-5",
+			memoryBlock:
+				"## What you remember about this user (long-term memory)\n- response_format: json",
+		});
+		expect(prompt).toContain("long-term memory");
+		expect(prompt).toContain("- response_format: json");
 	});
 });

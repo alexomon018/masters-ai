@@ -1,9 +1,40 @@
-import { generateText, type LanguageModel, type ModelMessage } from "ai";
+import {
+	generateText as defaultGenerateText,
+	type LanguageModel,
+	type ModelMessage
+} from "ai";
+
+// Injectable so tests can exercise incremental/full compaction without a live
+// model call. Narrowed to the fields used. The Worker omits it and gets the
+// real generateText.
+export type CompactGenerateTextFn = (args: {
+	model: LanguageModel;
+	system: string;
+	prompt: string;
+}) => Promise<{ text: string }>;
+
+// A summary persisted in the DO across turns. `coveredCount` is how many of the
+// current turn's model messages (from the front) the summary already accounts
+// for, so the next turn only has to summarize what was added on top instead of
+// re-summarizing the whole tail every time.
+export interface PersistedSummary {
+	coveredCount: number;
+	text: string;
+}
 
 interface CompactOptions {
 	threshold?: number;
 	keepLast?: number;
 	model: LanguageModel;
+	priorSummary?: PersistedSummary | null;
+	generateTextFn?: CompactGenerateTextFn;
+}
+
+export interface CompactResult {
+	messages: ModelMessage[];
+	// The summary to persist for next turn. null means "no summary in play"
+	// (under threshold) — callers may clear any stored summary.
+	summary: PersistedSummary | null;
 }
 
 const DEFAULT_THRESHOLD = 32_000;
@@ -48,32 +79,70 @@ function messageToText(m: ModelMessage): string {
 	return `${role}:`;
 }
 
+const SUMMARY_SYSTEM_PROMPT =
+	"You compress conversation history into terse summaries that preserve every decision the user made, every Frontend Masters course or instructor cited, and any concrete code/API the assistant proposed. Output a single paragraph, no preamble.";
+
+function summaryMessage(text: string): ModelMessage {
+	return {
+		role: "system",
+		content: `Summary of earlier conversation: ${text}`
+	};
+}
+
+// Replaces older messages with a running summary once history grows past the
+// threshold, keeping the prompt bounded as a conversation gets long. When a
+// prior summary is supplied it is extended rather than recomputed, so the cost
+// of compaction stays roughly constant instead of growing with history length.
 export async function compactHistory(
 	messages: ModelMessage[],
 	options: CompactOptions
-): Promise<ModelMessage[]> {
+): Promise<CompactResult> {
 	const threshold = options.threshold ?? DEFAULT_THRESHOLD;
 	const keepLast = options.keepLast ?? DEFAULT_KEEP_LAST;
+	const prior = options.priorSummary ?? null;
+	const generateTextFn = options.generateTextFn ?? defaultGenerateText;
 
-	if (characterCount(messages) < threshold) return messages.slice();
-	if (messages.length <= keepLast) return messages.slice();
+	if (characterCount(messages) < threshold) {
+		return { messages: messages.slice(), summary: prior };
+	}
+	if (messages.length <= keepLast) {
+		return { messages: messages.slice(), summary: prior };
+	}
 
-	const olderMessages = messages.slice(0, messages.length - keepLast);
-	const recentMessages = messages.slice(messages.length - keepLast);
+	const olderCount = messages.length - keepLast;
+	const olderMessages = messages.slice(0, olderCount);
+	const recentMessages = messages.slice(olderCount);
 
-	const transcript = olderMessages.map(messageToText).join("\n");
+	// Reuse the prior summary only when it still describes a valid prefix of the
+	// current history. If the persisted history was truncated (maxPersistedMessages)
+	// the stored coveredCount can exceed what remains, so fall back to a full
+	// recompute rather than trust a stale boundary.
+	const canReuse = prior !== null && prior.coveredCount <= olderCount;
+	const newOlder = canReuse
+		? olderMessages.slice(prior.coveredCount)
+		: olderMessages;
 
-	const summary = await generateText({
-		model: options.model,
-		system:
-			"You compress conversation history into terse summaries that preserve every decision the user made, every Frontend Masters course or instructor cited, and any concrete code/API the assistant proposed. Output a single paragraph, no preamble.",
-		prompt: `Summarize this conversation:\n\n${transcript}`,
-	});
+	let summaryText: string;
+	if (canReuse && newOlder.length === 0) {
+		// Nothing new fell out of the keep-last window — reuse the prior summary
+		// verbatim, no model call.
+		summaryText = prior.text;
+	} else {
+		const transcript = newOlder.map(messageToText).join("\n");
+		const prompt =
+			canReuse && prior
+				? `Existing summary of the conversation so far:\n${prior.text}\n\nExtend it to incorporate these newer messages, returning a single combined summary:\n\n${transcript}`
+				: `Summarize this conversation:\n\n${transcript}`;
+		const result = await generateTextFn({
+			model: options.model,
+			system: SUMMARY_SYSTEM_PROMPT,
+			prompt
+		});
+		summaryText = result.text;
+	}
 
-	const summaryMessage: ModelMessage = {
-		role: "system",
-		content: `Summary of earlier conversation: ${summary.text}`,
+	return {
+		messages: [summaryMessage(summaryText), ...recentMessages],
+		summary: { coveredCount: olderCount, text: summaryText }
 	};
-
-	return [summaryMessage, ...recentMessages];
 }

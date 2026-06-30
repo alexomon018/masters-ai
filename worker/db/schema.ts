@@ -102,6 +102,69 @@ export const feedbackTable = sqliteTable(
 	]
 );
 
+// Per-user, typed long-term memory — the durable layer that turns per-thread
+// retrieval into cross-session continuity. Distinct from the global transcript
+// vector store (shared knowledge) and the DO message history (per-thread
+// trace): rows here are facts/preferences/episodes ABOUT a user, scoped by
+// user_id and reused on every turn.
+//
+//   type        — "preference" (exact key/value personalization),
+//                 "fact" (durable assertion about the user/their work),
+//                 "episode" (summary of a past session).
+//   status      — computed server-side by the promotion gate, never trusted
+//                 from a caller. "provisional" rows are stored but withheld
+//                 from prompt injection until confirmed (status -> "active").
+//   content_hash — SHA-256 of (type|key|normalized content), the dedup key
+//                 within a user scope so the same assertion seen twice
+//                 collapses to one row instead of competing in retrieval.
+//   superseded_by — points at the replacement row when a preference/fact is
+//                 contradicted, so retrieval sees either old or new, never both.
+export const userMemoryTable = sqliteTable(
+	"user_memory",
+	{
+		userId: text("user_id").notNull(),
+		memoryId: text("memory_id").notNull(),
+		type: text("type", {
+			enum: ["preference", "fact", "episode"]
+		}).notNull(),
+		memoryKey: text("memory_key"),
+		content: text("content").notNull(),
+		contentHash: text("content_hash").notNull(),
+		source: text("source", {
+			enum: ["user_stated", "inferred", "admin_set"]
+		})
+			.notNull()
+			.default("inferred"),
+		confidence: integer("confidence").notNull().default(100),
+		status: text("status", {
+			enum: ["active", "provisional", "revoked", "superseded"]
+		})
+			.notNull()
+			.default("active"),
+		supersededBy: text("superseded_by"),
+		sourceThreadId: text("source_thread_id"),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`)
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.memoryId] }),
+		index("user_memory_scope").on(table.userId, table.type, table.status),
+		index("user_memory_dedup").on(table.userId, table.contentHash),
+		check(
+			"user_memory_type",
+			sql`${table.type} IN ('preference', 'fact', 'episode')`
+		),
+		check(
+			"user_memory_status",
+			sql`${table.status} IN ('active', 'provisional', 'revoked', 'superseded')`
+		)
+	]
+);
+
 // Per-user BYOK provider keys. The key is encrypted at rest (AES-GCM via
 // worker/src/crypto/keyVault.ts); only ciphertext + iv are stored, plus the
 // last four chars for display. Composite PK means one key per user per provider.
@@ -133,3 +196,5 @@ export type Course = typeof coursesTable.$inferSelect;
 export type NewCourse = typeof coursesTable.$inferInsert;
 export type UserApiKey = typeof userApiKeysTable.$inferSelect;
 export type NewUserApiKey = typeof userApiKeysTable.$inferInsert;
+export type UserMemory = typeof userMemoryTable.$inferSelect;
+export type NewUserMemory = typeof userMemoryTable.$inferInsert;

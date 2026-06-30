@@ -14,8 +14,12 @@ import {
 	type ToolSet
 } from "ai";
 import { z } from "zod";
-import { compactHistory } from "./context/compaction";
+import { compactHistory, type PersistedSummary } from "./context/compaction";
 import { streamAgent } from "./agent-core";
+import { buildMemoryBlock } from "./memory/context";
+import { runMemoryExtraction } from "./memory/manager";
+import { makeMemoryRepo } from "./repository/memory";
+import { getDb } from "./db";
 import {
 	flushBraintrust,
 	logSpanMetadata,
@@ -65,7 +69,12 @@ interface ChatGate {
 	byokKey: string | undefined;
 	userData: UserData | undefined;
 	messages: ModelMessage[];
+	memoryBlock: string;
 }
+
+// DO storage key for the running conversation summary (compaction). Survives
+// hibernation so a long thread doesn't re-summarize its whole tail every turn.
+const COMPACTION_SUMMARY_KEY = "compactionSummary";
 
 export class MastersChatAgent extends AIChatAgent<Env> {
 	maxPersistedMessages = 200;
@@ -74,6 +83,12 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 	// turn always runs in the same wakeup as the message that triggered it, so
 	// an instance field (which hibernation would wipe) is safe here.
 	private senderConnection: Connection<ConnectionIdentity> | null = null;
+
+	// Identity resolved for the turn currently being processed, stashed so the
+	// post-response memory extraction (which runs after the stream finishes)
+	// knows whose memory to update. Same wakeup as the turn, so an instance
+	// field is safe.
+	private lastTurnIdentity: ConnectionIdentity | null = null;
 
 	async onConnect(connection: Connection, ctx: ConnectionContext) {
 		const userId = ctx.request.headers.get("x-masters-user-id");
@@ -165,7 +180,18 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 		const model = getModel(modelId, this.env, byokKey);
 
 		const fullHistory = await convertToModelMessages(this.messages);
-		const messages = await compactHistory(fullHistory, { model });
+		const priorSummary =
+			(await this.ctx.storage.get<PersistedSummary>(COMPACTION_SUMMARY_KEY)) ??
+			null;
+		const compacted = await compactHistory(fullHistory, {
+			model,
+			priorSummary
+		});
+		await this.persistCompactionSummary(compacted.summary, priorSummary);
+
+		// Path A — known-scope, exhaustive lookup of this user's active memory,
+		// reassembled into the prompt prefix every turn (no ranking, no top-k).
+		const memoryBlock = await this.loadMemoryBlock(identity.userId);
 
 		return {
 			identity,
@@ -173,8 +199,34 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			modelId,
 			byokKey,
 			userData: body.userData,
-			messages
+			messages: compacted.messages,
+			memoryBlock
 		};
+	}
+
+	private async persistCompactionSummary(
+		next: PersistedSummary | null,
+		prior: PersistedSummary | null
+	): Promise<void> {
+		if (next === prior) return;
+		if (next === null) {
+			await this.ctx.storage.delete(COMPACTION_SUMMARY_KEY);
+			return;
+		}
+		await this.ctx.storage.put(COMPACTION_SUMMARY_KEY, next);
+	}
+
+	private async loadMemoryBlock(userId: string): Promise<string> {
+		if (!this.env.THREAD_INDEX) return "";
+		try {
+			const records = await makeMemoryRepo(getDb(this.env)).listActive(userId);
+			return buildMemoryBlock(records);
+		} catch (error) {
+			// Memory injection is enrichment — a lookup failure must never break
+			// the turn. Degrade to no memory rather than throwing.
+			console.error("[memory] active lookup failed:", error);
+			return "";
+		}
 	}
 
 	async onChatMessage(
@@ -193,7 +245,9 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			return this.errorStreamResponse(gate.error);
 		}
 
-		const { identity, model, modelId, userData, messages } = gate.data;
+		const { identity, model, modelId, userData, messages, memoryBlock } =
+			gate.data;
+		this.lastTurnIdentity = identity;
 		const turnStartMs = Date.now();
 
 		const result = streamAgent({
@@ -201,6 +255,7 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 			modelLabel: modelId,
 			messages,
 			userData,
+			memoryBlock,
 			env: {
 				UPSTASH_VECTOR_REST_URL: this.env.UPSTASH_VECTOR_REST_URL,
 				UPSTASH_VECTOR_REST_TOKEN: this.env.UPSTASH_VECTOR_REST_TOKEN,
@@ -277,9 +332,41 @@ export class MastersChatAgent extends AIChatAgent<Env> {
 				console.error("[braintrust] flush failed:", err);
 			})
 		);
+		this.ctx.waitUntil(this.extractMemoryForTurn());
+	}
+
+	// Distill durable memory from the just-finished turn. Runs in the background
+	// (after persistence) so it never adds latency to the reply, and only for
+	// authenticated users — anon visitors are transient and would mostly add
+	// exhaust to the store. Best-effort: failures are logged, never surfaced.
+	private async extractMemoryForTurn(): Promise<void> {
+		const identity = this.lastTurnIdentity;
+		if (!identity?.isAuthenticated) return;
+		try {
+			const messages = await convertToModelMessages(this.messages);
+			const summary = await runMemoryExtraction(this.env, {
+				userId: identity.userId,
+				threadId: this.name,
+				messages
+			});
+			if (summary.candidates > 0) {
+				logSpanMetadata({
+					memoryCandidates: summary.candidates,
+					memoryWritten: summary.written,
+					memoryConfirmed: summary.confirmed,
+					memoryDeduplicated: summary.deduplicated,
+					memoryRejected: summary.rejected
+				});
+			}
+		} catch (error) {
+			console.error("[memory] extraction failed:", error);
+		}
 	}
 
 	async clearHistory(): Promise<void> {
 		await this.persistMessages([]);
+		// Drop the per-thread running summary too, so a reused thread id never
+		// inherits a stale summary of deleted history.
+		await this.ctx.storage.delete(COMPACTION_SUMMARY_KEY);
 	}
 }

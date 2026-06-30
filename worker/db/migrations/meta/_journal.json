@@ -43,6 +43,13 @@
       "when": 1781705942294,
       "tag": "0005_complex_captain_midlands",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1782813855232,
+      "tag": "0006_absurd_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

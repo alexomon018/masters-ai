@@ -1,0 +1,78 @@
+// Assembles the active-memory slice into the system-prompt prefix. This is the
+// "reassemble the prompt on every turn" step: durable preferences/facts/episodes
+// are looked up exactly (no ranking) and rendered into a bounded block, rather
+// than accumulating raw transcript across turns. Budgets keep the block from
+// growing without limit as a user's memory accumulates.
+
+import type { MemoryView } from "../repository/memory";
+
+export const MAX_PREFERENCES = 12;
+export const MAX_FACTS = 15;
+export const MAX_EPISODES = 4;
+
+interface BudgetedGroups {
+	preferences: MemoryView[];
+	facts: MemoryView[];
+	episodes: MemoryView[];
+}
+
+// Only active memory is injectable — provisional rows are deliberately withheld
+// until confirmed. Caller passes the result of listActive().
+function groupAndBudget(records: MemoryView[]): BudgetedGroups {
+	const preferences: MemoryView[] = [];
+	const facts: MemoryView[] = [];
+	const episodes: MemoryView[] = [];
+
+	// Most-recently-updated first within each type (listActive already orders
+	// by updatedAt desc), so budgets drop the stalest entries.
+	for (const record of records) {
+		if (record.status !== "active") continue;
+		if (record.type === "preference" && preferences.length < MAX_PREFERENCES) {
+			preferences.push(record);
+		} else if (record.type === "fact" && facts.length < MAX_FACTS) {
+			facts.push(record);
+		} else if (record.type === "episode" && episodes.length < MAX_EPISODES) {
+			episodes.push(record);
+		}
+	}
+
+	return { preferences, facts, episodes };
+}
+
+// Returns an empty string when there is nothing to inject, so the system prompt
+// stays byte-identical to the no-memory case (and the prompt cache stays warm)
+// for users without memory.
+export function buildMemoryBlock(records: MemoryView[]): string {
+	const { preferences, facts, episodes } = groupAndBudget(records);
+	if (
+		preferences.length === 0 &&
+		facts.length === 0 &&
+		episodes.length === 0
+	) {
+		return "";
+	}
+
+	const sections: string[] = [
+		"## What you remember about this user (long-term memory)",
+		"Apply these durable, cross-session memories when relevant. They describe the user, not Frontend Masters course content, so they are NOT a substitute for ragSearch and must never be cited as course sources. If a memory conflicts with what the user now says, trust the user and adjust."
+	];
+
+	if (preferences.length > 0) {
+		sections.push("Preferences:");
+		sections.push(
+			preferences.map((p) => `- ${p.key}: ${p.content}`).join("\n")
+		);
+	}
+
+	if (facts.length > 0) {
+		sections.push("Known facts about the user:");
+		sections.push(facts.map((f) => `- ${f.content}`).join("\n"));
+	}
+
+	if (episodes.length > 0) {
+		sections.push("Recent sessions:");
+		sections.push(episodes.map((e) => `- ${e.content}`).join("\n"));
+	}
+
+	return sections.join("\n");
+}
