@@ -26,7 +26,13 @@ export const useMemory = () => {
 		isError
 	} = useQuery({
 		queryKey: memoryQueryKey,
-		queryFn: () => fetchMemory(tokenFn)
+		queryFn: () => fetchMemory(tokenFn),
+		// A settings panel should always reflect the latest memory when opened —
+		// background extraction may have added rows since this query was last
+		// cached (and the cache is persisted across reloads), so refetch on mount
+		// rather than showing a stale snapshot.
+		staleTime: 0,
+		refetchOnMount: "always"
 	});
 
 	const [pendingId, setPendingId] = useState<string | null>(null);
