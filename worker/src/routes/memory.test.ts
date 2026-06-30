@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { env } from "cloudflare:test";
 import { getDb } from "../db";
 import { makeMemoryRepo } from "../repository/memory";
+import { signAnonId } from "../anonId";
+import worker from "../worker";
 import { deleteAllMemory, deleteMemoryItem, getMemory } from "./memory";
 
 afterEach(async () => {
@@ -67,5 +69,42 @@ describe("DELETE /memory", () => {
 			all[0].memoryId
 		);
 		expect(ok.status).toBe(204);
+	});
+});
+
+// Exercises the public worker entrypoint (route ordering, MEMORY_ITEM_RE
+// matching, auth + CORS wrapping) rather than the handler helpers in isolation.
+describe("worker /memory entrypoint", () => {
+	const ORIGIN = "http://localhost:3000";
+
+	it("routes an authenticated GET /memory through auth + CORS", async () => {
+		const anonId = await signAnonId("workerentrypoint01", env.ANON_ID_SECRET);
+		const res = await worker.fetch(
+			new Request(`https://test/memory?anonId=${encodeURIComponent(anonId)}`, {
+				headers: { origin: ORIGIN }
+			}),
+			env
+		);
+		expect(res.status).toBe(200);
+		expect(res.headers.get("access-control-allow-origin")).toBe(ORIGIN);
+		const body = (await res.json()) as { preferences: unknown[] };
+		expect(body).toHaveProperty("preferences");
+	});
+
+	it("rejects an unauthenticated GET /memory with 401", async () => {
+		const res = await worker.fetch(new Request("https://test/memory"), env);
+		expect(res.status).toBe(401);
+	});
+
+	it("matches DELETE /memory/:id and 404s an unknown id", async () => {
+		const anonId = await signAnonId("workerentrypoint02", env.ANON_ID_SECRET);
+		const res = await worker.fetch(
+			new Request(
+				`https://test/memory/does-not-exist?anonId=${encodeURIComponent(anonId)}`,
+				{ method: "DELETE", headers: { origin: ORIGIN } }
+			),
+			env
+		);
+		expect(res.status).toBe(404);
 	});
 });
