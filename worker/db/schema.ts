@@ -163,6 +163,11 @@ export const userMemoryTable = sqliteTable(
 		uniqueIndex("user_memory_live_dedup")
 			.on(table.userId, table.contentHash)
 			.where(sql`${table.status} IN ('active', 'provisional')`),
+		uniqueIndex("user_memory_live_key")
+			.on(table.userId, table.memoryKey)
+			.where(
+				sql`${table.memoryKey} IS NOT NULL AND ${table.status} IN ('active', 'provisional')`
+			),
 		check(
 			"user_memory_type",
 			sql`${table.type} IN ('preference', 'fact', 'episode')`

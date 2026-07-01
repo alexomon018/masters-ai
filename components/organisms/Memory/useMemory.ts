@@ -35,7 +35,12 @@ export const useMemory = () => {
 		refetchOnMount: "always"
 	});
 
-	const [pendingId, setPendingId] = useState<string | null>(null);
+	// Track every in-flight delete by id so overlapping forgets don't clear each
+	// other's pending state — a single pendingId would let a later forget
+	// re-enable an earlier row's button before its request settles.
+	const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(
+		() => new Set()
+	);
 	const [clearing, setClearing] = useState(false);
 
 	// Both return whether the delete succeeded so the caller can keep the
@@ -43,7 +48,7 @@ export const useMemory = () => {
 	// (and thus optimistically refresh) when the server actually confirmed it.
 	const forget = useCallback(
 		async (memoryId: string): Promise<boolean> => {
-			setPendingId(memoryId);
+			setPendingIds((prev) => new Set(prev).add(memoryId));
 			try {
 				const ok = await deleteMemoryItem(tokenFn, memoryId);
 				if (ok) {
@@ -51,7 +56,11 @@ export const useMemory = () => {
 				}
 				return ok;
 			} finally {
-				setPendingId(null);
+				setPendingIds((prev) => {
+					const next = new Set(prev);
+					next.delete(memoryId);
+					return next;
+				});
 			}
 		},
 		[tokenFn, queryClient, memoryQueryKey]
@@ -82,7 +91,7 @@ export const useMemory = () => {
 		isEmpty,
 		forget,
 		clearAll,
-		pendingId,
+		pendingIds,
 		clearing
 	};
 };

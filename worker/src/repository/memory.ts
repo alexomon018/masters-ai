@@ -102,6 +102,28 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 		return rows[0];
 	}
 
+	// The single live (active/provisional) row for a (user, preference key) pair,
+	// if any. Backed by the partial unique index on (userId, memoryKey), so there
+	// is at most one. Used to resolve a unique-key race the same way contentHash
+	// conflicts are resolved.
+	async function findLiveByKey(
+		userId: string,
+		memoryKey: string
+	): Promise<UserMemory | undefined> {
+		const rows = await db
+			.select()
+			.from(schema.userMemoryTable)
+			.where(
+				and(
+					eq(schema.userMemoryTable.userId, userId),
+					eq(schema.userMemoryTable.memoryKey, memoryKey),
+					inArray(schema.userMemoryTable.status, [...VISIBLE_STATUSES])
+				)
+			)
+			.all();
+		return rows[0];
+	}
+
 	// Resolve a duplicate against an existing live row. A provisional fact is
 	// promoted to active only on *corroboration* — a new observation from a
 	// different thread, or a strictly stronger confidence. A same-thread repeat
@@ -125,6 +147,10 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 				.set({
 					status: "active",
 					confidence: Math.max(liveMatch.confidence, gatedConfidence),
+					// Inherit the confirming observation's provenance — a
+					// user_stated/admin_set confirmation must upgrade an originally
+					// inferred row's source, not leave it reporting "inferred".
+					source: gated.source,
 					// Record the confirming observation's provenance, not the
 					// original — it's the stronger/independent evidence.
 					sourceThreadId: gated.sourceThreadId ?? liveMatch.sourceThreadId,
@@ -214,12 +240,20 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 			if (inserted.success) {
 				return { outcome: "written", memoryId, status: gated.status };
 			}
-			// The partial unique index rejects a duplicate live row — a concurrent
-			// promote (e.g. from another Durable Object) won the race. Resolve
-			// against the row that now exists instead of surfacing the conflict; if
-			// none exists the failure was a real error, so rethrow.
+			// A partial unique index rejected the insert — a concurrent promote
+			// (e.g. from another Durable Object) won the race. Resolve against the
+			// row that now exists instead of surfacing the conflict.
+			//
+			// Two indexes can fire: the (user, contentHash) dedup index, when the
+			// same value was promoted twice; or the (user, key) index, when a
+			// different value for the same preference key landed first. Check both.
 			const raced = await findLiveMatch(userId, gated.contentHash);
 			if (raced) return resolveLiveMatch(userId, raced, gated);
+			if (gated.key) {
+				const racedKey = await findLiveByKey(userId, gated.key);
+				if (racedKey) return resolveLiveMatch(userId, racedKey, gated);
+			}
+			// No conflicting live row exists, so the failure was a real error.
 			throw inserted.error;
 		},
 

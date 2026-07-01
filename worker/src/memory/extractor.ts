@@ -27,8 +27,10 @@ export function isMemoryExtractionEnabled(env: {
 	if (!env.ANTHROPIC_API_KEY?.trim()) return false;
 	const raw = env.MEMORY_EXTRACTION;
 	if (typeof raw === "boolean") return raw;
-	// Default on: opt out explicitly with "0"/"false".
-	if (raw === "0" || raw === "false") return false;
+	// Default on: opt out explicitly with "0"/"false". Normalize first so a
+	// padded/upper-cased value like " FALSE " still disables extraction.
+	const normalized = raw?.trim().toLowerCase();
+	if (normalized === "0" || normalized === "false") return false;
 	return true;
 }
 

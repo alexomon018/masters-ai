@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `user_memory_live_key` ON `user_memory` (`user_id`,`memory_key`) WHERE "user_memory"."memory_key" IS NOT NULL AND "user_memory"."status" IN ('active', 'provisional');

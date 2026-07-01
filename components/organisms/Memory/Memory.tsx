@@ -50,13 +50,13 @@ const Section = ({
 	title,
 	items,
 	render,
-	pendingId,
+	pendingIds,
 	onForget
 }: {
 	title: string;
 	items: MemoryItemDto[];
 	render: (item: MemoryItemDto) => string;
-	pendingId: string | null;
+	pendingIds: ReadonlySet<string>;
 	onForget: (id: string) => void;
 }) => {
 	if (items.length === 0) return null;
@@ -69,7 +69,7 @@ const Section = ({
 						key={item.id}
 						item={item}
 						label={render(item)}
-						pending={pendingId === item.id}
+						pending={pendingIds.has(item.id)}
 						onForget={() => onForget(item.id)}
 					/>
 				))}
@@ -86,7 +86,7 @@ const Memory = () => {
 		isEmpty,
 		forget,
 		clearAll,
-		pendingId,
+		pendingIds,
 		clearing
 	} = useMemory();
 	const [confirmOpen, setConfirmOpen] = useState(false);
@@ -139,21 +139,21 @@ const Memory = () => {
 					title="Preferences"
 					items={memory.preferences}
 					render={(i) => (i.key ? `${i.key}: ${i.content}` : i.content)}
-					pendingId={pendingId}
+					pendingIds={pendingIds}
 					onForget={handleForget}
 				/>
 				<Section
 					title="Facts about you"
 					items={memory.facts}
 					render={(i) => i.content}
-					pendingId={pendingId}
+					pendingIds={pendingIds}
 					onForget={handleForget}
 				/>
 				<Section
 					title="Recent sessions"
 					items={memory.episodes}
 					render={(i) => i.content}
-					pendingId={pendingId}
+					pendingIds={pendingIds}
 					onForget={handleForget}
 				/>
 
@@ -186,6 +186,9 @@ const Memory = () => {
 			<AlertDialog
 				open={confirmOpen}
 				onOpenChange={(open) => {
+					// Don't let an outside-click / Esc dismiss the dialog mid-clear —
+					// the request must settle so its error can surface in place.
+					if (clearing) return;
 					setConfirmOpen(open);
 					if (!open) setClearError(null);
 				}}
@@ -204,7 +207,11 @@ const Memory = () => {
 						<p className="text-sm text-destructive">{clearError}</p>
 					)}
 					<AlertDialogFooter>
-						<Button variant="outline" onClick={() => setConfirmOpen(false)}>
+						<Button
+							variant="outline"
+							disabled={clearing}
+							onClick={() => setConfirmOpen(false)}
+						>
 							Cancel
 						</Button>
 						<Button

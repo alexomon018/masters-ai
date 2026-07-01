@@ -71,7 +71,9 @@ export function buildMemoryBlock(records: MemoryView[]): string {
 	const prefLines = preferences
 		.map((p) => {
 			const value = sanitizeEntry(p.content);
-			return value ? `- ${p.key}: ${value}` : null;
+
+			const key = p.key && /^[a-z0-9_]{1,64}$/.test(p.key) ? p.key : null;
+			return value && key ? `- ${key}: ${value}` : null;
 		})
 		.filter((l): l is string => l !== null);
 	const factLines = facts

@@ -25,11 +25,26 @@ export interface PersistedSummary {
 	anchor?: string;
 }
 
+// Cheap synchronous content hash (FNV-1a). Not cryptographic — just enough to
+// make the anchor depend on the whole message, so two different boundary
+// messages that share a 200-char prefix don't collide after head-truncation.
+function hashContent(text: string): string {
+	let h = 0x811c9dc5;
+	for (let i = 0; i < text.length; i += 1) {
+		h ^= text.charCodeAt(i);
+		h = Math.imul(h, 0x01000193);
+	}
+	return (h >>> 0).toString(16);
+}
+
 // Fingerprint of a single message, stable across turns as long as the message
 // itself is retained. Used as the summary's anchor; a mismatch means the
-// summarized prefix was evicted and the summary can no longer be trusted.
+// summarized prefix was evicted and the summary can no longer be trusted. The
+// full normalized length plus a content hash make the anchor identify the exact
+// message, not just a shared prefix that survives truncation.
 function fingerprintMessage(m: ModelMessage): string {
-	return `${m.role}|${messageToText(m).slice(0, 200)}`;
+	const text = messageToText(m);
+	return `${m.role}|${text.length}|${hashContent(text)}`;
 }
 
 // Anchor for a summary covering the first `coveredCount` messages: the
