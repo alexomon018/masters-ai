@@ -1,6 +1,9 @@
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { schema, type Database } from "../db";
-import { evaluateCandidate, type AcceptedCandidate } from "../memory/promotion-gate";
+import {
+	evaluateCandidate,
+	type AcceptedCandidate
+} from "../memory/promotion-gate";
 import { tryCatch } from "../../../utils/tryCatch";
 import type { MemoryCandidate } from "../memory/types";
 import type { NewUserMemory, UserMemory } from "../../db/schema";
@@ -179,6 +182,57 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 		return { outcome: "deduplicated", memoryId: liveMatch.memoryId };
 	}
 
+	// Supersede every live preference row for (user, key) whose value differs from
+	// the incoming one, pointing the audit trail at the row that is about to win.
+	async function supersedeOtherKeyValues(
+		userId: string,
+		gated: AcceptedCandidate,
+		winnerMemoryId: string,
+		now: Date
+	): Promise<void> {
+		if (!(gated.type === "preference" && gated.key)) return;
+		await db
+			.update(schema.userMemoryTable)
+			.set({
+				status: "superseded",
+				supersededBy: winnerMemoryId,
+				updatedAt: now
+			})
+			.where(
+				and(
+					eq(schema.userMemoryTable.userId, userId),
+					eq(schema.userMemoryTable.type, "preference"),
+					eq(schema.userMemoryTable.memoryKey, gated.key),
+					inArray(schema.userMemoryTable.status, [...VISIBLE_STATUSES]),
+					ne(schema.userMemoryTable.contentHash, gated.contentHash)
+				)
+			)
+			.run();
+	}
+
+	function buildRow(
+		userId: string,
+		gated: AcceptedCandidate,
+		memoryId: string,
+		now: Date
+	): NewUserMemory {
+		return {
+			userId,
+			memoryId,
+			type: gated.type,
+			memoryKey: gated.key,
+			content: gated.content,
+			contentHash: gated.contentHash,
+			source: gated.source,
+			confidence: toStoredConfidence(gated.confidence),
+			status: gated.status,
+			supersededBy: null,
+			sourceThreadId: gated.sourceThreadId,
+			createdAt: now,
+			updatedAt: now
+		};
+	}
+
 	return {
 		async listActive(userId) {
 			return listByStatuses(userId, ["active"]);
@@ -203,37 +257,9 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 			// A preference is single-valued per key: a new value for an existing
 			// key supersedes the old row (kept for audit, hidden from retrieval)
 			// so the model never sees two conflicting values for the same setting.
-			if (gated.type === "preference" && gated.key) {
-				await db
-					.update(schema.userMemoryTable)
-					.set({ status: "superseded", supersededBy: memoryId, updatedAt: now })
-					.where(
-						and(
-							eq(schema.userMemoryTable.userId, userId),
-							eq(schema.userMemoryTable.type, "preference"),
-							eq(schema.userMemoryTable.memoryKey, gated.key),
-							inArray(schema.userMemoryTable.status, [...VISIBLE_STATUSES]),
-							ne(schema.userMemoryTable.contentHash, gated.contentHash)
-						)
-					)
-					.run();
-			}
+			await supersedeOtherKeyValues(userId, gated, memoryId, now);
 
-			const row: NewUserMemory = {
-				userId,
-				memoryId,
-				type: gated.type,
-				memoryKey: gated.key,
-				content: gated.content,
-				contentHash: gated.contentHash,
-				source: gated.source,
-				confidence: toStoredConfidence(gated.confidence),
-				status: gated.status,
-				supersededBy: null,
-				sourceThreadId: gated.sourceThreadId,
-				createdAt: now,
-				updatedAt: now
-			};
+			const row = buildRow(userId, gated, memoryId, now);
 			const inserted = await tryCatch(
 				db.insert(schema.userMemoryTable).values(row).run()
 			);
@@ -246,12 +272,26 @@ export function makeMemoryRepo(db: Database): MemoryRepo {
 			//
 			// Two indexes can fire: the (user, contentHash) dedup index, when the
 			// same value was promoted twice; or the (user, key) index, when a
-			// different value for the same preference key landed first. Check both.
+			// different value for the same preference key landed first.
+			//
+			// The contentHash index means the racer wrote the *same* value — a true
+			// duplicate, so resolve (dedup/confirm) against it.
 			const raced = await findLiveMatch(userId, gated.contentHash);
 			if (raced) return resolveLiveMatch(userId, raced, gated);
 			if (gated.key) {
 				const racedKey = await findLiveByKey(userId, gated.key);
-				if (racedKey) return resolveLiveMatch(userId, racedKey, gated);
+				if (racedKey) {
+					await supersedeOtherKeyValues(userId, gated, memoryId, now);
+					const reinserted = await tryCatch(
+						db.insert(schema.userMemoryTable).values(row).run()
+					);
+					if (reinserted.success) {
+						return { outcome: "written", memoryId, status: gated.status };
+					}
+					const rerace = await findLiveMatch(userId, gated.contentHash);
+					if (rerace) return resolveLiveMatch(userId, rerace, gated);
+					throw reinserted.error;
+				}
 			}
 			// No conflicting live row exists, so the failure was a real error.
 			throw inserted.error;

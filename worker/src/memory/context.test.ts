@@ -36,6 +36,13 @@ describe("buildMemoryBlock", () => {
 		expect(block).toContain("- Worked through closures");
 	});
 
+	it("keeps a preference whose key has unsafe chars by sanitizing it", () => {
+		const block = buildMemoryBlock([
+			view({ type: "preference", key: "My Pref-Name!", content: "json" })
+		]);
+		expect(block).toContain("- my_pref_name: json");
+	});
+
 	it("must not be cited as a course source", () => {
 		const block = buildMemoryBlock([
 			view({ type: "fact", content: "Is a senior engineer" })

@@ -24,6 +24,22 @@ const INJECTION_RE =
 const IMPERATIVE_RE =
 	/\b(system prompt|you are now|you must|act as|respond only|from now on|new instructions?|do not (tell|mention|reveal))\b/i;
 
+// Coerce a stored preference key into a safe, single-line label for the prompt.
+// The write path (promotion-gate) only lower-cases, underscores whitespace, and
+// caps length — it does NOT restrict the character set — so a key like "my-pref"
+// persists fine. Dropping non-[a-z0-9_] keys here would silently hide those
+// preferences from the model, so we sanitize to a safe fallback instead: strip
+// anything outside the safe set and cap length, keeping the entry visible.
+function sanitizeKey(raw: string | null): string | null {
+	if (!raw) return null;
+	const cleaned = raw
+		.toLowerCase()
+		.replace(/[^a-z0-9_]+/g, "_")
+		.replace(/^_+|_+$/g, "")
+		.slice(0, 64);
+	return cleaned.length > 0 ? cleaned : null;
+}
+
 // Returns a single-line, instruction-free rendering of a memory value, or null
 // if the entry should be withheld from the prompt entirely.
 function sanitizeEntry(raw: string): string | null {
@@ -72,7 +88,7 @@ export function buildMemoryBlock(records: MemoryView[]): string {
 		.map((p) => {
 			const value = sanitizeEntry(p.content);
 
-			const key = p.key && /^[a-z0-9_]{1,64}$/.test(p.key) ? p.key : null;
+			const key = sanitizeKey(p.key);
 			return value && key ? `- ${key}: ${value}` : null;
 		})
 		.filter((l): l is string => l !== null);

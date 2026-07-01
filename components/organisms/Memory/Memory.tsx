@@ -109,6 +109,14 @@ const Memory = () => {
 		}
 	};
 
+	// Single close path for the clear dialog so Cancel, outside-click, and Esc all
+	// reset clearError — otherwise a stale error lingers into the next open.
+	const closeConfirm = () => {
+		if (clearing) return;
+		setConfirmOpen(false);
+		setClearError(null);
+	};
+
 	const renderBody = () => {
 		if (isLoading) {
 			return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -189,8 +197,11 @@ const Memory = () => {
 					// Don't let an outside-click / Esc dismiss the dialog mid-clear —
 					// the request must settle so its error can surface in place.
 					if (clearing) return;
+					if (!open) {
+						closeConfirm();
+						return;
+					}
 					setConfirmOpen(open);
-					if (!open) setClearError(null);
 				}}
 			>
 				<AlertDialogContent>
@@ -210,7 +221,7 @@ const Memory = () => {
 						<Button
 							variant="outline"
 							disabled={clearing}
-							onClick={() => setConfirmOpen(false)}
+							onClick={closeConfirm}
 						>
 							Cancel
 						</Button>
