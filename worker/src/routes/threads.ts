@@ -4,6 +4,7 @@ import { z } from "zod";
 import { verifyAnonId } from "../anonId";
 import { getDb } from "../db";
 import { makeFeedbackRepo } from "../repository/feedback";
+import { makeMemoryRepo } from "../repository/memory";
 import { makeThreadRepo } from "../repository/threads";
 import { makeUserApiKeyRepo } from "../repository/userApiKeys";
 import { redisPipeline } from "../redis";
@@ -143,6 +144,10 @@ export async function deleteAllForUser(
 
 	await makeFeedbackRepo(getDb(env)).deleteAllForUser(auth.userId);
 	await makeUserApiKeyRepo(getDb(env)).deleteAllForUser(auth.userId);
+	// Long-term memory is the most sensitive derived artifact we hold about a
+	// user (the article's GDPR concern), so the account-delete cascade must wipe
+	// it alongside threads, feedback, and keys.
+	await makeMemoryRepo(getDb(env)).deleteAllForUser(auth.userId);
 
 	const removed = await repo.deleteAllForUser(auth.userId);
 

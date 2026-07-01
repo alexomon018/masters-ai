@@ -20,6 +20,11 @@ import {
 } from "./routes/feedback";
 import { nameThread, nameThreadBodySchema } from "./routes/name-thread";
 import {
+	deleteAllMemory,
+	deleteMemoryItem,
+	getMemory
+} from "./routes/memory";
+import {
 	deleteKeyBodySchema,
 	deleteUserKey,
 	listUserKeys,
@@ -67,6 +72,7 @@ function withCorsHeaders(
 }
 
 const THREADS_ITEM_RE = /^\/threads\/([^/]+)$/;
+const MEMORY_ITEM_RE = /^\/memory\/([^/]+)$/;
 
 async function handleAuthenticated(
 	request: Request,
@@ -371,6 +377,37 @@ export default {
 			return withCorsHeaders(
 				await handleAuthenticated(request, env, (userId) =>
 					deleteThreadRoute(env, { userId }, threadsItemMatch[1])
+				),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/memory" && request.method === "GET") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, (userId) =>
+					getMemory(env, { userId })
+				),
+				env,
+				origin
+			);
+		}
+
+		if (url.pathname === "/memory" && request.method === "DELETE") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, (userId) =>
+					deleteAllMemory(env, { userId })
+				),
+				env,
+				origin
+			);
+		}
+
+		const memoryItemMatch = MEMORY_ITEM_RE.exec(url.pathname);
+		if (memoryItemMatch && request.method === "DELETE") {
+			return withCorsHeaders(
+				await handleAuthenticated(request, env, (userId) =>
+					deleteMemoryItem(env, { userId }, memoryItemMatch[1])
 				),
 				env,
 				origin

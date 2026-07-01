@@ -16,6 +16,9 @@ export interface Env {
 	ANON_ID_SECRET: string;
 	ALLOWED_ORIGINS: string;
 	RAG_QUERY_REWRITE?: string;
+	// Background long-term-memory extraction. Default on; set to "0"/"false" to
+	// disable (e.g. to cut Haiku spend). Extraction also requires ANTHROPIC_API_KEY.
+	MEMORY_EXTRACTION?: string;
 	KEY_ENCRYPTION_SECRET: string;
 }
 

@@ -12,6 +12,7 @@ import AccountUpgrade from "./AccountUpgrade/AccountUpgrade";
 import Customization from "./Customization/Customization";
 import ModelsPicker from "./ModelsPicker/ModelsPicker";
 import ApiKeysManager from "./ApiKeysManager/ApiKeysManager";
+import Memory from "./Memory/Memory";
 
 export {
 	Form,
@@ -25,5 +26,6 @@ export {
 	AccountUpgrade,
 	Customization,
 	ModelsPicker,
-	ApiKeysManager
+	ApiKeysManager,
+	Memory
 };
